@@ -1,0 +1,10 @@
+{
+  "name": "reel-sablon",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "studio": "remotion studio",
+    "kontrol": "tsc",
+    "render": "remotion render src/index.ts Reel out/video.mp4 --concurrency=4"
+  }
+}

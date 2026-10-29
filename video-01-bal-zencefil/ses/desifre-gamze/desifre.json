@@ -1,0 +1,328 @@
+[
+{
+"start": 0.0,
+"end": 3.96,
+"text": "Nenelerimiz kış gelmeden bu kavanozu mutlaka hazırlardı.",
+"words": [
+{
+"w": "Nenelerimiz",
+"s": 0.0,
+"e": 0.9
+},
+{
+"w": "kış",
+"s": 0.9,
+"e": 1.16
+},
+{
+"w": "gelmeden",
+"s": 1.16,
+"e": 1.68
+},
+{
+"w": "bu",
+"s": 1.68,
+"e": 1.96
+},
+{
+"w": "kavanozu",
+"s": 1.96,
+"e": 2.4
+},
+{
+"w": "mutlaka",
+"s": 2.4,
+"e": 3.0
+},
+{
+"w": "hazırlardı.",
+"s": 3.0,
+"e": 3.96
+}
+]
+},
+{
+"start": 4.62,
+"end": 8.5,
+"text": "Bir limonu ve bir parmak taze zencefili ince ince dilinmeyin.",
+"words": [
+{
+"w": "Bir",
+"s": 4.62,
+"e": 4.7
+},
+{
+"w": "limonu",
+"s": 4.7,
+"e": 5.22
+},
+{
+"w": "ve",
+"s": 5.22,
+"e": 5.42
+},
+{
+"w": "bir",
+"s": 5.42,
+"e": 5.66
+},
+{
+"w": "parmak",
+"s": 5.66,
+"e": 6.04
+},
+{
+"w": "taze",
+"s": 6.04,
+"e": 6.38
+},
+{
+"w": "zencefili",
+"s": 6.38,
+"e": 7.02
+},
+{
+"w": "ince",
+"s": 7.02,
+"e": 7.46
+},
+{
+"w": "ince",
+"s": 7.46,
+"e": 7.7
+},
+{
+"w": "dilinmeyin.",
+"s": 7.7,
+"e": 8.5
+}
+]
+},
+{
+"start": 8.74,
+"end": 13.06,
+"text": "Dilimleri kavanoza katman katman dizin, araya bir çubuk tarçın koyun.",
+"words": [
+{
+"w": "Dilimleri",
+"s": 8.74,
+"e": 9.14
+},
+{
+"w": "kavanoza",
+"s": 9.14,
+"e": 9.66
+},
+{
+"w": "katman",
+"s": 9.66,
+"e": 10.16
+},
+{
+"w": "katman",
+"s": 10.16,
+"e": 10.58
+},
+{
+"w": "dizin,",
+"s": 10.58,
+"e": 11.2
+},
+{
+"w": "araya",
+"s": 11.42,
+"e": 11.6
+},
+{
+"w": "bir",
+"s": 11.6,
+"e": 11.86
+},
+{
+"w": "çubuk",
+"s": 11.86,
+"e": 12.14
+},
+{
+"w": "tarçın",
+"s": 12.14,
+"e": 12.54
+},
+{
+"w": "koyun.",
+"s": 12.54,
+"e": 13.06
+}
+]
+},
+{
+"start": 13.3,
+"end": 15.7,
+"text": "Üzerini süzme balla tamamen kapatın.",
+"words": [
+{
+"w": "Üzerini",
+"s": 13.3,
+"e": 13.74
+},
+{
+"w": "süzme",
+"s": 13.74,
+"e": 14.18
+},
+{
+"w": "balla",
+"s": 14.18,
+"e": 14.52
+},
+{
+"w": "tamamen",
+"s": 14.52,
+"e": 15.12
+},
+{
+"w": "kapatın.",
+"s": 15.12,
+"e": 15.7
+}
+]
+},
+{
+"start": 16.06,
+"end": 18.16,
+"text": "Üç gün serin bir yerde dinlendirin.",
+"words": [
+{
+"w": "Üç",
+"s": 16.06,
+"e": 16.28
+},
+{
+"w": "gün",
+"s": 16.28,
+"e": 16.44
+},
+{
+"w": "serin",
+"s": 16.44,
+"e": 16.86
+},
+{
+"w": "bir",
+"s": 16.86,
+"e": 17.04
+},
+{
+"w": "yerde",
+"s": 17.04,
+"e": 17.24
+},
+{
+"w": "dinlendirin.",
+"s": 17.24,
+"e": 18.16
+}
+]
+},
+{
+"start": 18.34,
+"end": 20.4,
+"text": "Sabahları bir tatlı kaşığı yeterli.",
+"words": [
+{
+"w": "Sabahları",
+"s": 18.34,
+"e": 18.82
+},
+{
+"w": "bir",
+"s": 18.82,
+"e": 19.12
+},
+{
+"w": "tatlı",
+"s": 19.12,
+"e": 19.44
+},
+{
+"w": "kaşığı",
+"s": 19.44,
+"e": 19.74
+},
+{
+"w": "yeterli.",
+"s": 19.74,
+"e": 20.4
+}
+]
+},
+{
+"start": 20.72,
+"end": 23.16,
+"text": "Bir yaşından küçük bebeklere bal vermeyin.",
+"words": [
+{
+"w": "Bir",
+"s": 20.72,
+"e": 20.92
+},
+{
+"w": "yaşından",
+"s": 20.92,
+"e": 21.36
+},
+{
+"w": "küçük",
+"s": 21.36,
+"e": 21.64
+},
+{
+"w": "bebeklere",
+"s": 21.64,
+"e": 22.22
+},
+{
+"w": "bal",
+"s": 22.22,
+"e": 22.48
+},
+{
+"w": "vermeyin.",
+"s": 22.48,
+"e": 23.16
+}
+]
+},
+{
+"start": 23.42,
+"end": 25.6,
+"text": "Diğer kış tariflerimi açıklamaya bırakıyorum.",
+"words": [
+{
+"w": "Diğer",
+"s": 23.42,
+"e": 23.68
+},
+{
+"w": "kış",
+"s": 23.68,
+"e": 23.94
+},
+{
+"w": "tariflerimi",
+"s": 23.94,
+"e": 24.52
+},
+{
+"w": "açıklamaya",
+"s": 24.52,
+"e": 25.06
+},
+{
+"w": "bırakıyorum.",
+"s": 25.06,
+"e": 25.6
+}
+]
+}
+]

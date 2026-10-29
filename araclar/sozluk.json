@@ -1,0 +1,6 @@
+{
+  "not": "Whisper'a ipucu ve düzeltme sözlüğü (geleneksel tıp / mutfak terimleri). Videoya özel düzeltmeler ilgili video klasöründe desifre/duzeltmeler.json'a.",
+  "vocab": ["hacamat", "sülük", "moksa", "akupunktur", "refleksoloji", "zencefil", "tarçın", "çörek otu", "kantaron", "ısırgan", "zerdeçal", "karanfil", "çam çırası", "süzme bal", "tatlı kaşığı"],
+  "phrases": [],
+  "words": {"tarçım": "tarçın", "dilinmeyin": "dilimleyin"}
+}

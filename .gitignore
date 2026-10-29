@@ -1,0 +1,23 @@
+# Anahtarlar
+.env
+
+# Paketler ve çıktılar (yeniden üretilebilir)
+node_modules/
+**/out/
+.playwright-mcp/
+__pycache__/
+
+# Büyük medya — videolar yerelde kalır
+video-*/klipler/*.mp4
+video-*/klipler/*.wav
+video-*/teslim/*.mp4
+video-*/kurgu/public/
+video-*/ses/*.webm
+video-*/kareler/v*/
+
+# Başkalarına ait referans fotoğraflar (telif) — yalnız REFERANS-KARTI.md paylaşılır
+video-*/gercek-referans/indirilen/
+video-*/gercek-referans/secilen/
+
+# Eski denemeler
+_eski/

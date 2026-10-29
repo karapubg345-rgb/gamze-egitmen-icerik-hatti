@@ -1,0 +1,2 @@
+# olasılığı < 0,4 olan kelimeler: yanlışsa desifre/duzeltmeler.json → words'e ekle, sonra --sadece-duzelt
+[00:04.6] '1' p=0.145  ← 1 limonu ve 1 parmak taze zencefili ince ince dilimleyin.
