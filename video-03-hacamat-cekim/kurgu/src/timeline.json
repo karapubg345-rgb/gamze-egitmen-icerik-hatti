@@ -1,0 +1,266 @@
+{
+ "video": "video.mp4",
+ "audio": "anlatim.mp3",
+ "dur": 30.25,
+ "hook": {
+  "t": "Hacamat|nasıl yapılır",
+  "s": 0,
+  "e": 3.9
+ },
+ "handle": "@gamze.egitmen",
+ "outro": {
+  "t": "Detaylar açıklamada",
+  "s": 26.84
+ },
+ "captions": [
+  {
+   "t": "Hacamatta kupaları sırta",
+   "s": 0.0,
+   "e": 1.8
+  },
+  {
+   "t": "bu şekilde sırayla",
+   "s": 1.8,
+   "e": 2.96
+  },
+  {
+   "t": "yerleştiriyoruz",
+   "s": 2.96,
+   "e": 4.68
+  },
+  {
+   "t": "Şimdi çizme işlemine",
+   "s": 4.68,
+   "e": 5.72
+  },
+  {
+   "t": "geçiyorum",
+   "s": 5.72,
+   "e": 6.74
+  },
+  {
+   "t": "Bakın",
+   "s": 6.74,
+   "e": 7.28
+  },
+  {
+   "t": "kese atarken elimizi",
+   "s": 7.28,
+   "e": 8.76
+  },
+  {
+   "t": "hafif ve düzenli",
+   "s": 8.76,
+   "e": 9.88
+  },
+  {
+   "t": "tutuyoruz",
+   "s": 9.88,
+   "e": 11.08
+  },
+  {
+   "t": "Şimdi kupamızı alıyoruz",
+   "s": 11.08,
+   "e": 12.7
+  },
+  {
+   "t": "buraya yerleştiriyoruz ve",
+   "s": 12.7,
+   "e": 14.26
+  },
+  {
+   "t": "pompayla yavaş yavaş",
+   "s": 14.26,
+   "e": 15.82
+  },
+  {
+   "t": "çekiyoruz",
+   "s": 15.82,
+   "e": 17.02
+  },
+  {
+   "t": "Bakın",
+   "s": 17.02,
+   "e": 17.58
+  },
+  {
+   "t": "kupayı hafifçe oynatıp",
+   "s": 17.58,
+   "e": 19.04
+  },
+  {
+   "t": "bırakıyorum",
+   "s": 19.04,
+   "e": 19.98
+  },
+  {
+   "t": "sonra tekrar vakumluyorum",
+   "s": 19.98,
+   "e": 21.86
+  },
+  {
+   "t": "Görüyor musunuz",
+   "s": 21.86,
+   "e": 22.78
+  },
+  {
+   "t": "akış bu şekilde",
+   "s": 22.78,
+   "e": 23.62
+  },
+  {
+   "t": "devam ediyor",
+   "s": 23.62,
+   "e": 24.82
+  },
+  {
+   "t": "Uygularken dua okumayı",
+   "s": 24.82,
+   "e": 26.22
+  },
+  {
+   "t": "unutmayın",
+   "s": 26.22,
+   "e": 26.84
+  },
+  {
+   "t": "Hacamat mutlaka eğitimli",
+   "s": 26.84,
+   "e": 28.86
+  },
+  {
+   "t": "ellerde yapılmalı",
+   "s": 28.86,
+   "e": 29.82
+  }
+ ],
+ "shots": [
+  {
+   "s": 0,
+   "e": 2.4,
+   "z": 1.0,
+   "fx": 540,
+   "fy": 800,
+   "push": 0.05
+  },
+  {
+   "s": 2.4,
+   "e": 4.7,
+   "z": 1.18,
+   "fx": 540,
+   "fy": 700,
+   "push": 0.04
+  },
+  {
+   "s": 4.7,
+   "e": 7.0,
+   "z": 1.0,
+   "fx": 540,
+   "fy": 1200,
+   "push": 0.04
+  },
+  {
+   "s": 7.0,
+   "e": 9.2,
+   "z": 1.3,
+   "fx": 620,
+   "fy": 1450,
+   "push": 0.05
+  },
+  {
+   "s": 9.2,
+   "e": 11.1,
+   "z": 1.08,
+   "fx": 540,
+   "fy": 1000,
+   "push": 0.04
+  },
+  {
+   "s": 11.1,
+   "e": 13.2,
+   "z": 1.0,
+   "fx": 540,
+   "fy": 1000,
+   "push": 0.05
+  },
+  {
+   "s": 13.2,
+   "e": 15.3,
+   "z": 1.3,
+   "fx": 620,
+   "fy": 1050,
+   "push": 0.05
+  },
+  {
+   "s": 15.3,
+   "e": 17.0,
+   "z": 1.12,
+   "fx": 560,
+   "fy": 1100,
+   "push": 0.04
+  },
+  {
+   "s": 17.0,
+   "e": 19.3,
+   "z": 1.0,
+   "fx": 540,
+   "fy": 1100,
+   "push": 0.04
+  },
+  {
+   "s": 19.3,
+   "e": 21.9,
+   "z": 1.18,
+   "fx": 420,
+   "fy": 1050,
+   "push": 0.05
+  },
+  {
+   "s": 21.9,
+   "e": 24.8,
+   "z": 1.05,
+   "fx": 540,
+   "fy": 1100,
+   "push": 0.04
+  },
+  {
+   "s": 24.8,
+   "e": 27.0,
+   "z": 1.0,
+   "fx": 540,
+   "fy": 900,
+   "push": 0.05
+  },
+  {
+   "s": 27.0,
+   "e": 31.0,
+   "z": 1.12,
+   "fx": 540,
+   "fy": 1000,
+   "push": 0.06
+  }
+ ],
+ "sceneStarts": [
+  0,
+  4.7,
+  11.1,
+  17.0,
+  24.8
+ ],
+ "keywords": [
+  "hacamat",
+  "kupa",
+  "çizme",
+  "pompa",
+  "vakum",
+  "akış",
+  "dua",
+  "eğitimli"
+ ],
+ "ambient": {
+  "src": "sessiz.wav",
+  "open": 0,
+  "duck": 0,
+  "fadeAt": 26.84
+ }
+}

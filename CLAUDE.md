@@ -8,12 +8,20 @@ Bu klasör Gamze Eğitmen'in (@gamze.egitmen) Instagram Reels üretim sistemidir
 - **Nesne kilidi:** ana nesne (kavanoz, kâse…) gerçek fotoğrafa göre bir kez üretilir, her karede referans verilir. Nesne kareden kareye değişmez.
 - **Gerçeklik:** tarif/uygulama görünümü internetten gerçek fotoğraflarla doğrulanır (`gercek-referans` ajanı); yapay zekânın uydurduğu görünüm kullanılmaz.
 - **Sağlık dili:** "tedavi eder / geçirir / iyileştirir" YOK → "geleneksel olarak kullanılır". Aşı, 5G vb. konular yok. Her açıklamada uyarı satırı: "Geleneksel bir tariftir, tedavi amacı taşımaz; sağlık sorununuz varsa hekiminize danışın." Bal içeren tariflerde "1 yaş altı bebeklere bal verilmez".
-- **Kan/kesik gösterilmez** (hacamat sahnelerinde de).
+- **Kan:** hafif kan (kupada damlalar) şimdilik kabul (kullanıcı, 29 Eki); uzun yoğun akış ve yara yakın planı yok. Yapay zekâ üretiminde kan HAFİF yazılır.
+- **Gamze'nin kendi çekimi önce gelir:** uygulama videosu (hacamat vb.) için önce Gamze'nin çekimi `cekim-donusturucu` ile Seedance Video Edit'ten geçirilir (hareket çekimden, eller ve ortam bizden). Sıfırdan yapay zekâ uygulama videosu yalnız çekim yoksa (Gamze ilk denemeyi "yanlış sonuç çok" diye beğenmedi).
+- **Hasta/kişi gösterilmez:** kafa, yüz, kıyafet kadraja girmez; kurguda kırpılır ya da o saniyeler kesilir. Görünen yalnız uygulama bölgesi (sırt, kupalar) ve eller.
+- **Kol asla siyah değil:** yalnız eldiven siyah; bilek/kol her zaman mürdüm. Net referans: `mekan-kilidi/ELLER-referans.jpg`.
+- **Prompt planın gerçeğini anlatır:** video promptunda her plan zaman damgasıyla gerçekte ne oluyorsa onu söyler; o planda olmayan nesne adı geçmez ya da "bu planda X YOK" diye yazılır. Kesitlere ortak/genel prompt yazılmaz.
+- **Sıra:** anlatım metni ve ses, video üretilip denetlendikten SONRA yazılır.
 - **Kredi:** TopView görselleri Sınırsız modda (0 kredi) üretilir; kredili her işlemden (video, ücretli model) önce maliyeti söyle ve onay al.
 - Kurguda emoji yok; ikon gerekirse çizgi SVG.
 
+- **Referans varsa his referanstan gelir:** kullanıcı örnek video/fotoğraf verdiyse kadraj, mesafe, açı ve çekim hissi ondan alınır; tedavi/uygulama sahnelerinde mekânın görünmesi şart değil, önemli olan tedavi anını hissettirmek. Referans kare Image Edit'e kompozisyon referansı olarak verilir.
+
 ## Ajanlar (`.claude/agents/`)
-`gercek-referans` → `sahne-denetci` → `video-denetci` → `kurgu-ajani`. Kullanıcıya hiçbir kare/video denetimden geçmeden gösterilmez.
+Yapay zekâ yolu: `gercek-referans` → `referans-uyum` (referans varsa) → `sahne-denetci` → `video-denetci` → `kurgu-ajani`.
+Gamze'nin çekimi yolu: `cekim-donusturucu` → `video-denetci` → `kurgu-ajani` (örnek: `video-04-hacamat-edit/`). Kullanıcıya hiçbir kare/video denetimden geçmeden gösterilmez.
 
 ## Skill'ler (`.claude/skills/`)
 `topview-uretim` (görsel + video, arayüz tuzakları), `elevenlabs-ses` (anlatım).

@@ -31,6 +31,12 @@ Sen Gamze Eğitmen hattının kurgucususun. Hedef: anlatımdaki enerjiyi görün
 - `keywords`: malzemeler, süreler, ölçüler, uyarı kelimesi (sarı vurgu). Kök yaz ("tarçın" → TARÇINI da yakalar).
 - Ortam sesi: `open` 1.0 / `duck` 0.45; müzik eklenmez (karar: ortam sesi müzik yerine).
 
+## Gamze'nin çekiminden gelen video (Yol B, `cekim-donusturucu` sonrası)
+- **Hasta gösterilmez:** NOTLAR.md'deki "hasta görünen saniyeler"de kafa, yüz, kıyafet (üst, pantolon) kadraj dışında kalacak. Geniş planı `public/video.mp4` hazırlanırken ffmpeg `crop` ile daralt (720×1280 kaynakta ör. `crop=523:930:98:0` → 1,38×; 1,6×'ı geçme). Kamera planın sonunda kafaya kalkıyorsa planı o andan önce bitir. Kırptıktan sonra o planlardan 0,7-1 sn arayla büyük kare çıkar ve AÇ: kafa/kıyafet tek karede bile varsa HATA.
+- Ağır çekim gerekiyorsa (anlatıma yetişmesi için) `setpts=PTS*k` + `minterpolate=fps=30:mi_mode=mci` (k ≤ 2); 24 fps'i düz yavaşlatmak takılır.
+- Aynı kesit sırası daha önce seslendirildiyse (ör. video-03) o kurgunun `src/timeline.json` + `public/anlatim.mp3` aynen kullanılır; yeni kesimi o `sceneStarts` anlarına göre yap (geçişler ±0,1 sn). Ses kredisi harcanmaz.
+- Video Edit çıktısında ses yok/işe yaramaz → `ambient` sessiz.
+
 ## Kontrol ve teslim
 1. `node scripts/kareler.mjs <her sahnenin yakın planından 1 an>` → `out/kare/` AÇ VE BAK: odak doğru nesnede mi, kanca okunuyor mu.
 2. `bash ../../araclar/teslim.sh "$(pwd)" ../teslim/<ad>.mp4` — hata olursa DURUR; eski render asla teslim edilmez.

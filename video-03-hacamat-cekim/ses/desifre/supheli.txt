@@ -1,0 +1,2 @@
+# olasılığı < 0,4 olan kelimeler: yanlışsa desifre/duzeltmeler.json → words'e ekle, sonra --sadece-duzelt
+

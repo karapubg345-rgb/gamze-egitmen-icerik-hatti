@@ -17,6 +17,13 @@ Video dosyası (`klipler/*.mp4`), üretimde kullanılan prompt (zaman damgalı),
 5. **Zamansal bozulma:** sahne içinde 0,25 sn arayla 6-8 kare çıkar; nesne şekil değiştiriyor mu, eşya beliriyor/kayboluyor mu, el eriyor mu?
 6. **Anlatımla eşleşme:** anlatım zamanları varsa her sahnenin anlatılan adımla örtüştüğünü kontrol et; kayma > 1 sn ise kurgu için kaydırma öner.
 
+7. **Video Edit çıktısıysa (Yol B):** kaynak videoyla saniye saniye karşılaştır (üst kaynak / alt çıktı şeridi):
+   - Uydurma nesne: çıktıda bir elde kaynakta olmayan nesne var mı (bilinen hata: pompasız planda boştaki ele pompa)?
+   - Kol: hiçbir karede kol/bilek siyah olmayacak; yalnız parmak ucu görünen el kola dönmüş mü?
+   - Hareket kayması: el/kupa aynı anda aynı yerde mi; çıktı süresi kaynaktan kısaysa geçiş anlarını yeniden ölç.
+   - Hasta: kafa/yüz/kıyafet görünen saniyeleri listele (kurguda kırpılacak).
+   - Kan: hafif damla kabul; yoğun akış ŞÜPHELİ yaz.
+
 ## Çıktı
 `VIDEO-DENETIM.md`:
 - Teknik özet

@@ -28,4 +28,14 @@ Playwright MCP uzantı modunda kullanıcının kendi Chrome'u ve TopView oturumu
 - Video → Omni Reference → model Seedance 2.5 → kareleri sırayla sürükle (@Image1…N) → tek prompt, zaman damgalı: `0-4s: start exactly from @Image1: … 4-9s: cut to @Image2: …` + "same jar/hands/room in every shot, clean hard cuts, no face, no text, no music, no voice".
 - 25 sn 720p ≈ 30 kredi (kredi modu). Süre menüsünden seç. Omni'de Native Audio düğmesi yok; ortam sesi gelir, kurguda kullanılır.
 - Yeni kural: 8-10 kısa plan (2-3 sn), makro yakın planlar, promptta kamera hareketi (slow push-in, slight orbit, rack focus), doğal hız; "slow" yalnız akışkanlarda.
+- Hacamat gibi sahnelerde ERKEK hasta (kadın sırtı GPT Image'da "sexual" reddi); "dome, bare, skin drawn up" kelimelerinden kaçın.
+
+## Video Edit (Gamze'nin çekimini dönüştürme — ayrıntı: `cekim-donusturucu` ajanı)
+- Omni Reference → Seedance 2.5 → kaynak video + referanslar → Task Type **Video Edit** (aşağıda, `scrollIntoView` gerekir). Çıktı süresi kaynaktan gelir; ~1,4 kredi/sn, 43 kredi ön provizyon.
+- **Her görevden önce sayfayı yeniden yükle.** Silinen küçük resimlerin videoları/görselleri de gönderiliyor (bulaşma).
+- Büyük dosya: `araclar/topview/parcala.py` (~315 KB parçalar; tek 2 MB parça "Unexpected number" hatası, 100 KB altı parça araç çıktısında yankılanır).
+- Gönderim: `prompt.js` (window.__prompt) → `araclar/topview/video-edit-gonder.js`.
+- Panel model seçimi Topview T1'e dönebilir; seçici ilk açılışta geç yüklenir (script döngüyle bekler).
+- Sonra `topview_list_board_tasks`: `parameters.inputVideos` = 1, `duration` = -1. Sabit süre (ör. 30) giderse kısa kaynakta "duration geçersiz" hatası (kredi iade).
+- Sonuç: `result.originVideo.url`. Hasta değişimi tutmuyor (vücut korunuyor).
 - Video Sınırsız modu sık sık "Busy" ile kilitli olur; MiniMax H3 / Wan 3.0 promosyonları 0 kredi gösterebilir — ilk üretimden sonra kredi kaydını kontrol et.

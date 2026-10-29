@@ -38,8 +38,10 @@ const Hook: React.FC<{ t: number }> = ({ t }) => {
   const { s, e } = TL.hook;
   if (t > e + 0.3) return null;
   const out = 1 - ramp(t, e, 0.3);
-  const words = up(TL.hook.t).split(" ");
-  const lines = [words.slice(0, 2).join(" "), words.slice(2).join(" ")];
+  // "|" varsa satır oradan bölünür; yoksa ilk iki kelime üst satır.
+  const raw = up(TL.hook.t);
+  const words = raw.split(" ");
+  const lines = raw.includes("|") ? raw.split("|").map((s) => s.trim()) : [words.slice(0, 2).join(" "), words.slice(2).join(" ")];
   return (
     <div style={{ position: "absolute", top: 250, width: "100%", display: "flex", flexDirection: "column", alignItems: "center", gap: 14, opacity: out }}>
       {lines.map((l, i) => {

@@ -1,0 +1,327 @@
+[
+{
+"start": 0.0,
+"end": 1.82,
+"text": "Şimdi hacamata başlıyoruz.",
+"words": [
+{
+"w": "Şimdi",
+"s": 0.0,
+"e": 0.56
+},
+{
+"w": "hacamata",
+"s": 0.56,
+"e": 1.0
+},
+{
+"w": "başlıyoruz.",
+"s": 1.0,
+"e": 1.82
+}
+]
+},
+{
+"start": 2.18,
+"end": 4.0,
+"text": "Önce bölgeyi güzelce temizliyoruz.",
+"words": [
+{
+"w": "Önce",
+"s": 2.18,
+"e": 2.42
+},
+{
+"w": "bölgeyi",
+"s": 2.42,
+"e": 2.98
+},
+{
+"w": "güzelce",
+"s": 2.98,
+"e": 3.68
+},
+{
+"w": "temizliyoruz.",
+"s": 3.68,
+"e": 4.12
+}
+]
+},
+{
+"start": 4.94,
+"end": 9.22,
+"text": "Kupamızı alıyoruz, buraya yerleştiriyoruz ve pompamızı takıyoruz.",
+"words": [
+{
+"w": "Kupamızı",
+"s": 4.94,
+"e": 5.5
+},
+{
+"w": "alıyoruz,",
+"s": 5.5,
+"e": 6.14
+},
+{
+"w": "buraya",
+"s": 6.38,
+"e": 6.52
+},
+{
+"w": "yerleştiriyoruz",
+"s": 6.52,
+"e": 7.5
+},
+{
+"w": "ve",
+"s": 7.5,
+"e": 7.8
+},
+{
+"w": "pompamızı",
+"s": 7.8,
+"e": 8.46
+},
+{
+"w": "takıyoruz.",
+"s": 8.46,
+"e": 9.22
+}
+]
+},
+{
+"start": 9.52,
+"end": 12.24,
+"text": "Bakın, pompayla yavaş yavaş çekiyoruz.",
+"words": [
+{
+"w": "Bakın,",
+"s": 9.52,
+"e": 9.98
+},
+{
+"w": "pompayla",
+"s": 10.18,
+"e": 10.64
+},
+{
+"w": "yavaş",
+"s": 10.64,
+"e": 11.08
+},
+{
+"w": "yavaş",
+"s": 11.08,
+"e": 11.42
+},
+{
+"w": "çekiyoruz.",
+"s": 11.42,
+"e": 12.24
+}
+]
+},
+{
+"start": 12.62,
+"end": 14.12,
+"text": "Görüyor musunuz? Kupa tuttu.",
+"words": [
+{
+"w": "Görüyor",
+"s": 12.62,
+"e": 12.82
+},
+{
+"w": "musunuz?",
+"s": 12.82,
+"e": 13.38
+},
+{
+"w": "Kupa",
+"s": 13.46,
+"e": 13.62
+},
+{
+"w": "tuttu.",
+"s": 13.62,
+"e": 14.12
+}
+]
+},
+{
+"start": 14.54,
+"end": 17.0,
+"text": "Diğer kupaları da aynı şekilde sırayla koyuyoruz.",
+"words": [
+{
+"w": "Diğer",
+"s": 14.54,
+"e": 14.82
+},
+{
+"w": "kupaları",
+"s": 14.82,
+"e": 15.26
+},
+{
+"w": "da",
+"s": 15.26,
+"e": 15.62
+},
+{
+"w": "aynı",
+"s": 15.62,
+"e": 15.8
+},
+{
+"w": "şekilde",
+"s": 15.8,
+"e": 16.26
+},
+{
+"w": "sırayla",
+"s": 16.26,
+"e": 16.74
+},
+{
+"w": "koyuyoruz.",
+"s": 16.74,
+"e": 17.18
+}
+]
+},
+{
+"start": 17.76,
+"end": 20.0,
+"text": "Çizme işleminden sonra kupayı tekrar vakumluyoruz.",
+"words": [
+{
+"w": "Çizme",
+"s": 17.76,
+"e": 18.12
+},
+{
+"w": "işleminden",
+"s": 18.12,
+"e": 18.74
+},
+{
+"w": "sonra",
+"s": 18.74,
+"e": 19.14
+},
+{
+"w": "kupayı",
+"s": 19.14,
+"e": 19.52
+},
+{
+"w": "tekrar",
+"s": 19.52,
+"e": 19.96
+},
+{
+"w": "vakumluyoruz.",
+"s": 19.96,
+"e": 20.4
+}
+]
+},
+{
+"start": 21.02,
+"end": 22.32,
+"text": "Bakın, akış başladı.",
+"words": [
+{
+"w": "Bakın,",
+"s": 21.02,
+"e": 21.5
+},
+{
+"w": "akış",
+"s": 21.58,
+"e": 21.8
+},
+{
+"w": "başladı.",
+"s": 21.8,
+"e": 22.32
+}
+]
+},
+{
+"start": 22.66,
+"end": 26.14,
+"text": "En sonunda kupayı yavaşça çıkarıp bölgeyi temizliyoruz.",
+"words": [
+{
+"w": "En",
+"s": 22.66,
+"e": 22.96
+},
+{
+"w": "sonunda",
+"s": 22.96,
+"e": 23.32
+},
+{
+"w": "kupayı",
+"s": 23.32,
+"e": 23.76
+},
+{
+"w": "yavaşça",
+"s": 23.76,
+"e": 24.38
+},
+{
+"w": "çıkarıp",
+"s": 24.38,
+"e": 24.8
+},
+{
+"w": "bölgeyi",
+"s": 24.8,
+"e": 25.32
+},
+{
+"w": "temizliyoruz.",
+"s": 25.32,
+"e": 26.14
+}
+]
+},
+{
+"start": 26.46,
+"end": 29.06,
+"text": "Hacamat mutlaka eğitimli ellerde yapılmalı.",
+"words": [
+{
+"w": "Hacamat",
+"s": 26.46,
+"e": 26.86
+},
+{
+"w": "mutlaka",
+"s": 26.86,
+"e": 27.56
+},
+{
+"w": "eğitimli",
+"s": 27.56,
+"e": 28.06
+},
+{
+"w": "ellerde",
+"s": 28.06,
+"e": 28.54
+},
+{
+"w": "yapılmalı.",
+"s": 28.54,
+"e": 29.06
+}
+]
+}
+]

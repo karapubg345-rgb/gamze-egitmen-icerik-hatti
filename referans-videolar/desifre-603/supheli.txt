@@ -1,0 +1,3 @@
+# olasılığı < 0,4 olan kelimeler: yanlışsa desifre/duzeltmeler.json → words'e ekle, sonra --sadece-duzelt
+[00:00.0] 'Hacamat' p=0.044  ← Hacamat'ın da çizmeye başlayacağım, kalp ile başlıyorum.
+[00:00.3] "'ın" p=0.297  ← Hacamat'ın da çizmeye başlayacağım, kalp ile başlıyorum.

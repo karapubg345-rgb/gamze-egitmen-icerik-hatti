@@ -1,0 +1,2 @@
+# olasılığı < 0,4 olan kelimeler: yanlışsa desifre/duzeltmeler.json → words'e ekle, sonra --sadece-duzelt
+[00:00.0] 'çıtır' p=0.119  ← çıtır çıtır çıtır çıtır çıtır çıtır çıtır çıtır çıtır çıtır çıtır çıtır çıtır çıtır çıtır çıtır çıtır çıtır çıtır çıtır çıtır çıtır çıtır çıtır çıtır çıtır çıtır çıtır çıtır çıtır çıtır çıtır çıtır çıtır çıtır çıtır çıtır çıtır çıtır çıtır çıtır çıtır çıtır çıtır çıtır çıtır çıtır çıtır çıtır çıtır çıtır çıtır çıtır çıtır çıtır çıtır çıtır çıtır çıtır çıtır çıtır çıtır çıtır çıtır çıtır çıtır çıtır çıtır çıtır çıtır çıtır çıtır çıtır çıtır ç

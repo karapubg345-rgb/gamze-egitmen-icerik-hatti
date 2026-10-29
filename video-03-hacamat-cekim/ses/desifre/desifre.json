@@ -1,0 +1,323 @@
+[
+{
+"start": 0.0,
+"end": 4.32,
+"text": "Hacamatta kupaları sırta bu şekilde sırayla yerleştiriyoruz.",
+"words": [
+{
+"w": "Hacamatta",
+"s": 0.0,
+"e": 0.66
+},
+{
+"w": "kupaları",
+"s": 0.66,
+"e": 1.3
+},
+{
+"w": "sırta",
+"s": 1.3,
+"e": 1.8
+},
+{
+"w": "bu",
+"s": 1.8,
+"e": 2.02
+},
+{
+"w": "şekilde",
+"s": 2.02,
+"e": 2.48
+},
+{
+"w": "sırayla",
+"s": 2.48,
+"e": 2.96
+},
+{
+"w": "yerleştiriyoruz.",
+"s": 2.96,
+"e": 4.32
+}
+]
+},
+{
+"start": 4.68,
+"end": 6.4,
+"text": "Şimdi çizme işlemine geçiyorum.",
+"words": [
+{
+"w": "Şimdi",
+"s": 4.68,
+"e": 4.92
+},
+{
+"w": "çizme",
+"s": 4.92,
+"e": 5.28
+},
+{
+"w": "işlemine",
+"s": 5.28,
+"e": 5.72
+},
+{
+"w": "geçiyorum.",
+"s": 5.72,
+"e": 6.4
+}
+]
+},
+{
+"start": 6.74,
+"end": 10.72,
+"text": "Bakın kese atarken elimizi hafif ve düzenli tutuyoruz.",
+"words": [
+{
+"w": "Bakın",
+"s": 6.74,
+"e": 7.28
+},
+{
+"w": "kese",
+"s": 7.28,
+"e": 7.56
+},
+{
+"w": "atarken",
+"s": 7.56,
+"e": 8.2
+},
+{
+"w": "elimizi",
+"s": 8.2,
+"e": 8.76
+},
+{
+"w": "hafif",
+"s": 8.76,
+"e": 9.26
+},
+{
+"w": "ve",
+"s": 9.26,
+"e": 9.44
+},
+{
+"w": "düzenli",
+"s": 9.44,
+"e": 9.88
+},
+{
+"w": "tutuyoruz.",
+"s": 9.88,
+"e": 10.72
+}
+]
+},
+{
+"start": 11.08,
+"end": 16.6,
+"text": "Şimdi kupamızı alıyoruz, buraya yerleştiriyoruz ve pompayla yavaş yavaş çekiyoruz.",
+"words": [
+{
+"w": "Şimdi",
+"s": 11.08,
+"e": 11.28
+},
+{
+"w": "kupamızı",
+"s": 11.28,
+"e": 11.88
+},
+{
+"w": "alıyoruz,",
+"s": 11.88,
+"e": 12.46
+},
+{
+"w": "buraya",
+"s": 12.7,
+"e": 12.86
+},
+{
+"w": "yerleştiriyoruz",
+"s": 12.86,
+"e": 13.92
+},
+{
+"w": "ve",
+"s": 13.92,
+"e": 14.26
+},
+{
+"w": "pompayla",
+"s": 14.26,
+"e": 15.02
+},
+{
+"w": "yavaş",
+"s": 15.02,
+"e": 15.52
+},
+{
+"w": "yavaş",
+"s": 15.52,
+"e": 15.82
+},
+{
+"w": "çekiyoruz.",
+"s": 15.82,
+"e": 16.6
+}
+]
+},
+{
+"start": 17.02,
+"end": 21.54,
+"text": "Bakın kupayı hafifçe oynatıp bırakıyorum. Sonra tekrar vakumluyorum.",
+"words": [
+{
+"w": "Bakın",
+"s": 17.02,
+"e": 17.58
+},
+{
+"w": "kupayı",
+"s": 17.58,
+"e": 17.98
+},
+{
+"w": "hafifçe",
+"s": 17.98,
+"e": 18.54
+},
+{
+"w": "oynatıp",
+"s": 18.54,
+"e": 19.04
+},
+{
+"w": "bırakıyorum.",
+"s": 19.04,
+"e": 19.78
+},
+{
+"w": "Sonra",
+"s": 19.98,
+"e": 20.24
+},
+{
+"w": "tekrar",
+"s": 20.24,
+"e": 20.64
+},
+{
+"w": "vakumluyorum.",
+"s": 20.64,
+"e": 21.54
+}
+]
+},
+{
+"start": 21.86,
+"end": 24.36,
+"text": "Görüyor musunuz? Akış bu şekilde devam ediyor.",
+"words": [
+{
+"w": "Görüyor",
+"s": 21.86,
+"e": 22.04
+},
+{
+"w": "musunuz?",
+"s": 22.04,
+"e": 22.74
+},
+{
+"w": "Akış",
+"s": 22.78,
+"e": 23.08
+},
+{
+"w": "bu",
+"s": 23.08,
+"e": 23.3
+},
+{
+"w": "şekilde",
+"s": 23.3,
+"e": 23.62
+},
+{
+"w": "devam",
+"s": 23.62,
+"e": 24.02
+},
+{
+"w": "ediyor.",
+"s": 24.02,
+"e": 24.36
+}
+]
+},
+{
+"start": 24.82,
+"end": 26.84,
+"text": "Uygularken dua okumayı unutmayın.",
+"words": [
+{
+"w": "Uygularken",
+"s": 24.82,
+"e": 25.48
+},
+{
+"w": "dua",
+"s": 25.48,
+"e": 25.78
+},
+{
+"w": "okumayı",
+"s": 25.78,
+"e": 26.22
+},
+{
+"w": "unutmayın.",
+"s": 26.22,
+"e": 26.84
+}
+]
+},
+{
+"start": 26.84,
+"end": 29.82,
+"text": "Hacamat mutlaka eğitimli ellerde yapılmalı.",
+"words": [
+{
+"w": "Hacamat",
+"s": 26.84,
+"e": 27.62
+},
+{
+"w": "mutlaka",
+"s": 27.62,
+"e": 28.32
+},
+{
+"w": "eğitimli",
+"s": 28.32,
+"e": 28.86
+},
+{
+"w": "ellerde",
+"s": 28.86,
+"e": 29.3
+},
+{
+"w": "yapılmalı.",
+"s": 29.3,
+"e": 29.82
+}
+]
+}
+]

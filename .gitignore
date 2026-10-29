@@ -21,3 +21,15 @@ video-*/gercek-referans/secilen/
 
 # Eski denemeler
 _eski/
+
+# Gamze'nin ham çekimleri (büyük dosya, yerelde kalır)
+referans-videolar/*.mp4
+
+# Gamze'nin çekiminden kesilen kaynaklar ve analiz kareleri (özel görüntü, yerelde kalır)
+video-*/kaynak/
+video-*/klipler/*.jpg
+video-*/klipler/*.png
+referans-videolar/*.jpg
+video-*/kareler/genis-*/
+video-*/ses/*-taslak.mp3
+video-*/gercek-referans/*.jpg
