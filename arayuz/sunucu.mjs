@@ -11,7 +11,16 @@ const ARAYUZ = path.dirname(fileURLToPath(import.meta.url));
 const KOK = path.resolve(ARAYUZ, '..');
 const PORT = Number(process.env.ARAYUZ_PORT || 4747);
 const ARACLAR = 'Bash,Read,Write,Edit,Glob,Grep,Agent,Task,Skill,WebFetch,WebSearch,mcp__playwright';
-const tanim = () => JSON.parse(fs.readFileSync(path.join(ARAYUZ, 'asamalar.json'), 'utf8'));
+// .env → process.env (alt süreçteki claude, .mcp.json'daki token'ı ortamdan okur).
+try {
+  for (const s of fs.readFileSync(path.join(KOK, '.env'), 'utf8').split(/\r?\n/)) {
+    const m = s.match(/^\s*([A-Z0-9_]+)\s*=\s*([^\s#]*)/);
+    if (m && m[2] && !process.env[m[1]]) process.env[m[1]] = m[2];
+  }
+} catch {}
+if (!process.env.PLAYWRIGHT_MCP_EXTENSION_TOKEN) console.log('UYARI: PLAYWRIGHT_MCP_EXTENSION_TOKEN boş — Claude tarayıcıyı kullanamaz (.env)');
+
+const tanim = () =>JSON.parse(fs.readFileSync(path.join(ARAYUZ, 'asamalar.json'), 'utf8'));
 
 let calisan = null; // { klasor, asama, proc, baslangic }
 

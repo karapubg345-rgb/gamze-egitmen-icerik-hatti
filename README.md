@@ -2,7 +2,7 @@
 
 Peçeli bir geleneksel tıp eğitmeni için yüzsüz, eller odaklı tarif/uygulama Reels'i üreten Claude Code sistemi.
 
-**Kurulum:** [KURULUM.md](KURULUM.md) · **Akış:** [SISTEM.md](SISTEM.md) · **Kurallar:** [CLAUDE.md](CLAUDE.md)
+**Kurulum:** [KURULUM.md](KURULUM.md) (`kurulum.ps1` → `kurulum-dogrula.ps1` → `STUDYO-AC.bat`) · **Akış:** [SISTEM.md](SISTEM.md) · **Kurallar:** [CLAUDE.md](CLAUDE.md)
 
 **Kullanım:** `STUDYO-AC.bat` → tarayıcıda iki bölüm: **1 · Tarif videoları** (sıfırdan yapay zekâ) ve **2 · Referans video** (Gamze'nin çekimi → Seedance Video Edit). Her aşama tek tıkla çalışır, çıktısı aynı sayfada görünür.
 

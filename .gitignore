@@ -36,3 +36,6 @@ video-*/gercek-referans/*.jpg
 
 # Arayüz çalışma günlükleri ve durum
 video-*/.arayuz/
+
+# Kurulum doğrulama çıktıları
+ornekler/cikti/
