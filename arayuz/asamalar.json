@@ -1,0 +1,103 @@
+{
+  "ortak": "Gamze Eğitmen içerik hattı — ARAYÜZDEN çalıştırılan TEK aşama. CLAUDE.md ve SISTEM.md kurallarına harfiyen uy. Video klasörü: {klasor}. Konu: {konu}. Bölüm: {bolum}. Yalnız BU aşamayı yap, sonraki aşamaya GEÇME, kullanıcıya soru sorma (cevap veremez): karar gerekiyorsa en güvenli seçeneği uygula ve raporda belirt. Kredi: {kredi}. Kullanıcının ek notu: {not}. Bitince kısa Türkçe rapor yaz: ne üretildi (dosya yolları), denetim sonucu, harcanan kredi, sorunlar ve kullanıcının bakması gerekenler.",
+  "krediYok": "YASAK — bu aşamada kredili hiçbir işlem yapma (TopView'de Generate düğmesinde rakam varsa gönderme). Kredi gerekiyorsa dur ve raporla.",
+  "krediVar": "Kullanıcı arayüzde bu aşama için en fazla {limit} kredi onayladı. Tahmini maliyet bunu aşarsa GÖNDERME, dur ve raporla.",
+  "bolumler": [
+    {
+      "id": "tarif",
+      "ad": "Tarif videoları",
+      "aciklama": "Sıfırdan yapay zekâ: mekân kilidi + nesne kilidi + kareler + Seedance videosu. Çekimi olmayan tarif ve konular için.",
+      "sistem": "SISTEM.md Bölüm 1",
+      "asamalar": [
+        {
+          "id": "senaryo",
+          "ad": "Senaryo ve gerçek referans",
+          "aciklama": "Kanca, 8-10 kısa plan, taslak anlatım, açıklama ve uyarı satırı; tarifin gerçek fotoğraflarla doğrulanması.",
+          "talimat": "SISTEM.md Bölüm 1 adım 1-2: {klasor}/SENARYO.md yaz (kanca yazısı, 20-30 sn taslak anlatım, 8-10 kısa plan, açıklama metni, uyarı satırı; sağlık iddiası filtresi). Sonra gercek-referans ajanını çağır ({klasor}/gercek-referans/REFERANS-KARTI.md) ve gerekiyorsa senaryoyu gerçeğe göre düzelt.",
+          "kredili": false,
+          "ciktilar": ["SENARYO.md", "gercek-referans/REFERANS-KARTI.md"]
+        },
+        {
+          "id": "kareler",
+          "ad": "Nesne kilidi ve kareler",
+          "aciklama": "TopView GPT Image 2 Sınırsız (0 kredi): ana nesne bir kez, sonra her plan karesi; sahne-denetci süreklilik denetimi.",
+          "talimat": "SISTEM.md Bölüm 1 adım 3-5 ve topview-uretim skill'i: nesne kilidi ({klasor}/nesne-kilidi/P1-*.png), sonra plan kareleri ({klasor}/kareler/), hepsi GPT Image 2 · 9:16 · 1K Sınırsız modda. sahne-denetci ajanıyla denetle ({klasor}/DENETIM.md); DÜZELT olanları düzelt ve yeniden denetle.",
+          "kredili": false,
+          "ciktilar": ["nesne-kilidi/*.png", "kareler/*.png", "DENETIM.md"]
+        },
+        {
+          "id": "video",
+          "ad": "Video üretimi",
+          "aciklama": "Seedance 2.5 Omni Reference: tüm kareler + zaman damgalı tek prompt; video-denetci kontrolü.",
+          "talimat": "SISTEM.md Bölüm 1 adım 6-7: kareleri @Image1..N olarak verip Seedance 2.5 Omni Reference ile zaman damgalı TEK prompt (planın gerçek eylemi, kamera hareketi). Videoyu {klasor}/klipler/ altına indir, video-denetci ajanıyla {klasor}/VIDEO-DENETIM.md yaz.",
+          "kredili": true,
+          "tahmin": "25 sn 720p ≈ 30 TopView kredisi",
+          "varsayilanLimit": 35,
+          "ciktilar": ["klipler/*.mp4", "VIDEO-DENETIM.md"]
+        },
+        {
+          "id": "ses",
+          "ad": "Anlatım sesi",
+          "aciklama": "Anlatım metni videodaki gerçek sahne zamanlarına göre yazılır; ElevenLabs Gamze sesi; whisper doğrulaması.",
+          "talimat": "SISTEM.md Bölüm 1 adım 8: anlatım metnini VIDEO-DENETIM.md'deki gerçek sahne zamanlarına ve videoda görünen hareketlere göre kesinleştir (SENARYO.md'ye yaz), elevenlabs-ses skill'iyle Gamze sesinde üret ({klasor}/ses/), whisper ile doğrula.",
+          "kredili": true,
+          "tahmin": "ElevenLabs ≈ karakter başına 1 kredi (30 sn ≈ 450)",
+          "varsayilanLimit": 600,
+          "ciktilar": ["ses/*.mp3", "SENARYO.md"]
+        },
+        {
+          "id": "kurgu",
+          "ad": "Kurgu ve teslim",
+          "aciklama": "Dijital kamera planları, altyazı, kanca, ortam sesi; −14 LUFS teslim dosyası ve altyazı bandı kontrolü.",
+          "talimat": "kurgu-ajani talimatlarıyla {klasor}/kurgu/ kur, render al, araclar/teslim.sh ile {klasor}/teslim/ altına teslim et, altyazı bandını kontrol et. {klasor}/teslim/ACIKLAMA.txt (açıklama + uyarı satırı) yaz.",
+          "kredili": false,
+          "ciktilar": ["teslim/*.mp4", "teslim/ACIKLAMA.txt", "kurgu/out/kontrol/altyazi-bandi.jpg"]
+        }
+      ]
+    },
+    {
+      "id": "cekim",
+      "ad": "Referans video (Video Edit)",
+      "aciklama": "Gamze'nin kendi çekimi: hareketler çekimden, eller (siyah eldiven + mürdüm kol + bakır kelepçe) ve ortam bizden. Uygulama videoları için önceliklidir.",
+      "sistem": "SISTEM.md Bölüm 2",
+      "asamalar": [
+        {
+          "id": "kesitler",
+          "ad": "Kesitler ve kaynak video",
+          "aciklama": "Yüklenen çekimden ≤ 30 sn kesit kurgusu; her planda gerçekte ne olduğu ve hastanın göründüğü saniyeler.",
+          "talimat": "cekim-donusturucu ajanının 1. adımı: kaynak çekimler: {kaynaklar}. Kesitleri seç, ≤ 30 sn TEK kaynak video {klasor}/kaynak/kurgu30.mp4 yap, kontak şeridini {klasor}/kaynak/sheet.jpg olarak kaydet, {klasor}/NOTLAR.md'ye her planın gerçek içeriğini (hangi el ne tutuyor, hangi planda hangi nesne YOK) ve hastanın kafa/kıyafetinin göründüğü saniyeleri yaz, {klasor}/SENARYO.md'ye kesit tablosunu yaz.",
+          "kredili": false,
+          "ciktilar": ["NOTLAR.md", "SENARYO.md", "kaynak/sheet.jpg", "kaynak/kurgu30.mp4"]
+        },
+        {
+          "id": "donustur",
+          "ad": "Video Edit dönüşümü",
+          "aciklama": "Seedance 2.5 Video Edit: plan plan yazılmış prompt, gönderim kontrol listesi, kaynakla kare kare karşılaştırma.",
+          "talimat": "cekim-donusturucu ajanının 2-4. adımları: {klasor}/prompt.js (plan rehberli, ortak prompt yok), sayfayı yeniden yükleyip araclar/topview/video-edit-gonder.js ile gönder, inputVideos = 1 ve duration = -1 kontrolü, çıktıyı {klasor}/klipler/ altına indir, kaynakla karşılaştır ({klasor}/klipler/karsilastir-*.mp4), video-denetci ajanının Video Edit maddeleriyle {klasor}/VIDEO-DENETIM.md yaz.",
+          "kredili": true,
+          "tahmin": "≈ 1,4 TopView kredisi / sn (30 sn ≈ 43)",
+          "varsayilanLimit": 45,
+          "ciktilar": ["prompt.js", "klipler/edit-*.mp4", "klipler/karsilastir-*.mp4", "VIDEO-DENETIM.md"]
+        },
+        {
+          "id": "ses",
+          "ad": "Anlatım sesi",
+          "aciklama": "Gamze'nin canlı eğitmen dili; aynı kesit sırası önceden seslendirildiyse o ses yeniden kullanılır (kredi yok).",
+          "talimat": "Anlatımı videodaki gerçek planlara göre Gamze'nin canlı eğitmen diliyle yaz ('şimdi kupamızı alıyoruz… bakın…'; sağlık iddiası yok), {klasor}/SENARYO.md'ye ekle. Aynı kesit sırası daha önce bir video klasöründe seslendirildiyse o sesi kullan ve kredi harcama; değilse elevenlabs-ses skill'iyle Gamze sesinde üret ({klasor}/ses/), whisper ile doğrula.",
+          "kredili": true,
+          "tahmin": "ElevenLabs ≈ karakter başına 1 kredi (yeniden kullanımda 0)",
+          "varsayilanLimit": 600,
+          "ciktilar": ["ses/*.mp3", "SENARYO.md"]
+        },
+        {
+          "id": "kurgu",
+          "ad": "Kurgu ve teslim",
+          "aciklama": "Hasta gizlenir (geniş planlar kırpılır), altyazı, kanca; −14 LUFS teslim dosyası.",
+          "talimat": "kurgu-ajani talimatlarıyla (Bölüm 2 maddeleri: hasta görünen saniyelerde kırpma/kesme, gerekirse minterpolate ağır çekim) {klasor}/kurgu/ kur, render al, araclar/teslim.sh ile {klasor}/teslim/ altına teslim et; kırpılan planlardan büyük kare alıp hastanın görünmediğini doğrula. {klasor}/teslim/ACIKLAMA.txt yaz.",
+          "kredili": false,
+          "ciktilar": ["teslim/*.mp4", "teslim/ACIKLAMA.txt", "kurgu/out/kontrol/altyazi-bandi.jpg"]
+        }
+      ]
+    }
+  ]
+}

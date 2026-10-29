@@ -8,7 +8,7 @@ Gamze konuyu/tarifi verir → hat 20-30 sn'lik yüzsüz Reel çıkarır.
 - Ses — ElevenLabs sabit ses (seçilecek).
 - Yazı stili — Remotion şablonu (kanca yazısı, logo, altyazı, "açıklamada").
 
-## Yol A — Sıfırdan yapay zekâ (tarifler; çekimi olmayan konular)
+## Bölüm 1 — Tarif videoları (arayüz sekmesi 1 · sıfırdan yapay zekâ; çekimi olmayan konular)
 Akış (her video `video-NN-konu/` klasörü):
 1. **SENARYO.md** — kanca + 20-30 sn metin + 4-6 sahne listesi + açıklama metni + uyarı satırı. İddia filtresi: "tedavi eder/geçer" yok, "geleneksel olarak" dili.
 2. **gercek-referans** ajanı — tarifin gerçek fotoğrafları → `gercek-referans/` + REFERANS-KARTI.md (+ gerekiyorsa senaryo düzeltmesi).
@@ -20,7 +20,7 @@ Akış (her video `video-NN-konu/` klasörü):
 8. **Ses** — ElevenLabs (`elevenlabs-ses` skill), whisper ile doğrula. **Ses her zaman video geldikten ve video-denetci bittikten SONRA yazılır/üretilir:** anlatım metni VIDEO-DENETIM'deki gerçek sahne zamanlarına ve videoda gerçekten görünen hareketlere göre kesinleştirilir (senaryodaki taslak metin değil). Kredi beklerken ses üretme.
 9. **kurgu-ajani** — `kurgu-sablon/` + `araclar/` ile plan kesmeleri (dijital kamera), ortam sesi ducking, altyazı, kanca/kapanış → `araclar/teslim.sh` → `teslim/` + altyazı bandı kontrolü.
 
-## Yol B — Gamze'nin kendi çekimi (uygulama videoları için ÖNCELİKLİ)
+## Bölüm 2 — Referans video / Video Edit (arayüz sekmesi 2 · Gamze'nin kendi çekimi; uygulama videoları için ÖNCELİKLİ)
 Örnek: `video-04-hacamat-edit/` (NOTLAR.md, prompt.js, teslim/).
 1. **cekim-donusturucu** — kesitleri seç, ≤ 30 sn TEK kaynak video (`kaynak/kurgu30.mp4`), kontak şeridinden her planın gerçek içeriğini yaz.
 2. **prompt.js** — koru / yalnız eller + ortam değişsin / zaman damgalı plan rehberi ("bu planda pompa YOK"). Ortak prompt yok.
@@ -31,8 +31,8 @@ Akış (her video `video-NN-konu/` klasörü):
 Bilinen sınır: Video Edit hastayı değiştirmiyor (vücudu koruyor) → hasta kurguda gizlenir.
 
 ## Ajanlar (`.claude/agents/`)
-Yol A: gercek-referans → referans-uyum → sahne-denetci → video-denetci → kurgu-ajani.
-Yol B: cekim-donusturucu → video-denetci → kurgu-ajani.
+Bölüm 1 (Tarif): gercek-referans → referans-uyum → sahne-denetci → video-denetci → kurgu-ajani.
+Bölüm 2 (Referans video): cekim-donusturucu → video-denetci → kurgu-ajani.
 Bu klasörde açılan Claude Code oturumunda ada göre çağrılır.
 
 ## API anahtarları (`.env`)

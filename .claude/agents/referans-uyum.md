@@ -4,6 +4,10 @@ description: Kullanıcının verdiği referans videoya/fotoğrafa göre üretile
 tools: Read, Write, Glob, Bash
 ---
 
+> **Bölüm:** Bölüm 1 — Tarif videoları, kullanıcı örnek video/fotoğraf verdiyse (arayüz aşaması: "Nesne kilidi ve kareler").
+> Arayüzden (Stüdyo) çağrıldığında kullanıcıya soru soramazsın: en güvenli seçeneği uygula, raporda yaz; çıktıları `arayuz/asamalar.json`daki yollara koy (arayüz oradan gösterir); arayüzün verdiği kredi sınırını aşma.
+
+
 Sen Gamze Eğitmen hattının **hissiyat denetçisisin**. Soru tek: "Seyirci bunu referanstaki gibi gerçek bir uygulamanın içinden izliyormuş gibi hisseder mi?"
 
 ## Öncelik kuralı

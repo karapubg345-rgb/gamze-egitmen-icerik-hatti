@@ -19,12 +19,23 @@ Bu klasör Gamze Eğitmen'in (@gamze.egitmen) Instagram Reels üretim sistemidir
 
 - **Referans varsa his referanstan gelir:** kullanıcı örnek video/fotoğraf verdiyse kadraj, mesafe, açı ve çekim hissi ondan alınır; tedavi/uygulama sahnelerinde mekânın görünmesi şart değil, önemli olan tedavi anını hissettirmek. Referans kare Image Edit'e kompozisyon referansı olarak verilir.
 
-## Ajanlar (`.claude/agents/`)
-Yapay zekâ yolu: `gercek-referans` → `referans-uyum` (referans varsa) → `sahne-denetci` → `video-denetci` → `kurgu-ajani`.
-Gamze'nin çekimi yolu: `cekim-donusturucu` → `video-denetci` → `kurgu-ajani` (örnek: `video-04-hacamat-edit/`). Kullanıcıya hiçbir kare/video denetimden geçmeden gösterilmez.
+## İki bölüm (arayüzdeki iki sekme)
+| Bölüm | Ne zaman | Ajan sırası | Örnek |
+|---|---|---|---|
+| **1 · Tarif videoları** | çekimi olmayan tarif/konu; sıfırdan yapay zekâ | `gercek-referans` → `referans-uyum` (referans varsa) → `sahne-denetci` → `video-denetci` → `kurgu-ajani` | `video-01-bal-zencefil/` |
+| **2 · Referans video (Video Edit)** | Gamze'nin kendi çekimi var; uygulama videoları | `cekim-donusturucu` → `video-denetci` → `kurgu-ajani` | `video-04-hacamat-edit/` |
+
+Kullanıcıya hiçbir kare/video denetimden geçmeden gösterilmez. Her video klasörünün bölümü `video-NN/.arayuz/durum.json`'da (`bolum`: `tarif` | `cekim`).
+
+## Arayüz (Stüdyo)
+`STUDYO-AC.bat` → http://127.0.0.1:4747. Aşamalar, talimatlar ve çıktı yolları `arayuz/asamalar.json`'da; her aşama `claude -p` ile tek başına çalışır (`arayuz/sunucu.mjs`).
+- Arayüzden gelen istemde kullanıcıya soru SORULAMAZ: en güvenli seçeneği uygula, raporda belirt; yalnız istenen aşamayı yap.
+- Kredi: kredisiz aşamada kredili işlem yok; kredili aşamada arayüzde onaylanan sınır aşılmaz.
+- Çıktılar `asamalar.json`daki `ciktilar` yollarına yazılır (arayüz oradan gösterir). Yeni aşama/değişen yol olursa `asamalar.json` da güncellenir.
+- Terminalden çalışırken de aynı bölüm ve aşama sırası geçerlidir.
 
 ## Skill'ler (`.claude/skills/`)
 `topview-uretim` (görsel + video, arayüz tuzakları), `elevenlabs-ses` (anlatım).
 
 ## Yeni video başlatma
-`video-NN-konu/` klasörü aç → `SENARYO.md` (kanca + 20-30 sn anlatım + 8-10 kısa plan + açıklama + uyarı) → SISTEM.md adımları. Örnek: `video-01-bal-zencefil/`.
+Tercihen arayüzden (Stüdyo → bölüm → Yeni video). Terminalden: önce bölümü belirle; `video-NN-konu/` klasörü aç → Bölüm 1: `SENARYO.md` (kanca + 20-30 sn anlatım + 8-10 kısa plan + açıklama + uyarı) → SISTEM.md Bölüm 1 adımları; Bölüm 2: çekimi `referans-videolar/`a koy → `cekim-donusturucu`.

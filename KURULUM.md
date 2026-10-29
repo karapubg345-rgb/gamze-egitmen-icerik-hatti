@@ -37,10 +37,18 @@ Kurgu şablonunun çalıştığını kontrol etmek için:
 
 (Örnek videonun mp4'leri repoda yok; ilk testte Seedance videosu yeniden üretilmeli ya da örnek dosya ayrıca kopyalanmalı.)
 
-## 5. Yeni video
-> Yeni video: <konu / tarif>. SISTEM.md akışıyla başla.
+## 5. Stüdyo (arayüz) — günlük kullanım
+4. adımdaki ilk `claude` açılışı (MCP onayı) bir kez yapıldıktan sonra repo klasöründeki **`STUDYO-AC.bat`** dosyasına çift tıkla. Chrome'da `http://127.0.0.1:4747` açılır; siyah pencere açık kaldıkça çalışır.
 
-Claude sırasıyla senaryo → gerçek referans → nesne kilidi → kareler (denetim) → video (onayınla, kredili) → ses → kurgu → `video-NN/teslim/` adımlarını yürütür.
+- **1 · Tarif videoları:** konu yaz → Oluştur → aşamaları sırayla çalıştır: Senaryo ve gerçek referans → Nesne kilidi ve kareler → Video üretimi (kredili) → Anlatım sesi (kredili) → Kurgu ve teslim.
+- **2 · Referans video (Video Edit):** konu yaz → Oluştur → kendi çekimini sürükle-bırak → Kesitler ve kaynak video → Video Edit dönüşümü (kredili) → Anlatım sesi → Kurgu ve teslim.
+- Her aşamanın çıktısı (senaryo, kareler, video, teslim dosyası) kartın altında görünür. Beğenmediğin aşamaya not yaz ("3. kareyi yeniden üret") ve **Yeniden çalıştır**.
+- Kredili aşamalar, "Kredi harcanmasını onaylıyorum" kutusu işaretlenmeden ve verilen sınırın üstünde çalışmaz.
+- Aynı anda tek aşama çalışır (tarayıcı ortak). Çalışırken TopView/ElevenLabs sekmelerine dokunma.
+
+## 6. Terminalden yeni video (isteğe bağlı)
+> Yeni video, Bölüm 1 (tarif): <konu>. SISTEM.md akışıyla başla.
+> Yeni video, Bölüm 2 (referans video): referans-videolar/<dosya>.mp4. cekim-donusturucu ile başla.
 
 ## Sorun giderme
 - **Playwright bağlanmıyor:** Chrome açık mı, uzantı etkin mi, token `.env`'de mi? `claude` içinde `/mcp` ile durumu gör.

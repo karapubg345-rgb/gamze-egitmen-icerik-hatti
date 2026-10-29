@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gamze Eğitmen Stüdyo</title>
+<style>
+  :root {
+    --zemin: #f7f2ec; --kart: #fffdfa; --cizgi: #e6dcd2; --yazi: #2b2127; --soluk: #7a6a72;
+    --murdum: #6d3b5c; --murdum-acik: #f1e4ec; --lila: #a98bb5; --bakir: #b4693a;
+    --yesil: #3f7d58; --yesil-acik: #e3f1e8; --kirmizi: #a8423a; --kirmizi-acik: #f7e3e0; --sari-acik: #f8efd9;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --zemin: #1d171b; --kart: #262026; --cizgi: #3a3138; --yazi: #f1e9ee; --soluk: #b3a3ad;
+      --murdum: #c792b6; --murdum-acik: #3a2734; --lila: #b9a0c4; --bakir: #d79260;
+      --yesil: #7cc49a; --yesil-acik: #20342a; --kirmizi: #e88b82; --kirmizi-acik: #3c2523; --sari-acik: #3a321f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--zemin); color: var(--yazi); font: 15px/1.5 "Segoe UI", system-ui, sans-serif; }
+  header { display: flex; align-items: center; gap: 16px; padding: 14px 24px; border-bottom: 1px solid var(--cizgi); background: var(--kart); position: sticky; top: 0; z-index: 2; flex-wrap: wrap; }
+  header h1 { font-size: 18px; margin: 0; color: var(--murdum); font-weight: 650; letter-spacing: .2px; }
+  .sekmeler { display: flex; gap: 6px; }
+  .sekme { border: 1px solid var(--cizgi); background: transparent; color: var(--yazi); padding: 8px 14px; border-radius: 999px; cursor: pointer; font: inherit; }
+  .sekme.secili { background: var(--murdum); border-color: var(--murdum); color: #fff; }
+  .calisan { margin-left: auto; font-size: 13px; color: var(--soluk); display: flex; gap: 10px; align-items: center; }
+  .nokta { width: 9px; height: 9px; border-radius: 50%; background: var(--bakir); animation: nabiz 1.2s infinite; }
+  @keyframes nabiz { 50% { opacity: .3; } }
+  main { display: grid; grid-template-columns: 300px 1fr; gap: 20px; padding: 20px 24px; max-width: 1400px; margin: 0 auto; }
+  @media (max-width: 860px) { main { grid-template-columns: 1fr; padding: 16px; } header { padding: 12px 16px; } }
+  .panel { background: var(--kart); border: 1px solid var(--cizgi); border-radius: 12px; padding: 16px; }
+  .bolum-aciklama { color: var(--soluk); font-size: 13.5px; margin: 0 0 14px; }
+  h2 { font-size: 15px; margin: 0 0 10px; }
+  label { display: block; font-size: 13px; color: var(--soluk); margin: 10px 0 4px; }
+  input[type=text], textarea { width: 100%; border: 1px solid var(--cizgi); background: var(--zemin); color: var(--yazi); border-radius: 8px; padding: 8px 10px; font: inherit; }
+  textarea { min-height: 56px; resize: vertical; }
+  button.ana { background: var(--murdum); color: #fff; border: 0; border-radius: 8px; padding: 9px 16px; font: inherit; font-weight: 600; cursor: pointer; }
+  button.ana:disabled { opacity: .45; cursor: not-allowed; }
+  button.ikincil { background: transparent; color: var(--murdum); border: 1px solid var(--murdum); border-radius: 8px; padding: 7px 12px; font: inherit; cursor: pointer; }
+  .liste { list-style: none; padding: 0; margin: 14px 0 0; display: flex; flex-direction: column; gap: 6px; }
+  .liste li { padding: 9px 11px; border-radius: 8px; cursor: pointer; border: 1px solid transparent; }
+  .liste li:hover { background: var(--murdum-acik); }
+  .liste li.secili { border-color: var(--murdum); background: var(--murdum-acik); }
+  .liste .ad { font-weight: 600; font-size: 14px; }
+  .liste .alt { font-size: 12px; color: var(--soluk); }
+  .ilerleme { display: flex; gap: 3px; margin-top: 5px; }
+  .ilerleme span { flex: 1; height: 4px; border-radius: 2px; background: var(--cizgi); }
+  .ilerleme span.bitti { background: var(--yesil); } .ilerleme span.calisiyor { background: var(--bakir); } .ilerleme span.hata { background: var(--kirmizi); }
+  .bos { color: var(--soluk); text-align: center; padding: 60px 20px; }
+  .baslik { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+  .baslik h2 { font-size: 20px; margin: 0; }
+  .baslik code { color: var(--soluk); font-size: 13px; }
+  .asama { border: 1px solid var(--cizgi); border-radius: 12px; padding: 16px; margin-bottom: 14px; background: var(--kart); }
+  .asama-ust { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .sira { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--murdum-acik); color: var(--murdum); font-weight: 700; font-size: 13px; flex: none; }
+  .asama h3 { margin: 0; font-size: 16px; }
+  .rozet { font-size: 12px; padding: 2px 9px; border-radius: 999px; background: var(--cizgi); color: var(--soluk); }
+  .rozet.bitti { background: var(--yesil-acik); color: var(--yesil); } .rozet.calisiyor { background: var(--sari-acik); color: var(--bakir); }
+  .rozet.hata, .rozet.durduruldu { background: var(--kirmizi-acik); color: var(--kirmizi); }
+  .rozet.kredi { background: var(--sari-acik); color: var(--bakir); }
+  .asama p.ac { color: var(--soluk); margin: 6px 0 0 40px; font-size: 13.5px; }
+  .asama-govde { margin: 12px 0 0 40px; }
+  @media (max-width: 600px) { .asama p.ac, .asama-govde { margin-left: 0; } }
+  .kredi-kutu { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; background: var(--sari-acik); border-radius: 8px; padding: 9px 11px; margin: 10px 0; font-size: 13.5px; }
+  .kredi-kutu input[type=number] { width: 90px; border: 1px solid var(--cizgi); border-radius: 6px; padding: 4px 6px; background: var(--kart); color: var(--yazi); font: inherit; }
+  .eylemler { display: flex; gap: 10px; margin-top: 10px; align-items: center; flex-wrap: wrap; }
+  .ozet { white-space: pre-wrap; background: var(--zemin); border-radius: 8px; padding: 10px 12px; font-size: 13.5px; margin-top: 10px; max-height: 260px; overflow: auto; }
+  details { margin-top: 10px; } summary { cursor: pointer; color: var(--murdum); font-size: 13.5px; }
+  pre.log { white-space: pre-wrap; word-break: break-word; background: #17121a; color: #e9dfe6; border-radius: 8px; padding: 12px; font: 12.5px/1.45 Consolas, monospace; max-height: 380px; overflow: auto; margin: 8px 0 0; }
+  .ciktilar { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-top: 12px; }
+  .ciktilar a, .ciktilar figure { margin: 0; text-decoration: none; color: var(--yazi); font-size: 12px; }
+  .ciktilar img, .ciktilar video { width: 100%; border-radius: 8px; border: 1px solid var(--cizgi); background: #000; display: block; }
+  .ciktilar .metin { grid-column: 1 / -1; }
+  .ciktilar figcaption { color: var(--soluk); margin-top: 3px; word-break: break-all; }
+  .yukleme { border: 1.5px dashed var(--lila); border-radius: 10px; padding: 14px; text-align: center; color: var(--soluk); font-size: 13.5px; margin-top: 10px; }
+  .yukleme.uzerinde { background: var(--murdum-acik); }
+  .kaynaklar { font-size: 13px; color: var(--soluk); margin-top: 6px; }
+  .hata-mesaj { color: var(--kirmizi); font-size: 13.5px; margin-top: 8px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Gamze Eğitmen Stüdyo</h1>
+  <nav class="sekmeler" id="sekmeler"></nav>
+  <div class="calisan" id="calisan"></div>
+</header>
+<main>
+  <aside class="panel">
+    <p class="bolum-aciklama" id="bolumAciklama"></p>
+    <h2>Yeni video</h2>
+    <label for="konu" id="konuEtiket">Konu</label>
+    <input type="text" id="konu" placeholder="">
+    <div style="margin-top:10px"><button class="ana" id="olustur">Oluştur</button></div>
+    <div class="hata-mesaj" id="olusturHata"></div>
+    <h2 style="margin-top:22px">Videolar</h2>
+    <ul class="liste" id="liste"></ul>
+  </aside>
+  <section id="detay"><div class="panel bos">Soldan bir video seçin ya da yeni video oluşturun.</div></section>
+</main>
+<script>
+const $ = s => document.querySelector(s);
+const durumAd = { bitti: 'Bitti', calisiyor: 'Çalışıyor', hata: 'Hata', durduruldu: 'Durduruldu' };
+let TANIM, VERI, bolum = 'tarif', secili = null, acikLoglar = new Set();
+try { bolum = localStorage.getItem('bolum') || 'tarif'; } catch {}
+
+const api = async (yol, govde) => {
+  const r = await fetch(yol, govde ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(govde) } : undefined);
+  const v = await r.json(); if (!r.ok) throw new Error(v.hata || 'hata'); return v;
+};
+const kacis = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const bolumT = () => TANIM.bolumler.find(b => b.id === bolum);
+
+function sekmeler() {
+  $('#sekmeler').innerHTML = TANIM.bolumler.map((b, i) =>
+    `<button class="sekme ${b.id === bolum ? 'secili' : ''}" data-b="${b.id}">${i + 1} · ${kacis(b.ad)}</button>`).join('');
+  document.querySelectorAll('.sekme').forEach(e => e.onclick = () => {
+    bolum = e.dataset.b; secili = null; try { localStorage.setItem('bolum', bolum); } catch {}
+    ciz();
+  });
+  const b = bolumT();
+  $('#bolumAciklama').textContent = b.aciklama;
+  $('#konuEtiket').textContent = bolum === 'tarif' ? 'Tarif / konu' : 'Uygulama / konu';
+  $('#konu').placeholder = bolum === 'tarif' ? 'ör. Zencefilli bal macunu' : 'ör. Sırta hacamat uygulaması';
+}
+
+function liste() {
+  const vs = VERI.videolar.filter(v => v.bolum === bolum).reverse();
+  const b = bolumT();
+  $('#liste').innerHTML = vs.length ? vs.map(v => `
+    <li data-k="${v.klasor}" class="${v.klasor === secili ? 'secili' : ''}">
+      <div class="ad">${kacis(v.konu || v.klasor)}</div>
+      <div class="alt">${v.klasor}</div>
+      <div class="ilerleme">${b.asamalar.map(a => `<span class="${v.asamalar[a.id]?.durum || ''}"></span>`).join('')}</div>
+    </li>`).join('') : '<li class="alt" style="cursor:default">Bu bölümde henüz video yok.</li>';
+  document.querySelectorAll('#liste li[data-k]').forEach(e => e.onclick = () => { secili = e.dataset.k; ciz(); });
+}
+
+function calisanCiz() {
+  const c = VERI.calisan;
+  $('#calisan').innerHTML = c ? `<span class="nokta"></span> ${kacis(c.klasor)} · ${kacis(c.asama)} çalışıyor (${Math.round((Date.now() - c.baslangic) / 60000)} dk)
+    <button class="ikincil" id="durdur">Durdur</button>` : '';
+  if (c) $('#durdur').onclick = async () => { if (confirm('Çalışan aşama durdurulsun mu?')) { await api('/api/durdur', {}); yenile(); } };
+}
+
+async function ciktiCiz(kutu, klasor, asama) {
+  const dosyalar = await api(`/api/ciktilar?klasor=${encodeURIComponent(klasor)}&asama=${asama}`);
+  const url = f => '/dosya?yol=' + encodeURIComponent(f) + '&t=' + Date.now();
+  const parcalar = [];
+  for (const f of dosyalar) {
+    const ad = f.split('/').slice(-2).join('/');
+    if (/\.(png|jpe?g|webp)$/i.test(f)) parcalar.push(`<a href="${url(f)}" target="_blank"><img src="${url(f)}" loading="lazy" alt=""><figcaption>${kacis(ad)}</figcaption></a>`);
+    else if (/\.mp4$/i.test(f)) parcalar.push(`<figure><video src="${url(f)}" controls preload="metadata"></video><figcaption>${kacis(ad)}</figcaption></figure>`);
+    else if (/\.mp3$/i.test(f)) parcalar.push(`<figure class="metin"><audio src="${url(f)}" controls style="width:100%"></audio><figcaption>${kacis(ad)}</figcaption></figure>`);
+    else {
+      const metin = await (await fetch(url(f))).text();
+      parcalar.push(`<details class="metin"><summary>${kacis(ad)}</summary><div class="ozet">${kacis(metin.slice(0, 20000))}</div></details>`);
+    }
+  }
+  kutu.innerHTML = parcalar.join('') || '<span class="alt" style="color:var(--soluk);font-size:13px">Henüz çıktı yok.</span>';
+}
+
+async function logCiz(klasor, asama) {
+  const pre = document.querySelector(`pre.log[data-a="${asama}"]`); if (!pre) return;
+  const altta = pre.scrollTop + pre.clientHeight >= pre.scrollHeight - 30;
+  pre.textContent = await (await fetch(`/api/log?klasor=${encodeURIComponent(klasor)}&asama=${asama}`)).text() || 'Günlük boş.';
+  if (altta) pre.scrollTop = pre.scrollHeight;
+}
+
+function detay() {
+  const v = VERI.videolar.find(x => x.klasor === secili);
+  if (!v) { $('#detay').innerHTML = '<div class="panel bos">Soldan bir video seçin ya da yeni video oluşturun.</div>'; return; }
+  const b = bolumT();
+  const mesgul = !!VERI.calisan;
+  let h = `<div class="baslik"><h2>${kacis(v.konu)}</h2><code>${v.klasor}</code></div>`;
+  if (bolum === 'cekim') h += `<div class="panel" style="margin-bottom:14px">
+      <h2>Gamze'nin çekimi</h2>
+      <div class="yukleme" id="yukleme">Video dosyasını buraya sürükleyin ya da <label style="display:inline;color:var(--murdum);cursor:pointer">seçin<input type="file" id="dosya" accept="video/*" multiple hidden></label></div>
+      <div class="kaynaklar">${(v.kaynaklar || []).length ? 'Yüklenenler: ' + v.kaynaklar.map(kacis).join(', ') : 'Henüz çekim yüklenmedi.'}</div>
+      <div class="hata-mesaj" id="yukHata"></div></div>`;
+  b.asamalar.forEach((a, i) => {
+    const d = v.asamalar[a.id] || {};
+    const oncekiTamam = i === 0 || v.asamalar[b.asamalar[i - 1].id]?.durum === 'bitti';
+    const calisiyor = d.durum === 'calisiyor';
+    h += `<div class="asama" data-a="${a.id}">
+      <div class="asama-ust"><span class="sira">${i + 1}</span><h3>${kacis(a.ad)}</h3>
+        ${d.durum ? `<span class="rozet ${d.durum}">${durumAd[d.durum] || d.durum}${d.tahmini ? ' (dosyalardan)' : ''}</span>` : '<span class="rozet">Bekliyor</span>'}
+        ${a.kredili ? '<span class="rozet kredi">Kredili</span>' : '<span class="rozet">0 kredi</span>'}</div>
+      <p class="ac">${kacis(a.aciklama)}</p>
+      <div class="asama-govde">
+        ${!oncekiTamam ? '<div class="alt" style="color:var(--soluk);font-size:13px">Önce bir önceki aşama bitmeli (yine de çalıştırabilirsiniz).</div>' : ''}
+        <label>Not / düzeltme isteği (isteğe bağlı)</label>
+        <textarea data-not="${a.id}" placeholder="ör. kavanoz daha küçük olsun, 3. kareyi yeniden üret"></textarea>
+        ${a.kredili ? `<div class="kredi-kutu"><label style="margin:0;color:inherit;display:flex;gap:6px;align-items:center"><input type="checkbox" data-onay="${a.id}"> Kredi harcanmasını onaylıyorum</label>
+          <span>en fazla <input type="number" min="1" data-limit="${a.id}" value="${a.varsayilanLimit}"></span><span style="color:var(--soluk)">Tahmin: ${kacis(a.tahmin)}</span></div>` : ''}
+        <div class="eylemler">
+          <button class="ana" data-calistir="${a.id}" ${mesgul ? 'disabled' : ''}>${d.durum ? 'Yeniden çalıştır' : 'Çalıştır'}</button>
+          ${calisiyor ? '<span style="color:var(--bakir);font-size:13px">Claude çalışıyor — günlük canlı güncelleniyor</span>' : ''}
+          <span class="hata-mesaj" data-hata="${a.id}"></span>
+        </div>
+        ${d.ozet ? `<div class="ozet">${kacis(d.ozet)}</div>` : ''}
+        <div class="ciktilar" data-cikti="${a.id}"></div>
+        <details data-logkutu="${a.id}" ${calisiyor || acikLoglar.has(a.id) ? 'open' : ''}><summary>Çalışma günlüğü</summary><pre class="log" data-a="${a.id}"></pre></details>
+      </div></div>`;
+  });
+  // Yeniden çizimde yazılmış notlar, onay kutuları ve limitler kaybolmasın.
+  const korunan = [...document.querySelectorAll('#detay [data-not], #detay [data-onay], #detay [data-limit]')]
+    .map(e => [e.dataset.not ? `[data-not="${e.dataset.not}"]` : e.dataset.onay ? `[data-onay="${e.dataset.onay}"]` : `[data-limit="${e.dataset.limit}"]`, e.type === 'checkbox' ? e.checked : e.value]);
+  const oncekiKlasor = $('#detay').dataset.klasor;
+  $('#detay').innerHTML = h;
+  $('#detay').dataset.klasor = v.klasor;
+  if (oncekiKlasor === v.klasor) korunan.forEach(([s, d]) => { const e = document.querySelector('#detay ' + s); if (e) e.type === 'checkbox' ? (e.checked = d) : (e.value = d); });
+  b.asamalar.forEach(a => {
+    ciktiCiz(document.querySelector(`[data-cikti="${a.id}"]`), v.klasor, a.id);
+    const det = document.querySelector(`[data-logkutu="${a.id}"]`);
+    if (det.open) logCiz(v.klasor, a.id);
+    det.ontoggle = () => { det.open ? (acikLoglar.add(a.id), logCiz(v.klasor, a.id)) : acikLoglar.delete(a.id); };
+  });
+  document.querySelectorAll('[data-calistir]').forEach(btn => btn.onclick = async () => {
+    const a = btn.dataset.calistir;
+    const onay = document.querySelector(`[data-onay="${a}"]`);
+    const hataK = document.querySelector(`[data-hata="${a}"]`);
+    try {
+      await api('/api/calistir', { klasor: v.klasor, asama: a, not: document.querySelector(`[data-not="${a}"]`).value,
+        krediOnay: onay ? onay.checked : false, krediLimit: Number(document.querySelector(`[data-limit="${a}"]`)?.value || 0) });
+      acikLoglar.add(a); yenile();
+    } catch (e) { hataK.textContent = e.message; }
+  });
+  if (bolum === 'cekim') yuklemeBagla(v);
+}
+
+function yuklemeBagla(v) {
+  const alan = $('#yukleme'), giris = $('#dosya');
+  const gonder = async dosyalar => {
+    for (const f of dosyalar) {
+      alan.textContent = `Yükleniyor: ${f.name}…`;
+      const r = await fetch(`/api/yukle?klasor=${encodeURIComponent(v.klasor)}&ad=${encodeURIComponent(f.name)}`, { method: 'POST', body: f });
+      if (!r.ok) { $('#yukHata').textContent = (await r.json()).hata; }
+    }
+    yenile();
+  };
+  giris.onchange = () => gonder(giris.files);
+  alan.ondragover = e => { e.preventDefault(); alan.classList.add('uzerinde'); };
+  alan.ondragleave = () => alan.classList.remove('uzerinde');
+  alan.ondrop = e => { e.preventDefault(); alan.classList.remove('uzerinde'); gonder(e.dataTransfer.files); };
+}
+
+function ciz() { sekmeler(); liste(); calisanCiz(); detay(); }
+
+let sonImza = '';
+async function yenile() {
+  VERI = await api('/api/videolar');
+  const imza = JSON.stringify([VERI.calisan, VERI.videolar.map(v => [v.klasor, v.asamalar, v.kaynaklar])]);
+  if (imza !== sonImza) { sonImza = imza; liste(); calisanCiz(); detay(); }
+  else if (VERI.calisan && VERI.calisan.klasor === secili) { logCiz(secili, VERI.calisan.asama); calisanCiz(); }
+}
+
+$('#olustur').onclick = async () => {
+  $('#olusturHata').textContent = '';
+  try { const r = await api('/api/videolar', { bolum, konu: $('#konu').value }); $('#konu').value = ''; secili = r.klasor; sonImza = ''; await yenile(); }
+  catch (e) { $('#olusturHata').textContent = e.message; }
+};
+
+(async () => { TANIM = await api('/api/tanim'); VERI = await api('/api/videolar'); ciz(); setInterval(yenile, 3000); })();
+</script>
+</body>
+</html>
