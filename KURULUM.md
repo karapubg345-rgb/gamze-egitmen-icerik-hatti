@@ -5,7 +5,7 @@ PowerShell'i aç:
 ```powershell
 winget install --id Git.Git -e
 cd $HOME\Desktop
-git clone https://github.com/<hesap>/gamze-egitmen-icerik-hatti.git gamze-egitmen
+git clone https://github.com/karapubg345-rgb/gamze-egitmen-icerik-hatti.git gamze-egitmen
 cd gamze-egitmen
 ```
 
