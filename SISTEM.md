@@ -38,7 +38,6 @@ Bu klasörde açılan Claude Code oturumunda ada göre çağrılır.
 ## API anahtarları (`.env`)
 | Anahtar | Ne için | Nereden |
 |---|---|---|
-| PEXELS_API_KEY | telifsiz gerçek stok foto/video | pexels.com/api (ücretsiz) |
 | PIXABAY_API_KEY | telifsiz stok foto/video | pixabay.com/api/docs (ücretsiz) |
 | SERPER_API_KEY | Google Görseller (gerçek ev tarifleri; yalnız referans) | serper.dev (2.500 ücretsiz sorgu) |
 | ELEVENLABS_API_KEY | seslendirmeyi otomatik üretmek | elevenlabs.io → Profile → API Keys |

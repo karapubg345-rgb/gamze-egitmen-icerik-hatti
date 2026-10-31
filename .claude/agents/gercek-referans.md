@@ -16,8 +16,7 @@ Video klasörü (ör. `video-01-bal-zencefil/`) ve oradaki `SENARYO.md` (konu, m
 ## Adımlar
 1. **Sorgu üret:** Her ana nesne / sonuç için 2-3 İngilizce + 1 Türkçe sorgu (ör. "honey ginger lemon jar homemade", "bal zencefil limon kavanoz"). Ayrıca her ara adım için (rendelenmiş zencefil, dilimlenmiş limon...).
 2. **Ara:** Sırayla dene:
-   - `.env`'de `PEXELS_API_KEY` varsa Pexels API (`https://api.pexels.com/v1/search?query=...`, header `Authorization`).
-   - `PIXABAY_API_KEY` varsa Pixabay API.
+   - `.env`'de `PIXABAY_API_KEY` varsa Pixabay API.
    - `SERPER_API_KEY` varsa Serper Google Images (`POST https://google.serper.dev/images`).
    - Hiçbiri yoksa Playwright ile Bing Görseller: `https://www.bing.com/images/search?q=<sorgu>&qft=+filterui:photo-photo`, sonra `a.iusc` öğelerinin `m` JSON'undan `murl`.
 3. **İndir:** `gercek-referans/indirilen/` altına (her video için ayrı, boş klasör). Çizim, illüstrasyon, filigranlı stok, yazılı pin görselleri ELENİR.
