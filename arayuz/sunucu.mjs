@@ -219,7 +219,10 @@ function calistir({ klasor, asama, not, krediOnay, krediLimit, otoDeneme }) {
     .replaceAll('{asamaIdleri}', b.asamalar.map(x => x.id).join(', ')).replaceAll('{kalan}', String(Math.max(0, Math.round(kalan * 100) / 100)));
   const istem = doldur(t.ortak).replace('ÜRETİM MODU: {mod}', 'ÜRETİM MODU: ' + doldur(modKurali))
     + '\n\nAŞAMA — ' + a.ad + ':\n' + doldur(a.talimat)
-    + '\n\nRaporun sondan bir önceki satırı `SONUC: TAMAM` ya da `SONUC: SORUN` olsun (denetimden geçmeyen kare/video, bütçe ya da Sınırsız mod nedeniyle yapılamayan gönderim, eksik çıktı varsa SORUN).';
+    + '\n\nRAPOR SONU (sunucu okur, bu sırayla): denetimde bulduğun her eksik için bir `EKSIK: <kısa, kullanıcının anlayacağı dille>` satırı (en fazla 6); '
+    + '`UYUM: <0-100>` — çıktının isteğe (senaryo, CLAUDE.md kuralları, kullanıcı notu) genel uyum yüzdesi, denetçi raporlarına dayanarak dürüstçe; '
+    + '`SONUC: TAMAM` ya da `SONUC: SORUN` (denetimden geçmeyen kare/video, bütçe ya da Sınırsız mod nedeniyle yapılamayan gönderim, eksik çıktı varsa SORUN); gerekiyorsa `GERI: <aşama-id>`; en son `HARCANAN_KREDI: <sayı>`.'
+    + '\nKREDİ PAYI: kredili üretimi (video, Video Edit, ücretli görsel) bu aşama içinde kendiliğinden YENİDEN GÖNDERME — denetim kötüyse düşük UYUM ve EKSIK yaz, yeniden üretme kararı hattındır. Kredisiz işlerde (Sınırsız kareler) en fazla 1 düzeltme turu yap.';
 
   const logDir = path.join(guvenliYol(klasor), '.arayuz');
   fs.mkdirSync(logDir, { recursive: true });
@@ -271,9 +274,15 @@ function asamaBitti(klasor, a, { kod, durduruldu, sonuc, sure }) {
   const sorun = /SONUC:\s*SORUN/i.test(sonuc);
   const durum = durduruldu ? 'durduruldu' : kod === 0 ? 'bitti' : 'hata';
   const deneme = d.asamalar[a.id]?.deneme || 0;
-  d.asamalar[a.id] = { durum, bitis: new Date().toISOString(), ozet: sonuc.slice(0, 4000), deneme, ...(sorun ? { sorun: true } : {}) };
+  // Uyum payı: çıktı isteğe ESIK_UYUM (varsayılan %70) ve üstü uyuyorsa düzeltme yapılmaz, eksikler teslimde listelenir.
+  // Uyum yazılmamışsa kredi harcamamak için yeterli sayılır.
+  const uyum = Number(sonuc.match(/UYUM:\s*%?\s*(\d+)/i)?.[1] ?? NaN);
+  const eksikler = [...sonuc.matchAll(/^\s*EKSIK:\s*(.+)$/gim)].map(m => m[1].trim()).slice(0, 6);
+  const agirSorun = sorun && uyum < (Number(process.env.ESIK_UYUM) || 70);
+  d.asamalar[a.id] = { durum, bitis: new Date().toISOString(), ozet: sonuc.slice(0, 4000), deneme,
+    ...(sorun ? { sorun: true } : {}), ...(Number.isNaN(uyum) ? {} : { uyum }), ...(eksikler.length ? { eksikler } : {}) };
   if (durduruldu) { d.otomatik = false; durumYaz(klasor, d); return; }
-  const ozet = sonuc.replace(/\n*(SONUC|HARCANAN_KREDI|GERI):.*$/gim, '').trim();
+  const ozet = sonuc.replace(/\n*(SONUC|HARCANAN_KREDI|GERI|UYUM|EKSIK):.*$/gim, '').trim();
   if (!d.otomatik) { durumYaz(klasor, d); olaylar.emit('asama', { klasor, asama: a.id, ad: a.ad, durum, sure, ozet }); return; }
   // Claude notun daha önceki bir aşamada giderilmesi gerektiğine karar verdiyse (GERI: <id>) oradan yeniden başla (en fazla 2 kez).
   const geri = sonuc.match(/GERI:\s*([a-z]+)/i)?.[1];
@@ -285,17 +294,18 @@ function asamaBitti(klasor, a, { kod, durduruldu, sonuc, sure }) {
     olaylar.emit('asama', { klasor, asama: geri, ad: asamalar[i].ad, durum: 'geri' });
     return isEkle({ klasor, asama: geri, not: d.sonNot || ozet.slice(0, 800) });
   }
-  // Tam otomatikte Claude karar verir: hata 1 kez, denetim sorunu 2 kez (raporu not olarak) kendiliğinden yeniden denenir.
-  // Denemeler bitince sorunlu sonuçla devam edilir (son mesajda uyarı); hata ise durup haber verir.
-  if (d.onaylar === 'yok' && (durum === 'hata' || sorun) && deneme < (durum === 'hata' ? 1 : 2)) {
+  // Tam otomatikte Claude karar verir: hata ya da uyum payının altındaki sorun YALNIZ 1 kez (raporu not olarak) yeniden denenir.
+  // Payın üstündeki sorun ve tükenen deneme → mevcut çıktıyla devam, eksikler teslim mesajında; hata ise durup haber verir.
+  if (d.onaylar === 'yok' && (durum === 'hata' || agirSorun) && deneme < 1) {
     d.asamalar[a.id].deneme = deneme + 1;
     durumYaz(klasor, d);
     olaylar.emit('asama', { klasor, asama: a.id, ad: a.ad, durum: 'yeniden', sure });
-    return isEkle({ klasor, asama: a.id, otoDeneme: true, not: `Önceki deneme ${durum === 'hata' ? 'hata verdi' : 'denetimden geçmedi'}; raporu: ${ozet.slice(0, 1500)} — sorunları gider.` });
+    return isEkle({ klasor, asama: a.id, otoDeneme: true, not: `Önceki deneme ${durum === 'hata' ? 'hata verdi' : `denetimden geçmedi (uyum %${uyum})`}; ${eksikler.length ? 'eksikler: ' + eksikler.join('; ') : 'raporu: ' + ozet.slice(0, 1500)} — bunları gider.` });
   }
-  if (d.onaylar === 'yok' && sorun) (d.uyarilar = d.uyarilar || []).push(`${a.ad}: ${ozet.slice(0, 300)}`);
-  // Hata her zaman durur; onaylı akışta sorun ve onay kapısında da durulur.
-  const tur = durum === 'hata' ? 'hata' : d.onaylar === 'yok' ? null : sorun ? 'sorun' : a.onay ? 'onay' : null;
+  if (sorun || eksikler.length) (d.uyarilar = d.uyarilar || []).push(
+    `${a.ad}${Number.isNaN(uyum) ? '' : ` (uyum %${uyum})`}: ${eksikler.length ? eksikler.join('; ') : ozet.slice(0, 300)}`);
+  // Hata her zaman durur; onaylı akışta payın altındaki sorunda ve onay kapısında da durulur.
+  const tur = durum === 'hata' ? 'hata' : d.onaylar === 'yok' ? null : agirSorun ? 'sorun' : a.onay ? 'onay' : null;
   if (tur) {
     d.bekleyen = { asama: a.id, tur, zaman: new Date().toISOString() };
     durumYaz(klasor, d);

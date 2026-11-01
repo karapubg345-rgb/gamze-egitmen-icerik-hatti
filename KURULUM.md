@@ -71,7 +71,7 @@ Repodaki gerçek dosyalarla dener, çıktıları `ornekler\cikti\` klasörüne k
    - `/yeni bal zencefil 20sn` → tarif videosu, kredisiz (0 kredi).
    - `/yeni bal zencefil 20sn kredili` → tarayıcı açılmadan hızlı (bütçe otomatik hesaplanır; `40kredi` yazılırsa o).
    - Çekim videosu: videoyu sohbete gönder, açıklamasına konuyu yaz (`hacamat 25sn`). Telegram botlar **20 MB**'den büyük dosya indiremez; büyükse Stüdyo'dan yükleyin.
-   - **Tam otomatik** (varsayılan): arada soru gelmez; Claude her aşamayı kendisi denetler, sorunluysa kendisi yeniden yapar. Sohbete yalnız bitmiş video + açıklama metni gelir. Beğenmezseniz **Düzelt** → ne istediğinizi yazın; Claude hangi aşamadan düzelteceğine kendisi karar verir.
+   - **Tam otomatik** (varsayılan): arada soru gelmez; Claude her aşamayı kendisi denetler, sorunluysa kendisi yeniden yapar. Sohbete yalnız bitmiş video + açıklama metni gelir. Kredi korumak için küçük kusurlarda tekrar tekrar üretmez: sonuç isteğe %70 ve üstü uyuyorsa videoyu gönderir, eksikleri listeler ve "isterseniz düzeltmeye başlayabilirim" der (**Eksikleri düzelt** düğmesi). Payın altındaki sonuç yalnız bir kez yeniden denenir. Beğenmezseniz **Düzelt** → ne istediğinizi yazın; Claude hangi aşamadan düzelteceğine kendisi karar verir.
    - `onaylı` yazılırsa o video **kareler** (çekimde **kesitler**) hazır olunca ve **teslimde** düğmeyle onay bekler.
    - Varsayılanlar `.env`'de: `VARSAYILAN_MOD` (kredisiz/kredili), `VARSAYILAN_ONAY` (yok/iki).
    - `/durum`, `/dur`, `/guncelle` (GitHub'dan son sürümü çeker, Stüdyo'yu kendisi yeniden başlatır).

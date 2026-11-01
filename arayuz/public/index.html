@@ -1098,7 +1098,7 @@ function detay() {
     html += `
       <div class="onay-seridi ${tur === 'hata' ? 'hata' : ''}">
         <h4>${kacis(baslik)}</h4>
-        <div class="ozet">${kacis((v.asamalar[ba.id]?.ozet || '').replace(/\n*(SONUC|HARCANAN_KREDI|GERI):.*$/gim, '').slice(0, 1500))}</div>
+        <div class="ozet">${kacis((v.asamalar[ba.id]?.ozet || '').replace(/\n*(SONUC|HARCANAN_KREDI|GERI|UYUM|EKSIK):.*$/gim, '').slice(0, 1500))}</div>
         <div class="dugmeler">
           ${tur === 'hata' ? '<button class="btn-ana" data-karar="tekrar" style="width:auto">Tekrar dene</button>'
             : `<button class="btn-ana" data-karar="devam" style="width:auto">${kacis(tur === 'sorun' ? 'Yine de devam' : ba.onay?.devam || 'Devam')}</button>`}
@@ -1112,8 +1112,9 @@ function detay() {
     html += `
       <div class="onay-seridi" style="border-color:var(--yesil);background:var(--yesil-acik)">
         <h4>Video teslim edildi</h4>
-        ${(v.uyarilar || []).length ? `<div class="ozet">Denetimden tam geçmeyenler:\n${kacis(v.uyarilar.join('\n'))}</div>` : ''}
+        ${(v.uyarilar || []).length ? `<div class="ozet">Genel olarak isteğe uygun, ama şu noktalarda eksikler var:\n${kacis(v.uyarilar.map(u => '- ' + u).join('\n'))}</div>` : ''}
         <div class="dugmeler">
+          ${(v.uyarilar || []).length ? '<button class="btn-ana" id="eksikDuzeltBtn" style="width:auto">Eksikleri düzelt</button>' : ''}
           <textarea id="sonNot" placeholder="Beğenmediğiniz bir şey varsa yazın; Claude hangi aşamadan düzelteceğine kendisi karar verir."></textarea>
           <button class="btn-ikincil" id="sonDuzeltBtn">Düzelt</button>
         </div>
@@ -1201,6 +1202,10 @@ function detay() {
   if ($('#otoBtn')) $('#otoBtn').onclick = async () => {
     try { await api('/api/otomatik', { klasor: v.klasor }); sonImza = ''; yenile(); }
     catch (e) { $('#otoHata').textContent = e.message; }
+  };
+  if ($('#eksikDuzeltBtn')) $('#eksikDuzeltBtn').onclick = async () => {
+    try { await api('/api/duzelt', { klasor: v.klasor, not: 'Teslimde bildirilen eksikleri gider:\n' + v.uyarilar.join('\n') }); sonImza = ''; yenile(); }
+    catch (e) { $('#sonHata').textContent = e.message; }
   };
   if ($('#sonDuzeltBtn')) $('#sonDuzeltBtn').onclick = async () => {
     try { await api('/api/duzelt', { klasor: v.klasor, not: $('#sonNot').value }); sonImza = ''; yenile(); }

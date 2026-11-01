@@ -21,7 +21,7 @@ const YARDIM = `Komutlar:
 /guncelle — sistemi günceller ve yeniden başlatır
 
 Süre 10-60 sn (30 sn üstü iki parçada üretilip birleştirilir). Varsayılan: 25 sn, kredisiz (TopView Sınırsız, 0 kredi). "kredili" yazarsanız tarayıcı açılmadan hızlı üretilir.
-Tam otomatik: Claude her aşamayı kendi denetler, sorunluysa kendisi yeniden yapar; size yalnız bitmiş video gelir. Beğenmezseniz "Düzelt"e basıp ne istediğinizi yazın, Claude hangi aşamadan düzelteceğine kendisi karar verir.
+Tam otomatik: Claude her aşamayı kendi denetler, sorunluysa kendisi yeniden yapar; size yalnız bitmiş video gelir. Küçük kusurlar için tekrar tekrar üretmez (kredi payı): isteğe %70 ve üstü uyuyorsa videoyu gönderir, eksikleri yazar; "Eksikleri düzelt" derseniz düzeltir. Kendi notunuzla da düzelttirebilirsiniz, Claude hangi aşamadan başlayacağına kendisi karar verir.
 "onaylı" yazarsanız o video kareler ve teslimde sizi bekler.`;
 
 async function tg(yontem, govde) {
@@ -144,10 +144,13 @@ export function telegramBaslat(hat) {
   hat.olaylar.on('bitti', async o => {
     if (o.onayli) return herkese(`Tamamlandı: ${o.konu}. Teslim dosyası teslim/ klasöründe.`); // teslim zaten onayda gönderildi
     const kredi = o.mod === 'kredili' ? `\nHarcanan: ${o.harcanan} / ${o.butce} kredi` : '';
-    const uyari = o.uyarilar.length ? `\n\nDenetimden tam geçmeyenler (yine de tamamlandı):\n${o.uyarilar.map(u => '- ' + kisa(u, 200)).join('\n')}` : '';
+    const eksik = o.uyarilar.length;
+    const uyari = eksik ? `\n\nGenel olarak isteğe uygun, ama şu noktalarda eksikler var:\n${o.uyarilar.map(u => '- ' + kisa(u, 220)).join('\n')}\n\nİsterseniz bunları düzeltmeye başlayabilirim${o.mod === 'kredili' ? ' (kredili modda ek kredi harcanabilir)' : ''}.` : '';
+    const dugme = eksik ? [[{ text: 'Eksikleri düzelt', callback_data: `u|${o.klasor}` }], [{ text: 'Kendi notumla düzelt', callback_data: `n|${o.klasor}` }]]
+      : [[{ text: 'Düzelt', callback_data: `n|${o.klasor}` }]];
     for (const chat of IZINLI) {
       await dosyalariGonder(hat, chat, o.klasor, o.gonder);
-      await yaz(chat, `Hazır: ${o.konu}${kredi}${uyari}`, { reply_markup: { inline_keyboard: [[{ text: 'Düzelt', callback_data: `n|${o.klasor}` }]] } });
+      await yaz(chat, `Hazır: ${o.konu}${kredi}${uyari}`, { reply_markup: { inline_keyboard: dugme } });
     }
   });
 
@@ -220,6 +223,12 @@ export function telegramBaslat(hat) {
     await tg('editMessageReplyMarkup', { chat_id: chat, message_id: q.message.message_id, reply_markup: { inline_keyboard: [] } }).catch(() => {});
     try {
       if (tur === 'z' || tur === 'n') { notBekleyen.set(chat, { klasor, son: tur === 'n' }); return yaz(chat, 'Neyi düzelteyim? Kısaca yazın (ör. "kavanoz daha küçük olsun", "altyazı büyüsün").'); }
+      if (tur === 'u') {
+        const liste = hat.durumOku(klasor).uyarilar || [];
+        if (!liste.length) return yaz(chat, 'Bu videoda kayıtlı eksik yok.');
+        const s = hat.duzelt({ klasor, not: 'Teslimde bildirilen eksikleri gider:\n' + liste.join('\n') });
+        return yaz(chat, s === 'kuyruk' ? 'Tamam, eksikleri düzeltmek için sıraya girdi.' : 'Tamam, eksikleri düzeltiyorum. Bitince yeni hâlini göndereceğim.');
+      }
       const karar = { d: 'devam', t: 'tekrar', i: 'iptal' }[tur];
       const s = hat.onayVer({ klasor, karar });
       if (s === 'devam' && hat.durumOku(klasor).teslim && !hat.durumOku(klasor).otomatik) return; // son onay: "Tamamlandı" zaten gitti

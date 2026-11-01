@@ -1,5 +1,5 @@
 {
-  "ortak": "Gamze Eğitmen içerik hattı — ARAYÜZDEN çalıştırılan TEK aşama. CLAUDE.md ve SISTEM.md kurallarına harfiyen uy. Video klasörü: {klasor}. Konu: {konu}. Bölüm: {bolum}. Hedef video süresi: {sure} sn. Yalnız BU aşamayı yap, sonraki aşamaya GEÇME, kullanıcıya soru sorma (cevap veremez): karar gerekiyorsa en güvenli seçeneği uygula ve raporda belirt. ÜRETİM MODU: {mod}. Kullanıcının ek notu: {not}. Bitince kısa Türkçe rapor yaz: ne üretildi (dosya yolları), denetim sonucu, sorunlar ve kullanıcının bakması gerekenler. Kullanıcının notu bu aşamada giderilemiyorsa (ör. kurguda \"kavanoz değişsin\") o işi zorlama: raporun sonuna `GERI: <aşama-id>` yaz (bu bölümün aşamaları: {asamaIdleri}); hat o aşamadan notla yeniden başlar. Raporun SON satırı tam olarak `HARCANAN_KREDI: <sayı>` olsun (bu aşamada harcanan TopView kredisi; yoksa 0).",
+  "ortak": "Gamze Eğitmen içerik hattı — ARAYÜZDEN çalıştırılan TEK aşama. CLAUDE.md ve SISTEM.md kurallarına harfiyen uy. Video klasörü: {klasor}. Konu: {konu}. Bölüm: {bolum}. Hedef video süresi: {sure} sn. Yalnız BU aşamayı yap, sonraki aşamaya GEÇME, kullanıcıya soru sorma (cevap veremez): karar gerekiyorsa en güvenli seçeneği uygula ve raporda belirt. ÜRETİM MODU: {mod}. Kullanıcının ek notu: {not}. Bitince kısa Türkçe rapor yaz: ne üretildi (dosya yolları), denetim sonucu, sorunlar ve kullanıcının bakması gerekenler. Kullanıcının notu bu aşamada giderilemiyorsa (ör. kurguda \"kavanoz değişsin\") o işi zorlama: raporun sonuna `GERI: <aşama-id>` yaz (bu bölümün aşamaları: {asamaIdleri}); hat o aşamadan notla yeniden başlar. HARCANAN_KREDI bu aşamada harcanan TopView kredisidir (yoksa 0).",
   "modlar": {
     "kredisiz": {
       "ad": "Kredisiz",
@@ -31,7 +31,7 @@
           "id": "kareler",
           "ad": "Nesne kilidi ve kareler",
           "aciklama": "GPT Image 2 · 9:16 · 1K: ana nesne bir kez, sonra her plan karesi; sahne-denetci süreklilik denetimi.",
-          "talimat": "SISTEM.md Bölüm 1 adım 3-5 ve topview-uretim skill'i: nesne kilidi ({klasor}/nesne-kilidi/P1-*.png), sonra plan kareleri ({klasor}/kareler/), hepsi GPT Image 2 · 9:16 · 1K (moda göre: kredisizde Sınırsız tarayıcı, kredilide MCP). sahne-denetci ajanıyla denetle ({klasor}/DENETIM.md); DÜZELT olanları düzelt ve yeniden denetle (en fazla 2 tur).",
+          "talimat": "SISTEM.md Bölüm 1 adım 3-5 ve topview-uretim skill'i: nesne kilidi ({klasor}/nesne-kilidi/P1-*.png), sonra plan kareleri ({klasor}/kareler/), hepsi GPT Image 2 · 9:16 · 1K (moda göre: kredisizde Sınırsız tarayıcı, kredilide MCP). sahne-denetci ajanıyla denetle ({klasor}/DENETIM.md); DÜZELT olanları düzelt ve yeniden denetle (en fazla 1 tur; kalan küçük kusurları EKSIK olarak yaz).",
           "kredili": true,
           "tahmin": { "kredisiz": "0 kredi", "kredili": "≈ 0,2 kredi / kare (10 kare ≈ 2)" },
           "kartBasina": 0.2,

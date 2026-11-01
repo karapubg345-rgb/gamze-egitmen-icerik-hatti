@@ -39,9 +39,9 @@ Kullanıcıya hiçbir kare/video denetimden geçmeden gösterilmez. Her video kl
 - Çıktılar `asamalar.json`daki `ciktilar` yollarına yazılır (arayüz oradan gösterir). Yeni aşama/değişen yol olursa `asamalar.json` da güncellenir.
 - Terminalden çalışırken de aynı bölüm ve aşama sırası geçerlidir.
 - **Otomatik akış** (`durum.json` → `onaylar`):
-  - **yok** (tam otomatik, varsayılan): Claude karar verir. Hata 1 kez, `SONUC: SORUN` 2 kez notla kendiliğinden yeniden denenir; sonra sorunlu sonuçla devam edilir ve son mesajda uyarı olarak yazılır. Kullanıcıya yalnız bitmiş video gider; "Düzelt" notu son aşamadan başlar, aşama işin daha geride yapılması gerektiğine karar verirse `GERI: <aşama-id>` yazar ve hat oradan yeniden yürür (en fazla 2 kez).
+  - **yok** (tam otomatik, varsayılan): Claude karar verir. **Uyum payı (kredi koruması):** her aşama `UYUM: <0-100>` ve `EKSIK:` satırları yazar; uyum `ESIK_UYUM`'un (varsayılan %70) üstündeyse düzeltme YAPILMAZ, eksikler teslim mesajında listelenir ve "Eksikleri düzelt" önerilir. Payın altındaki sorun ve hata YALNIZ 1 kez yeniden denenir; kredili üretim aşama içinde kendiliğinden yeniden gönderilmez. Kullanıcıya yalnız bitmiş video gider; "Düzelt" notu son aşamadan başlar, aşama işin daha geride yapılması gerektiğine karar verirse `GERI: <aşama-id>` yazar ve hat oradan yeniden yürür (en fazla 2 kez).
   - **iki** (onaylı): `onay` tanımlı aşamada (kareler / kesitler / teslim), hata ya da sorunda durup sorar.
-  - Her aşama raporu `SONUC: TAMAM|SORUN`, gerekirse `GERI: <id>` ve `HARCANAN_KREDI: <sayı>` satırlarıyla biter (sunucu bunları okur).
+  - Her aşama raporu `EKSIK: …`, `UYUM: <0-100>`, `SONUC: TAMAM|SORUN`, gerekirse `GERI: <id>` ve `HARCANAN_KREDI: <sayı>` satırlarıyla biter (sunucu bunları okur).
 - **Telegram** (`arayuz/telegram.mjs`, sunucuyla aynı süreçte): `/yeni`, çekim videosu gönderme, onay düğmeleri, `/guncelle`. Yalnız `.env`'deki `TELEGRAM_CHAT_ID`'ye cevap verir.
 
 ## Ortak geliştirme
