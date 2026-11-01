@@ -843,6 +843,11 @@
       <span id="videoSayisi" style="font-size:11px;background:var(--zemin-derin);padding:2px 7px;border-radius:10px">0</span>
     </div>
     <ul class="video-listesi" id="videoListesi"></ul>
+
+    <div class="panel-baslik" style="margin-top:26px">
+      <span>Öğrenilen Tercihler</span>
+    </div>
+    <div class="tahmin-notu" id="tercihKutusu"></div>
   </aside>
 
   <!-- Sağ Panel: Stüdyo Katı & Ajan Masaları -->
@@ -1204,7 +1209,7 @@ function detay() {
     catch (e) { $('#otoHata').textContent = e.message; }
   };
   if ($('#eksikDuzeltBtn')) $('#eksikDuzeltBtn').onclick = async () => {
-    try { await api('/api/duzelt', { klasor: v.klasor, not: 'Teslimde bildirilen eksikleri gider:\n' + v.uyarilar.join('\n') }); sonImza = ''; yenile(); }
+    try { await api('/api/duzelt', { klasor: v.klasor, kaynak: 'eksik', not: 'Teslimde bildirilen eksikleri gider:\n' + v.uyarilar.join('\n') }); sonImza = ''; yenile(); }
     catch (e) { $('#sonHata').textContent = e.message; }
   };
   if ($('#sonDuzeltBtn')) $('#sonDuzeltBtn').onclick = async () => {
@@ -1358,12 +1363,27 @@ function ciz() {
   detay();
 }
 
+// Gamze Hoca'nın tepkilerinden öğrenilen kurallar (ogrenilen/TERCIHLER.md); yanlış olan silinebilir.
+async function tercihCiz() {
+  const t = await api('/api/tercihler');
+  $('#tercihKutusu').innerHTML = t.kurallar.length
+    ? t.kurallar.map((k, i) => `<div style="display:flex;gap:6px;align-items:flex-start;margin-bottom:6px">
+        <span style="flex:1">${kacis(k)}</span>
+        <button class="btn-ikincil" data-unut="${i + 1}" title="Bu tercihi unut" style="padding:1px 7px;font-size:11px">Unut</button></div>`).join('')
+      + (t.kalibrasyon ? `<div style="margin-top:8px;border-top:1px solid var(--cizgi);padding-top:6px">${kacis(t.kalibrasyon)}</div>` : '')
+    : 'Henüz öğrenilmiş tercih yok. Düzeltme notları iki videoda tekrarlanınca (ya da "hep böyle olsun" denince) burada kural olarak görünür.';
+  document.querySelectorAll('[data-unut]').forEach(b => {
+    b.onclick = async () => { if (confirm('Bu tercih unutulsun mu?')) { await api('/api/tercihler/unut', { no: Number(b.dataset.unut) }); tercihCiz(); } };
+  });
+}
+
 let sonImza = '';
 async function yenile() {
   VERI = await api('/api/videolar');
   const imza = JSON.stringify([VERI.calisan, VERI.kuyruk, VERI.videolar.map(v => [v.klasor, v.asamalar, v.kaynaklar, v.bekleyen, v.otomatik, v.harcanan, v.teslim])]);
   if (imza !== sonImza) {
     sonImza = imza;
+    tercihCiz().catch(() => {});
     liste();
     calisanBarCiz();
     detay();
@@ -1405,6 +1425,7 @@ $('#olusturBtn').onclick = async () => {
     $('#sureGiris').min = TANIM.sure.en; $('#sureGiris').max = TANIM.sure.cok; $('#sureGiris').value = TANIM.sure.varsayilan;
     $('#sureGiris').oninput = tahminGuncelle;
     ciz();
+    tercihCiz().catch(() => {});
     setInterval(yenile, 2500);
   } catch (e) {
     console.error('Arayüz başlatılamadı:', e);

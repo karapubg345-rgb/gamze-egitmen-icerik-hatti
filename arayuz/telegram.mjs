@@ -17,6 +17,8 @@ const YARDIM = `Komutlar:
    ör. /yeni zencefilli limon 45sn kredili
 Çekim videosu: videoyu bu sohbete gönderin, açıklamasına konuyu yazın (ör. "hacamat 25sn").
 /durum — çalışan ve bekleyen işler
+/tercihler — sistemin sizden öğrendikleri
+/unut <no> — yanlış öğrenilen bir tercihi siler
 /dur — çalışan işi durdurur
 /guncelle — sistemi günceller ve yeniden başlatır
 
@@ -141,6 +143,8 @@ export function telegramBaslat(hat) {
     }
   });
 
+  hat.olaylar.on('ogrendi', o => herkese(`Sizden yeni şeyler öğrendim, bundan sonraki videolarda uygulayacağım:\n${o.yeniler.map(y => '- ' + y).join('\n')}\n\nTüm liste: /tercihler · yanlışsa: /unut <no>`));
+
   hat.olaylar.on('bitti', async o => {
     if (o.onayli) return herkese(`Tamamlandı: ${o.konu}. Teslim dosyası teslim/ klasöründe.`); // teslim zaten onayda gönderildi
     const kredi = o.mod === 'kredili' ? `\nHarcanan: ${o.harcanan} / ${o.butce} kredi` : '';
@@ -173,6 +177,15 @@ export function telegramBaslat(hat) {
     switch (komut.replace(/@.*$/, '').toLowerCase()) {
       case '/start': case '/yardim': case '/help': return yaz(chat, YARDIM);
       case '/durum': return yaz(chat, durumMetni(hat));
+      case '/tercihler': {
+        const k = hat.ogrenme.kurallar(), kal = hat.ogrenme.kalibrasyon();
+        if (!k.length) return yaz(chat, 'Henüz öğrenilmiş tercih yok. Düzeltme notlarınızdan öğreniyorum; aynı istek iki videoda tekrarlanınca (ya da "hep böyle olsun" derseniz) kural olur.' + (kal ? '\n\n' + kal : ''));
+        return yaz(chat, `Sizden öğrendiklerim:\n${k.join('\n')}${kal ? '\n\nKalibrasyon: ' + kal : ''}\n\nYanlış olanı silmek için: /unut <no>`);
+      }
+      case '/unut': {
+        try { return yaz(chat, 'Unuttum: ' + hat.ogrenme.unut(arg.trim())); }
+        catch (e) { return yaz(chat, e.message + ' Liste için /tercihler'); }
+      }
       case '/dur': hat.durdur(); return yaz(chat, 'Durduruldu. Sıradaki işler de iptal edildi.');
       case '/yeni': {
         const p = ayristir(arg, hat.SURE);
@@ -226,7 +239,7 @@ export function telegramBaslat(hat) {
       if (tur === 'u') {
         const liste = hat.durumOku(klasor).uyarilar || [];
         if (!liste.length) return yaz(chat, 'Bu videoda kayıtlı eksik yok.');
-        const s = hat.duzelt({ klasor, not: 'Teslimde bildirilen eksikleri gider:\n' + liste.join('\n') });
+        const s = hat.duzelt({ klasor, kaynak: 'eksik', not: 'Teslimde bildirilen eksikleri gider:\n' + liste.join('\n') });
         return yaz(chat, s === 'kuyruk' ? 'Tamam, eksikleri düzeltmek için sıraya girdi.' : 'Tamam, eksikleri düzeltiyorum. Bitince yeni hâlini göndereceğim.');
       }
       const karar = { d: 'devam', t: 'tekrar', i: 'iptal' }[tur];
@@ -259,6 +272,8 @@ export function telegramBaslat(hat) {
     { command: 'yeni', description: 'Tarif videosu başlat: /yeni konu 20sn [kredili] (10-60 sn)' },
     { command: 'durum', description: 'Çalışan ve onay bekleyen işler' },
     { command: 'dur', description: 'Çalışan işi durdur' },
+    { command: 'tercihler', description: 'Sistemin sizden öğrendikleri' },
+    { command: 'unut', description: 'Yanlış öğrenilen tercihi sil: /unut 3' },
     { command: 'guncelle', description: 'Sistemi güncelle ve yeniden başlat' },
     { command: 'yardim', description: 'Komutlar' }
   ] }).catch(() => {});

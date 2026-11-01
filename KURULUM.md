@@ -74,6 +74,7 @@ Repodaki gerçek dosyalarla dener, çıktıları `ornekler\cikti\` klasörüne k
    - **Tam otomatik** (varsayılan): arada soru gelmez; Claude her aşamayı kendisi denetler, sorunluysa kendisi yeniden yapar. Sohbete yalnız bitmiş video + açıklama metni gelir. Kredi korumak için küçük kusurlarda tekrar tekrar üretmez: sonuç isteğe %70 ve üstü uyuyorsa videoyu gönderir, eksikleri listeler ve "isterseniz düzeltmeye başlayabilirim" der (**Eksikleri düzelt** düğmesi). Payın altındaki sonuç yalnız bir kez yeniden denenir. Beğenmezseniz **Düzelt** → ne istediğinizi yazın; Claude hangi aşamadan düzelteceğine kendisi karar verir.
    - `onaylı` yazılırsa o video **kareler** (çekimde **kesitler**) hazır olunca ve **teslimde** düğmeyle onay bekler.
    - Varsayılanlar `.env`'de: `VARSAYILAN_MOD` (kredisiz/kredili), `VARSAYILAN_ONAY` (yok/iki).
+   - **Öğrenme:** düzeltme notlarınızdan öğrenir. Aynı istek iki videoda tekrarlanınca (ya da "bundan sonra hep…" derseniz) kural olur ve sonraki videolarda kendiliğinden uygulanır; bot "Sizden yeni şeyler öğrendim" diye haber verir. `/tercihler` listeyi gösterir, `/unut <no>` yanlış öğrenileni siler.
    - `/durum`, `/dur`, `/guncelle` (GitHub'dan son sürümü çeker, Stüdyo'yu kendisi yeniden başlatır).
 4. **Bilgisayar açık kalmalı:** bot ve üretim bu bilgisayarda çalışır. Denetim Masası → Güç seçenekleri → "Bilgisayarı uyku moduna geçir: **Hiçbir zaman**". Açılışta kendiliğinden başlasın: `Win+R` → `shell:startup` → açılan klasöre `STUDYO-AC.bat`'ın **kısayolunu** koy.
 

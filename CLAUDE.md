@@ -44,6 +44,12 @@ Kullanıcıya hiçbir kare/video denetimden geçmeden gösterilmez. Her video kl
   - Her aşama raporu `EKSIK: …`, `UYUM: <0-100>`, `SONUC: TAMAM|SORUN`, gerekirse `GERI: <id>` ve `HARCANAN_KREDI: <sayı>` satırlarıyla biter (sunucu bunları okur).
 - **Telegram** (`arayuz/telegram.mjs`, sunucuyla aynı süreçte): `/yeni`, çekim videosu gönderme, onay düğmeleri, `/guncelle`. Yalnız `.env`'deki `TELEGRAM_CHAT_ID`'ye cevap verir.
 
+## Öğrenilen tercihler (`arayuz/ogrenme.mjs`)
+- Gamze Hoca'nın her tepkisi (teslim, düzeltme notu, "Eksikleri düzelt", onay kararı, /unut) `ogrenilen/geri-bildirim.jsonl`'a yazılır.
+- Her teslimden sonra kısa, kredisiz bir `claude -p` görevi (yalnız dosya araçları, MCP yok) bunları `ogrenilen/TERCIHLER.md`'ye damıtır: aynı yönde 2 ayrı videoda tepki ya da "hep / bundan sonra" gibi açık ifade → kural; tek videoya özgü düzeltme kural olmaz; değişmez kurallarla çelişen tercih eklenmez; düzeltilmeden bırakılan eksik "önemsiz" sayılır (Kalibrasyon).
+- Kurallar her aşamanın istemine eklenir; değişmez kurallar her zaman önce gelir. Hoca Telegram'da `/tercihler` ile görür, `/unut <no>` ile siler (silinen kural yeni açık tepki gelmedikçe geri gelmez).
+- `ogrenilen/` git dışındadır, yalnız üretim bilgisayarında yaşar.
+
 ## Ortak geliştirme
 - Kod **geliştirme bilgisayarında** değişir ve GitHub'a gönderilir; Gamze Hoca'nın bilgisayarı yalnız üretim yapar ve `/guncelle` (git pull) ile güncellenir. Onun bilgisayarında repo dosyalarını düzenleme — yerel değişiklik `git pull --ff-only`'yi bozar.
 - Makineye özel her şey `.env`'de (token'lar, sohbet kimliği) ve git dışında; video çıktıları da `.gitignore`'da.

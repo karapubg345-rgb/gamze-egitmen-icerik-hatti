@@ -9,6 +9,7 @@ import path from 'node:path';
 import { spawn } from 'node:child_process';
 import { EventEmitter } from 'node:events';
 import { fileURLToPath } from 'node:url';
+import { ogrenmeKur } from './ogrenme.mjs';
 
 const ARAYUZ = path.dirname(fileURLToPath(import.meta.url));
 const KOK = path.resolve(ARAYUZ, '..');
@@ -30,7 +31,8 @@ try {
 if (!process.env.PLAYWRIGHT_MCP_EXTENSION_TOKEN) console.log('UYARI: PLAYWRIGHT_MCP_EXTENSION_TOKEN boş — kredisiz modda Claude tarayıcıyı kullanamaz (.env)');
 
 const tanim = () =>JSON.parse(fs.readFileSync(path.join(ARAYUZ, 'asamalar.json'), 'utf8'));
-export const olaylar = new EventEmitter(); // 'asama' | 'onay' | 'bitti' (Telegram dinler)
+export const olaylar = new EventEmitter(); // 'asama' | 'onay' | 'bitti' | 'ogrendi' (Telegram dinler)
+const ogrenme = ogrenmeKur({ KOK, olaylar }); // Gamze Hoca'nın tepkilerinden öğrenilen tercihler (arayuz/ogrenme.mjs)
 
 let calisan = null; // { klasor, asama, proc, baslangic }
 const kuyruk = [];  // calistir() argümanları
@@ -233,7 +235,7 @@ function calistir({ klasor, asama, not, krediOnay, krediLimit, otoDeneme }) {
   const yasak = d.mod === 'kredili' ? [] : ['--disallowedTools', KREDILI_MCP.join(',')];
   const proc = spawn('claude', ['-p', '--output-format', 'stream-json', '--verbose', '--permission-mode', 'acceptEdits', '--allowedTools', araclar, ...yasak],
     { cwd: KOK, shell: true, windowsHide: true });
-  proc.stdin.end(istem);
+  proc.stdin.end(istem + ogrenme.istemBlogu());
   let kalanSatir = '', sonuc = '';
   proc.stdout.on('data', parca => {
     kalanSatir += parca.toString('utf8');
@@ -325,6 +327,9 @@ function sonrakiniBaslat(klasor) {
     d.otomatik = false; d.teslim = new Date().toISOString();
     durumYaz(klasor, d);
     const son = bolumBul(d.bolum).asamalar.at(-1);
+    ogrenme.kaydet({ tur: 'teslim', klasor, konu: d.konu, bolum: d.bolum, mod: d.mod, sure: d.sure, uyarilar: d.uyarilar || [],
+      uyumlar: Object.fromEntries(Object.entries(d.asamalar).filter(([, x]) => x.uyum != null).map(([k, x]) => [k, x.uyum])) });
+    ogrenme.ogren();
     return olaylar.emit('bitti', { klasor, konu: d.konu, mod: d.mod, harcanan: d.harcanan, butce: d.butce, uyarilar: d.uyarilar || [],
       gonder: son.onay?.gonder || ['teslim/*.mp4', 'teslim/ACIKLAMA.txt'], onayli: d.onaylar === 'iki' });
   }
@@ -348,6 +353,7 @@ function onayVer({ klasor, karar, not }) {
   const bek = d.bekleyen;
   if (!bek) throw new Error('Bu video onay beklemiyor.');
   d.bekleyen = null;
+  ogrenme.kaydet({ tur: karar === 'iptal' ? 'iptal' : karar === 'duzelt' ? 'onay-duzelt' : 'onay-devam', klasor, konu: d.konu, asama: bek.asama, ...(karar === 'duzelt' ? { not } : {}) });
   if (karar === 'iptal') { d.otomatik = false; durumYaz(klasor, d); return 'iptal'; }
   d.otomatik = true;
   if (karar === 'devam' && bek.tur !== 'hata') {
@@ -360,11 +366,13 @@ function onayVer({ klasor, karar, not }) {
   return isEkle({ klasor, asama: bek.asama, not: karar === 'duzelt' ? not : '' });
 }
 
-function duzelt({ klasor, not }) {
+// kaynak: 'eksik' = teslimde listelenen eksiklerin düzeltilmesi (öğrenme için ayrı kaydedilir).
+function duzelt({ klasor, not, kaynak }) {
   if (!not?.trim()) throw new Error('Düzeltme notu gerekli.');
   if (calisan?.klasor === klasor || kuyruk.some(k => k.klasor === klasor)) throw new Error('Bu video zaten çalışıyor.');
   const d = durumOku(klasor);
   const son = bolumBul(d.bolum).asamalar.at(-1);
+  ogrenme.kaydet({ tur: kaynak === 'eksik' ? 'eksik-duzelt' : 'duzelt', klasor, konu: d.konu, bolum: d.bolum, not: not.trim() });
   Object.assign(d, { otomatik: true, bekleyen: null, teslim: null, uyarilar: [], geriSayisi: 0, sonNot: not.trim() });
   durumYaz(klasor, d);
   return isEkle({ klasor, asama: son.id, not: not.trim() });
@@ -420,6 +428,8 @@ const sunucu = http.createServer(async (req, res) => {
     if (u.pathname === '/api/otomatik' && req.method === 'POST') { otomatikBaslat((await govdeOku(req)).klasor); return json(res, 200, { ok: true }); }
     if (u.pathname === '/api/onay' && req.method === 'POST') return json(res, 200, { sonuc: onayVer(await govdeOku(req)) });
     if (u.pathname === '/api/duzelt' && req.method === 'POST') return json(res, 200, { sonuc: duzelt(await govdeOku(req)) });
+    if (u.pathname === '/api/tercihler' && req.method === 'GET') return json(res, 200, { kurallar: ogrenme.kurallar(), kalibrasyon: ogrenme.kalibrasyon() });
+    if (u.pathname === '/api/tercihler/unut' && req.method === 'POST') return json(res, 200, { silinen: ogrenme.unut((await govdeOku(req)).no) });
     if (u.pathname === '/api/durdur' && req.method === 'POST') { durdur(); return json(res, 200, { ok: true }); }
     if (u.pathname === '/api/log') {
       const f = path.join(guvenliYol(q.klasor), '.arayuz', `${path.basename(q.asama)}.log`);
@@ -446,7 +456,7 @@ if (process.env.TELEGRAM_BOT_TOKEN) {
   const { telegramBaslat } = await import('./telegram.mjs');
   telegramBaslat({
     KOK, olaylar, SURE, tanim, bolumBul, eslesen, durumOku, tahminiKredi, planSayisi,
-    yeniKlasor, kaynakEkle, otomatikBaslat, onayVer, duzelt, durdur, durumListesi,
+    yeniKlasor, kaynakEkle, otomatikBaslat, onayVer, duzelt, durdur, durumListesi, ogrenme,
     mesgul: () => !!calisan
   });
 }

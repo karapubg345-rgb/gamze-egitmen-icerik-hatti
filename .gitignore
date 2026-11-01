@@ -39,3 +39,6 @@ video-*/.arayuz/
 
 # Kurulum doğrulama çıktıları
 ornekler/cikti/
+
+# Gamze Hoca'nın öğrenilmiş tercihleri ve tepki günlüğü (yalnız üretim bilgisayarında; git pull bozulmasın)
+ogrenilen/
