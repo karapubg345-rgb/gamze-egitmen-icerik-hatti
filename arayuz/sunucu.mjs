@@ -1,16 +1,25 @@
 // Gamze Eğitmen içerik hattı — yerel arayüz sunucusu (bağımlılıksız Node).
 // Başlat: node arayuz/sunucu.mjs  → http://127.0.0.1:4747
-// Her aşama `claude -p` ile çalışır; aynı anda tek iş (tarayıcı/Playwright ortak).
+// Her aşama `claude -p` ile çalışır; aynı anda tek iş (tarayıcı/Playwright ortak), fazlası kuyruğa girer.
+// Otomatik akış: aşamalar sırayla çalışır, `onay` tanımlı aşamada (kareler / kesitler / teslim) durup onay bekler.
+// .env'de TELEGRAM_BOT_TOKEN varsa Telegram botu da bu süreçte çalışır (arayuz/telegram.mjs).
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
+import { EventEmitter } from 'node:events';
 import { fileURLToPath } from 'node:url';
 
 const ARAYUZ = path.dirname(fileURLToPath(import.meta.url));
 const KOK = path.resolve(ARAYUZ, '..');
 const PORT = Number(process.env.ARAYUZ_PORT || 4747);
-const ARACLAR = 'Bash,Read,Write,Edit,Glob,Grep,Agent,Task,Skill,WebFetch,WebSearch,mcp__playwright';
+const TEMEL_ARACLAR = 'Bash,Read,Write,Edit,Glob,Grep,Agent,Task,Skill,WebFetch,WebSearch,mcp__claude_ai_topview,mcp__elevenlabs';
+// Kredisiz modda kredi harcayan TopView MCP araçları tamamen kapalı (yalnız okuma araçları açık).
+const KREDILI_MCP = ['topview_generate_image', 'topview_generate_video', 'topview_submit_creation', 'topview_submit_creation_batch',
+  'topview_recreate_creation', 'topview_generate_voice', 'topview_generate_audio', 'topview_generate_music', 'topview_avatar_video',
+  'topview_product_avatar', 'topview_remove_background', 'submit_topview_canvas_generation_task'].map(a => 'mcp__claude_ai_topview__' + a);
+export const SURE = { en: 10, cok: 60, varsayilan: 25, parca: 30 }; // Seedance tek üretimde en fazla 30 sn; üstü parçalı
+
 // .env → process.env (alt süreçteki claude, .mcp.json'daki token'ı ortamdan okur).
 try {
   for (const s of fs.readFileSync(path.join(KOK, '.env'), 'utf8').split(/\r?\n/)) {
@@ -18,11 +27,13 @@ try {
     if (m && m[2] && !process.env[m[1]]) process.env[m[1]] = m[2];
   }
 } catch {}
-if (!process.env.PLAYWRIGHT_MCP_EXTENSION_TOKEN) console.log('UYARI: PLAYWRIGHT_MCP_EXTENSION_TOKEN boş — Claude tarayıcıyı kullanamaz (.env)');
+if (!process.env.PLAYWRIGHT_MCP_EXTENSION_TOKEN) console.log('UYARI: PLAYWRIGHT_MCP_EXTENSION_TOKEN boş — kredisiz modda Claude tarayıcıyı kullanamaz (.env)');
 
 const tanim = () =>JSON.parse(fs.readFileSync(path.join(ARAYUZ, 'asamalar.json'), 'utf8'));
+export const olaylar = new EventEmitter(); // 'asama' | 'onay' | 'bitti' (Telegram dinler)
 
 let calisan = null; // { klasor, asama, proc, baslangic }
+const kuyruk = [];  // calistir() argümanları
 
 const TUR = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css', '.json': 'application/json; charset=utf-8', '.md': 'text/plain; charset=utf-8', '.txt': 'text/plain; charset=utf-8', '.log': 'text/plain; charset=utf-8', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.webp': 'image/webp', '.mp4': 'video/mp4', '.mp3': 'audio/mpeg', '.wav': 'audio/wav' };
 
@@ -54,6 +65,15 @@ function eslesen(klasor, desen) {
 
 function bolumBul(id) { return tanim().bolumler.find(b => b.id === id); }
 
+const planSayisi = sure => Math.max(4, Math.round(sure / 2.6)); // 25 sn → 10 plan, 15 sn → 6
+
+// Kredili modda bir videonun tahmini toplam TopView kredisi (%15 pay ile).
+function tahminiKredi(bolum, sure, mod) {
+  if (mod !== 'kredili') return 0;
+  const t = bolumBul(bolum).asamalar.reduce((s, a) => s + (a.kartBasina || 0) * (planSayisi(sure) + 2) + (a.saniyeBasina || 0) * sure, 0);
+  return Math.ceil(t * 1.15);
+}
+
 function durumOku(klasor) {
   let d = {};
   try { d = JSON.parse(fs.readFileSync(durumYolu(klasor), 'utf8')); } catch {}
@@ -66,17 +86,22 @@ function durumOku(klasor) {
     d.bolum = cekimIzi ? 'cekim' : 'tarif';
     d.konu = klasor.replace(/^video-\d+-?/, '').replace(/-/g, ' ');
   }
+  d.mod = d.mod || 'kredisiz';
+  d.sure = d.sure || SURE.varsayilan;
+  d.harcanan = d.harcanan || 0;
   d.asamalar = d.asamalar || {};
   for (const a of bolumBul(d.bolum).asamalar) {
     if (!d.asamalar[a.id] && a.ciktilar.some(c => eslesen(klasor, c).length)) d.asamalar[a.id] = { durum: 'bitti', tahmini: true };
   }
   if (calisan && calisan.klasor === klasor) d.asamalar[calisan.asama] = { ...(d.asamalar[calisan.asama] || {}), durum: 'calisiyor' };
+  if (kuyruk.some(k => k.klasor === klasor)) d.kuyrukta = kuyruk.filter(k => k.klasor === klasor).map(k => k.asama);
   return d;
 }
 
 function durumYaz(klasor, d) {
+  const { kuyrukta, ...kalici } = d;
   fs.mkdirSync(path.dirname(durumYolu(klasor)), { recursive: true });
-  fs.writeFileSync(durumYolu(klasor), JSON.stringify(d, null, 2));
+  fs.writeFileSync(durumYolu(klasor), JSON.stringify(kalici, null, 2));
 }
 
 function slug(s) {
@@ -84,12 +109,36 @@ function slug(s) {
   return s.toLocaleLowerCase('tr').replace(/[çğıöşüâîû]/g, c => harita[c]).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'video';
 }
 
-function yeniKlasor(bolum, konu) {
+function yeniKlasor({ bolum, konu, mod, sure, butce }) {
+  if (!bolumBul(bolum) || !konu?.trim()) throw new Error('bölüm ve konu gerekli');
+  mod = mod === 'kredili' ? 'kredili' : 'kredisiz';
+  sure = Math.min(SURE.cok, Math.max(SURE.en, Math.round(Number(sure) || SURE.varsayilan)));
   const no = videoKlasorleri().reduce((m, k) => Math.max(m, Number(k.match(/^video-(\d+)/)[1])), 0) + 1;
   const ad = `video-${String(no).padStart(2, '0')}-${slug(konu)}`;
   fs.mkdirSync(guvenliYol(ad), { recursive: true });
-  durumYaz(ad, { bolum, konu, olusturma: new Date().toISOString(), kaynaklar: [], asamalar: {} });
+  butce = mod === 'kredili' ? (Number(butce) > 0 ? Number(butce) : tahminiKredi(bolum, sure, mod)) : 0;
+  durumYaz(ad, { bolum, konu: konu.trim(), mod, sure, butce, harcanan: 0, olusturma: new Date().toISOString(), kaynaklar: [], asamalar: {} });
   return ad;
+}
+
+// Gamze'nin çekimini referans-videolar/ altına kaydeder ve videonun kaynaklarına ekler.
+function kaynakEkle(klasor, ad, akis) {
+  ad = path.basename(ad || '').replace(/[^\w.\-]+/g, '_');
+  if (!/\.(mp4|mov|m4v|webm)$/i.test(ad)) return Promise.reject(new Error('yalnız video dosyası'));
+  const hedef = guvenliYol(path.join('referans-videolar', ad));
+  fs.mkdirSync(path.dirname(hedef), { recursive: true });
+  return new Promise((ok, hata) => {
+    const yaz = fs.createWriteStream(hedef);
+    akis.pipe(yaz);
+    yaz.on('error', hata);
+    yaz.on('finish', () => {
+      const d = durumOku(klasor);
+      const goreli = 'referans-videolar/' + ad;
+      d.kaynaklar = [...new Set([...(d.kaynaklar || []), goreli])];
+      durumYaz(klasor, d);
+      ok(goreli);
+    });
+  });
 }
 
 function govdeOku(req) {
@@ -120,32 +169,67 @@ function gunlukSatiri(o) {
   return '';
 }
 
+// Bu aşamada tarayıcı (Playwright) gerekiyor mu? Kredili modda yalnız görsel arama anahtarı yoksa referans araması için.
+// Ses her iki modda ElevenLabs MCP ile üretilir.
+function tarayiciGerekli(mod, asama) {
+  if (mod !== 'kredili') return true;
+  return asama === 'senaryo' && !process.env.SERPER_API_KEY && !process.env.PIXABAY_API_KEY;
+}
+
+// 30 sn'yi aşan video kaç parçada üretilir: "tek parça" ya da "2 parça (~30 + ~30 sn)".
+function parcalar(sure) {
+  const n = Math.ceil(sure / SURE.parca);
+  if (n === 1) return 'tek parça';
+  const taban = Math.floor(sure / n), artan = sure - taban * n;
+  return `${n} parça (${Array.from({ length: n }, (_, i) => '~' + (taban + (i < artan ? 1 : 0))).join(' + ')} sn)`;
+}
+
+// Otomatik akışın iş girişi: başlatılamayan iş (ör. bütçe bitti) sunucuyu düşürmez, hata kapısına düşer.
+function isEkle(is) {
+  if (calisan) { kuyruk.push(is); return 'kuyruk'; }
+  try { calistir(is); } catch (e) { hataBildir(is.klasor, is.asama, e.message); return 'hata'; }
+  return 'basladi';
+}
+
 function calistir({ klasor, asama, not, krediOnay, krediLimit }) {
   if (calisan) throw new Error(`Şu an çalışan bir iş var: ${calisan.klasor} · ${calisan.asama}`);
   const d = durumOku(klasor);
   const b = bolumBul(d.bolum);
   const a = b.asamalar.find(x => x.id === asama);
   if (!a) throw new Error('aşama yok');
-  if (a.kredili && !krediOnay) throw new Error('Bu aşama kredili: önce kredi onay kutusunu işaretleyin.');
+  const krediHarcar = d.mod === 'kredili' && a.kredili;
+  // Otomatik akışta bütçe baştan onaylıdır; elle çalıştırmada kutu işaretlenmeli.
+  const kalan = d.otomatik ? (d.butce || 0) - d.harcanan : Number(krediLimit) || 0;
+  if (krediHarcar && !d.otomatik && !krediOnay) throw new Error('Bu aşama kredili: önce kredi onay kutusunu işaretleyin.');
+  if (krediHarcar && kalan <= 0) throw new Error(`Kredi bütçesi bitti (bütçe ${d.butce}, harcanan ${d.harcanan}).`);
+
   const t = tanim();
+  const tarayici = tarayiciGerekli(d.mod, asama);
+  let modKurali = t.modlar[d.mod].kural;
+  if (d.mod === 'kredili' && tarayici) modKurali += ' İSTİSNA: görsel arama anahtarı olmadığı için yalnız gerçek referans araması (Bing Görseller) için tarayıcı kullanılabilir.';
   const doldur = s => s.replaceAll('{klasor}', klasor).replaceAll('{konu}', d.konu || '').replaceAll('{bolum}', `${b.ad} (${b.sistem})`)
     .replaceAll('{kaynaklar}', (d.kaynaklar || []).join(', ') || 'referans-videolar/ altındaki ilgili çekim')
-    .replaceAll('{not}', (not || '').trim() || 'yok').replaceAll('{limit}', String(krediLimit || a.varsayilanLimit || 0));
-  const kredi = a.kredili ? doldur(t.krediVar) : t.krediYok;
-  const istem = doldur(t.ortak).replace('Kredi: {kredi}', 'Kredi: ' + kredi) + '\n\nAŞAMA — ' + a.ad + ':\n' + doldur(a.talimat);
+    .replaceAll('{not}', (not || '').trim() || 'yok').replaceAll('{sure}', String(d.sure)).replaceAll('{planSayisi}', String(planSayisi(d.sure))).replaceAll('{parcalar}', parcalar(d.sure))
+    .replaceAll('{butce}', String(d.otomatik ? d.butce : kalan)).replaceAll('{harcanan}', String(d.otomatik ? d.harcanan : 0))
+    .replaceAll('{kalan}', String(Math.max(0, Math.round(kalan * 100) / 100)));
+  const istem = doldur(t.ortak).replace('ÜRETİM MODU: {mod}', 'ÜRETİM MODU: ' + doldur(modKurali))
+    + '\n\nAŞAMA — ' + a.ad + ':\n' + doldur(a.talimat)
+    + '\n\nRaporun sondan bir önceki satırı `SONUC: TAMAM` ya da `SONUC: SORUN` olsun (denetimden geçmeyen kare/video, bütçe ya da Sınırsız mod nedeniyle yapılamayan gönderim, eksik çıktı varsa SORUN).';
 
   const logDir = path.join(guvenliYol(klasor), '.arayuz');
   fs.mkdirSync(logDir, { recursive: true });
   const log = fs.createWriteStream(path.join(logDir, `${asama}.log`));
-  log.write(`# ${new Date().toLocaleString('tr-TR')} · ${klasor} · ${a.ad}\n# Not: ${(not || '').trim() || '-'}\n\n`);
+  log.write(`# ${new Date().toLocaleString('tr-TR')} · ${klasor} · ${a.ad} · ${t.modlar[d.mod].ad} · ${d.sure} sn\n# Not: ${(not || '').trim() || '-'}\n\n`);
 
-  const proc = spawn('claude', ['-p', '--output-format', 'stream-json', '--verbose', '--permission-mode', 'acceptEdits', '--allowedTools', ARACLAR],
+  const araclar = TEMEL_ARACLAR + (tarayici ? ',mcp__playwright' : '');
+  const yasak = d.mod === 'kredili' ? [] : ['--disallowedTools', KREDILI_MCP.join(',')];
+  const proc = spawn('claude', ['-p', '--output-format', 'stream-json', '--verbose', '--permission-mode', 'acceptEdits', '--allowedTools', araclar, ...yasak],
     { cwd: KOK, shell: true, windowsHide: true });
   proc.stdin.end(istem);
-  let kalan = '', sonuc = '';
+  let kalanSatir = '', sonuc = '';
   proc.stdout.on('data', parca => {
-    kalan += parca.toString('utf8');
-    const satirlar = kalan.split('\n'); kalan = satirlar.pop();
+    kalanSatir += parca.toString('utf8');
+    const satirlar = kalanSatir.split('\n'); kalanSatir = satirlar.pop();
     for (const s of satirlar) {
       if (!s.trim()) continue;
       try { const o = JSON.parse(s); const g = gunlukSatiri(o); if (g) log.write(g + '\n'); if (o.type === 'result') sonuc = o.result || ''; }
@@ -156,13 +240,92 @@ function calistir({ klasor, asama, not, krediOnay, krediLimit }) {
   calisan = { klasor, asama, proc, baslangic: Date.now() };
   d.asamalar[asama] = { durum: 'calisiyor', baslangic: new Date().toISOString() };
   durumYaz(klasor, d);
+  olaylar.emit('asama', { klasor, asama, ad: a.ad, durum: 'basladi' });
   proc.on('close', kod => {
     log.end(`\n# bitti · çıkış kodu ${kod}\n`);
-    const son = durumOku(klasor);
-    son.asamalar[asama] = { durum: kod === 0 && !calisan?.durduruldu ? 'bitti' : (calisan?.durduruldu ? 'durduruldu' : 'hata'), bitis: new Date().toISOString(), ozet: sonuc.slice(0, 4000) };
+    const durduruldu = !!calisan?.durduruldu;
+    const sure = Math.round((Date.now() - calisan.baslangic) / 60000);
     calisan = null;
-    durumYaz(klasor, son);
+    asamaBitti(klasor, a, { kod, durduruldu, sonuc, sure });
+    while (!calisan && kuyruk.length) isEkle(kuyruk.shift());
   });
+}
+
+function hataBildir(klasor, asama, mesaj) {
+  const d = durumOku(klasor);
+  d.asamalar[asama] = { ...(d.asamalar[asama] || {}), durum: 'hata', ozet: mesaj };
+  if (d.otomatik) d.bekleyen = { asama, tur: 'hata', zaman: new Date().toISOString() };
+  durumYaz(klasor, d);
+  olaylar.emit('onay', { klasor, asama, tur: 'hata', ozet: mesaj });
+}
+
+function asamaBitti(klasor, a, { kod, durduruldu, sonuc, sure }) {
+  const d = durumOku(klasor);
+  const k = sonuc.match(/HARCANAN_KREDI:\s*([\d.,]+)/);
+  if (k) d.harcanan = Math.round((d.harcanan + Number(k[1].replace(',', '.'))) * 100) / 100;
+  const sorun = /SONUC:\s*SORUN/i.test(sonuc);
+  const durum = durduruldu ? 'durduruldu' : kod === 0 ? 'bitti' : 'hata';
+  d.asamalar[a.id] = { durum, bitis: new Date().toISOString(), ozet: sonuc.slice(0, 4000), ...(sorun ? { sorun: true } : {}) };
+  if (durduruldu) { d.otomatik = false; durumYaz(klasor, d); return; }
+  const ozet = sonuc.replace(/\n*SONUC:.*$|\n*HARCANAN_KREDI:.*$/gim, '').trim();
+  if (!d.otomatik) { durumYaz(klasor, d); olaylar.emit('asama', { klasor, asama: a.id, ad: a.ad, durum, sure, ozet }); return; }
+  // Otomatik akış: hata / sorun / onay kapısında dur, değilse sonraki aşamaya geç.
+  const tur = durum === 'hata' ? 'hata' : sorun ? 'sorun' : a.onay ? 'onay' : null;
+  if (tur) {
+    d.bekleyen = { asama: a.id, tur, zaman: new Date().toISOString() };
+    durumYaz(klasor, d);
+    return olaylar.emit('onay', { klasor, asama: a.id, tur, ozet, sure, onay: a.onay, mod: d.mod, harcanan: d.harcanan, butce: d.butce });
+  }
+  durumYaz(klasor, d);
+  olaylar.emit('asama', { klasor, asama: a.id, ad: a.ad, durum, sure });
+  sonrakiniBaslat(klasor);
+}
+
+function sonrakiAsama(d) { return bolumBul(d.bolum).asamalar.find(a => d.asamalar[a.id]?.durum !== 'bitti'); }
+
+function sonrakiniBaslat(klasor) {
+  const d = durumOku(klasor);
+  const s = sonrakiAsama(d);
+  if (!s) {
+    d.otomatik = false; d.teslim = new Date().toISOString();
+    durumYaz(klasor, d);
+    return olaylar.emit('bitti', { klasor, konu: d.konu, harcanan: d.harcanan });
+  }
+  isEkle({ klasor, asama: s.id });
+}
+
+// Uçtan uca akışı başlatır (ya da kaldığı yerden sürdürür).
+function otomatikBaslat(klasor) {
+  const d = durumOku(klasor);
+  if (d.bolum === 'cekim' && !(d.kaynaklar || []).length) throw new Error('Önce Gamze\'nin çekimini yükleyin.');
+  if (d.bekleyen) throw new Error('Bu video onay bekliyor.');
+  if (calisan?.klasor === klasor || kuyruk.some(k => k.klasor === klasor)) throw new Error('Bu video zaten çalışıyor.');
+  d.otomatik = true;
+  durumYaz(klasor, d);
+  sonrakiniBaslat(klasor);
+}
+
+// Onay kapısı kararı: devam | duzelt (not ile aynı aşamayı yeniden) | tekrar | iptal.
+function onayVer({ klasor, karar, not }) {
+  const d = durumOku(klasor);
+  const bek = d.bekleyen;
+  if (!bek) throw new Error('Bu video onay beklemiyor.');
+  d.bekleyen = null;
+  if (karar === 'iptal') { d.otomatik = false; durumYaz(klasor, d); return 'iptal'; }
+  d.otomatik = true;
+  if (karar === 'devam' && bek.tur !== 'hata') {
+    if (d.asamalar[bek.asama]) d.asamalar[bek.asama].onay = new Date().toISOString();
+    durumYaz(klasor, d);
+    sonrakiniBaslat(klasor);
+    return 'devam';
+  }
+  durumYaz(klasor, d);
+  return isEkle({ klasor, asama: bek.asama, not: karar === 'duzelt' ? not : '' });
+}
+
+function durdur() {
+  kuyruk.length = 0;
+  if (calisan) { calisan.durduruldu = true; spawn('taskkill', ['/pid', String(calisan.proc.pid), '/T', '/F']); }
 }
 
 function dosyaGonder(req, res, tam) {
@@ -179,42 +342,37 @@ function dosyaGonder(req, res, tam) {
   }
 }
 
+// Önceki oturumdan "çalışıyor" kalmış aşamalar yarıda kesilmiştir.
+for (const k of videoKlasorleri()) {
+  try {
+    const d = JSON.parse(fs.readFileSync(durumYolu(k), 'utf8'));
+    let degisti = false;
+    for (const a of Object.values(d.asamalar || {})) if (a.durum === 'calisiyor') { a.durum = 'hata'; a.ozet = 'Sunucu kapandığı için yarıda kaldı.'; degisti = true; }
+    if (degisti) { d.otomatik = false; fs.writeFileSync(durumYolu(k), JSON.stringify(d, null, 2)); }
+  } catch {}
+}
+
+const durumListesi = () => ({
+  calisan: calisan && { klasor: calisan.klasor, asama: calisan.asama, baslangic: calisan.baslangic },
+  kuyruk: kuyruk.map(k => ({ klasor: k.klasor, asama: k.asama })),
+  videolar: videoKlasorleri().map(k => ({ klasor: k, ...durumOku(k) }))
+});
+
 const sunucu = http.createServer(async (req, res) => {
   const u = new URL(req.url, 'http://x');
   const q = Object.fromEntries(u.searchParams);
   try {
     if (req.method === 'GET' && (u.pathname === '/' || u.pathname === '/index.html'))
       return dosyaGonder(req, res, path.join(ARAYUZ, 'public', 'index.html'));
-    if (u.pathname === '/api/tanim') return json(res, 200, tanim());
-    if (u.pathname === '/api/videolar' && req.method === 'GET')
-      return json(res, 200, { calisan: calisan && { klasor: calisan.klasor, asama: calisan.asama, baslangic: calisan.baslangic },
-        videolar: videoKlasorleri().map(k => ({ klasor: k, ...durumOku(k) })) });
-    if (u.pathname === '/api/videolar' && req.method === 'POST') {
-      const { bolum, konu } = await govdeOku(req);
-      if (!bolumBul(bolum) || !konu?.trim()) return json(res, 400, { hata: 'bölüm ve konu gerekli' });
-      return json(res, 200, { klasor: yeniKlasor(bolum, konu.trim()) });
-    }
-    if (u.pathname === '/api/yukle' && req.method === 'POST') { // ham gövde: tek dosya
-      const ad = path.basename(q.ad || '').replace(/[^\w.\-]+/g, '_');
-      if (!/\.(mp4|mov|m4v|webm)$/i.test(ad)) return json(res, 400, { hata: 'yalnız video dosyası' });
-      const hedef = guvenliYol(path.join('referans-videolar', ad));
-      fs.mkdirSync(path.dirname(hedef), { recursive: true });
-      const yaz = fs.createWriteStream(hedef);
-      req.pipe(yaz);
-      yaz.on('finish', () => {
-        const d = durumOku(q.klasor);
-        const goreli = 'referans-videolar/' + ad;
-        d.kaynaklar = [...new Set([...(d.kaynaklar || []), goreli])];
-        durumYaz(q.klasor, d);
-        json(res, 200, { yol: goreli });
-      });
-      return;
-    }
+    if (u.pathname === '/api/tanim') return json(res, 200, { ...tanim(), sure: SURE });
+    if (u.pathname === '/api/tahmin') return json(res, 200, { kredi: tahminiKredi(q.bolum, Number(q.sure) || SURE.varsayilan, q.mod), plan: planSayisi(Number(q.sure) || SURE.varsayilan) });
+    if (u.pathname === '/api/videolar' && req.method === 'GET') return json(res, 200, durumListesi());
+    if (u.pathname === '/api/videolar' && req.method === 'POST') return json(res, 200, { klasor: yeniKlasor(await govdeOku(req)) });
+    if (u.pathname === '/api/yukle' && req.method === 'POST') return json(res, 200, { yol: await kaynakEkle(q.klasor, q.ad, req) });
     if (u.pathname === '/api/calistir' && req.method === 'POST') { calistir(await govdeOku(req)); return json(res, 200, { ok: true }); }
-    if (u.pathname === '/api/durdur' && req.method === 'POST') {
-      if (calisan) { calisan.durduruldu = true; spawn('taskkill', ['/pid', String(calisan.proc.pid), '/T', '/F']); }
-      return json(res, 200, { ok: true });
-    }
+    if (u.pathname === '/api/otomatik' && req.method === 'POST') { otomatikBaslat((await govdeOku(req)).klasor); return json(res, 200, { ok: true }); }
+    if (u.pathname === '/api/onay' && req.method === 'POST') return json(res, 200, { sonuc: onayVer(await govdeOku(req)) });
+    if (u.pathname === '/api/durdur' && req.method === 'POST') { durdur(); return json(res, 200, { ok: true }); }
     if (u.pathname === '/api/log') {
       const f = path.join(guvenliYol(q.klasor), '.arayuz', `${path.basename(q.asama)}.log`);
       res.writeHead(200, { 'Content-Type': TUR['.txt'] });
@@ -235,3 +393,12 @@ const sunucu = http.createServer(async (req, res) => {
 });
 
 sunucu.listen(PORT, '127.0.0.1', () => console.log(`Arayüz hazır: http://127.0.0.1:${PORT}  (kapatmak için bu pencereyi kapatın)`));
+
+if (process.env.TELEGRAM_BOT_TOKEN) {
+  const { telegramBaslat } = await import('./telegram.mjs');
+  telegramBaslat({
+    KOK, olaylar, SURE, tanim, bolumBul, eslesen, durumOku, tahminiKredi, planSayisi,
+    yeniKlasor, kaynakEkle, otomatikBaslat, onayVer, durdur, durumListesi,
+    mesgul: () => !!calisan
+  });
+}

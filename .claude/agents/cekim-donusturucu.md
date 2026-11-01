@@ -16,7 +16,7 @@ Sen Gamze Eğitmen hattının çekim dönüştürücüsüsün. Yapay zekâ ile s
 - Kesit planı: varsa bir önceki çekim kurgusunun `SENARYO.md` kesit tablosu (ör. `video-03-hacamat-cekim`).
 
 ## 1. Kesitleri seç ve TEK kaynak video yap (kullanıcı kararı)
-- Her kesiti tek tek göndermek yerine tüm kurgu (≤ 30 sn) **tek kaynak video** olarak verilir: kesitler arası tutarlılık ve tek ödeme.
+- Her kesiti tek tek göndermek yerine tüm kurgu (≤ 30 sn) **tek kaynak video** olarak verilir: kesitler arası tutarlılık ve tek ödeme. Hedef süre 30 sn'yi aşıyorsa (en fazla 60) kurgu yine tek dosyadır ama dönüşüm parça parça yapılır: `topview-uretim` → "60 sn'ye kadar (parçalı üretim)"; parça sınırını bir plan kesmesine koy.
 - Kan: hafif kan (kupada damlalar) şimdilik kabul; uzun yoğun akış kesitlerini alma.
 - `ffmpeg` ile birleştir: her kesit `trim=a:b,scale=720:1280:force_original_aspect_ratio=increase,crop=720:1280,fps=30,setsar=1,setpts=PTS-STARTPTS` → `concat` → `-an -crf 30 -maxrate 1100k` (30 sn ≈ 2,4 MB; yükleme parçası az olsun). → `video-NN/kaynak/kurgu30.mp4`.
 - Kontak şeridi çıkar (`fps=0.5,tile=15x1`) ve AÇ: her kesitte **gerçekte** ne var? Hangi el ne tutuyor, hangi planda pompa/lanset yok, hasta nerede görünüyor, kafa/kıyafet hangi saniyede kadraja giriyor? Bunu `NOTLAR.md`'ye zaman damgasıyla yaz.

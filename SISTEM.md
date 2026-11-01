@@ -1,6 +1,6 @@
 # Gamze Eğitmen — içerik üretim hattı
 
-Gamze konuyu/tarifi verir → hat 20-30 sn'lik yüzsüz Reel çıkarır.
+Gamze konuyu/tarifi verir → hat 10-60 sn'lik yüzsüz Reel çıkarır (30 sn üstü video parça parça üretilir: `topview-uretim` → "60 sn'ye kadar").
 
 ## Sabitler
 - `mekan-kilidi/` — kusursuz klinik-mutfak, M0 ana referans (MEKAN-KILIDI.md).
@@ -22,7 +22,7 @@ Akış (her video `video-NN-konu/` klasörü):
 
 ## Bölüm 2 — Referans video / Video Edit (arayüz sekmesi 2 · Gamze'nin kendi çekimi; uygulama videoları için ÖNCELİKLİ)
 Örnek: `video-04-hacamat-edit/` (NOTLAR.md, prompt.js, teslim/).
-1. **cekim-donusturucu** — kesitleri seç, ≤ 30 sn TEK kaynak video (`kaynak/kurgu30.mp4`), kontak şeridinden her planın gerçek içeriğini yaz.
+1. **cekim-donusturucu** — kesitleri seç, hedef süreye (≤ 60 sn) TEK kaynak video (`kaynak/kurgu30.mp4`; 30 sn üstü parçalı dönüştürülür), kontak şeridinden her planın gerçek içeriğini yaz.
 2. **prompt.js** — koru / yalnız eller + ortam değişsin / zaman damgalı plan rehberi ("bu planda pompa YOK"). Ortak prompt yok.
 3. **Video Edit** (Seedance 2.5 Omni Reference → Video Edit, ~1,4 kredi/sn, onay al) — her görevden önce sayfayı yeniden yükle; `araclar/topview/parcala.py` + `video-edit-gonder.js`; sonra `inputVideos = 1`, `duration = -1` kontrolü.
 4. **Karşılaştırma** — kaynak/çıktı şeritleri + yan yana video; uydurma nesne, siyah kol, görünen hasta saniyeleri → NOTLAR.md.
@@ -40,5 +40,5 @@ Bu klasörde açılan Claude Code oturumunda ada göre çağrılır.
 |---|---|---|
 | PIXABAY_API_KEY | telifsiz stok foto/video | pixabay.com/api/docs (ücretsiz) |
 | SERPER_API_KEY | Google Görseller (gerçek ev tarifleri; yalnız referans) | serper.dev (2.500 ücretsiz sorgu) |
-| ELEVENLABS_API_KEY | seslendirmeyi otomatik üretmek | elevenlabs.io → Profile → API Keys |
+| (ElevenLabs) | seslendirme — anahtar yerine ElevenLabs MCP (OAuth) | `claude` → `/mcp` → elevenlabs → Authenticate |
 Anahtar yoksa referans araması Playwright + Bing Görseller ile çalışır.

@@ -290,6 +290,31 @@
     border-color: var(--murdum);
   }
 
+  /* Üretim modu ve süre seçimi */
+  .mod-secici { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+  .mod-secici button {
+    text-align: left; background: var(--zemin); border: 1px solid var(--cizgi); border-radius: 10px;
+    padding: 9px 11px; font: inherit; color: var(--yazi); cursor: pointer; transition: all .2s;
+  }
+  .mod-secici button strong { display: block; font-size: 13px; }
+  .mod-secici button span { display: block; font-size: 11.5px; color: var(--soluk); margin-top: 2px; line-height: 1.35; }
+  .mod-secici button.secili { border-color: var(--murdum); background: var(--murdum-acik); box-shadow: 0 0 0 2px var(--murdum-acik); }
+  .sure-satiri { display: flex; align-items: center; gap: 10px; margin-top: 12px; font-size: 12.5px; color: var(--soluk); }
+  .sure-satiri input[type=range] { flex: 1; accent-color: var(--murdum); }
+  .sure-satiri strong { color: var(--yazi); min-width: 42px; text-align: right; }
+  .tahmin-notu { font-size: 12px; color: var(--soluk); margin-top: 8px; line-height: 1.45; }
+  .tahmin-notu input { width: 64px; border: 1px solid var(--cizgi); border-radius: 6px; padding: 2px 6px; background: var(--zemin); color: var(--yazi); font: inherit; }
+  .onay-seridi {
+    border: 1px solid var(--bakir); background: var(--bakir-acik); border-radius: 12px; padding: 14px 16px; margin-bottom: 18px;
+  }
+  .onay-seridi.hata { border-color: var(--kirmizi); background: var(--kirmizi-acik); }
+  .onay-seridi h4 { margin: 0 0 6px; font-size: 14px; color: var(--yazi); }
+  .onay-seridi .ozet { font-size: 12.5px; color: var(--soluk); white-space: pre-wrap; max-height: 120px; overflow: auto; margin-bottom: 10px; }
+  .onay-seridi .dugmeler { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-start; }
+  .onay-seridi textarea { flex: 1 1 220px; min-height: 38px; border: 1px solid var(--cizgi); border-radius: 8px; padding: 7px 10px; font: inherit; font-size: 13px; background: var(--kart); color: var(--yazi); }
+  .proje-etiketleri { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+  .proje-etiketleri span { font-size: 11.5px; background: var(--zemin-derin); color: var(--soluk); padding: 2px 8px; border-radius: 10px; }
+
   /* Video Listesi */
   .video-listesi {
     list-style: none;
@@ -790,7 +815,18 @@
     
     <label for="konuGiris" id="konuEtiket" style="font-size:12.5px;color:var(--soluk);display:block;margin-bottom:6px">Konu / Başlık</label>
     <input type="text" id="konuGiris" class="giris-kutu" placeholder="ör. Zencefilli bal macunu">
-    
+
+    <div class="mod-secici" id="modSecici"></div>
+    <div class="sure-satiri">
+      <span>Süre</span>
+      <input type="range" id="sureGiris" min="10" max="30" step="1" value="25">
+      <strong id="sureYazi">25 sn</strong>
+    </div>
+    <div class="tahmin-notu" id="tahminNotu"></div>
+    <label style="display:flex;gap:6px;align-items:center;font-size:12.5px;color:var(--soluk);margin-top:10px">
+      <input type="checkbox" id="otoGiris" checked> Hemen otomatik başlat (kareler ve teslimde onay ister)
+    </label>
+
     <div style="margin-top:12px">
       <button class="btn-ana" id="olusturBtn">
         <span>+ Stüdyoda Proje Başlat</span>
@@ -875,7 +911,8 @@ const AJAN_MASALARI = {
 
 let TANIM, VERI, bolum = 'tarif', secili = null, seciliAsama = null, acikLoglar = new Set();
 let gorunumModu = 'ofis'; // 'ofis' veya 'liste'
-try { bolum = localStorage.getItem('bolum') || 'tarif'; } catch {}
+let yeniMod = 'kredisiz';
+try { bolum = localStorage.getItem('bolum') || 'tarif'; yeniMod = localStorage.getItem('mod') || 'kredisiz'; } catch {}
 
 const api = async (yol, govde) => {
   const r = await fetch(yol, govde ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(govde) } : undefined);
@@ -907,6 +944,29 @@ function sekmeler() {
   $('#bolumAciklama').innerHTML = `<strong>${kacis(b.ad)}:</strong> ${kacis(b.aciklama)}`;
   $('#konuEtiket').textContent = bolum === 'tarif' ? 'Tarif / Konu' : 'Uygulama / Konu';
   $('#konuGiris').placeholder = bolum === 'tarif' ? 'ör. Zencefilli bal macunu' : 'ör. Sırta hacamat uygulaması';
+  modSeciciCiz();
+}
+
+function modSeciciCiz() {
+  $('#modSecici').innerHTML = Object.entries(TANIM.modlar).map(([id, m]) =>
+    `<button type="button" data-mod="${id}" class="${id === yeniMod ? 'secili' : ''}"><strong>${kacis(m.ad)}</strong><span>${kacis(m.aciklama)}</span></button>`).join('');
+  document.querySelectorAll('#modSecici button').forEach(b => {
+    b.onclick = () => { yeniMod = b.dataset.mod; try { localStorage.setItem('mod', yeniMod); } catch {} modSeciciCiz(); };
+  });
+  tahminGuncelle();
+}
+
+let tahminSira = 0;
+async function tahminGuncelle() {
+  const sure = Number($('#sureGiris').value);
+  $('#sureYazi').textContent = sure + ' sn';
+  const sira = ++tahminSira;
+  const t = await api(`/api/tahmin?bolum=${bolum}&sure=${sure}&mod=${yeniMod}`);
+  if (sira !== tahminSira) return;
+  const plan = bolum === 'tarif' ? `${t.plan} plan · ` : '';
+  $('#tahminNotu').innerHTML = yeniMod === 'kredili'
+    ? `${plan}Tahmini ≈ ${t.kredi} TopView kredisi. Bütçe: <input type="number" id="butceGiris" min="1" value="${t.kredi}"> kredi (aşılırsa hat durur).`
+    : `${plan}0 TopView kredisi. Video Sınırsız kuyrukta bekler, kredili moddan yavaştır.`;
 }
 
 function liste() {
@@ -940,16 +1000,17 @@ function calisanBarCiz() {
   const c = VERI.calisan;
   if (c) {
     const dk = Math.round((Date.now() - c.baslangic) / 60000);
+    const sira = (VERI.kuyruk || []).length;
     $('#calisanBar').innerHTML = `
       <div class="nabiz-nokta"></div>
       <span style="font-weight:600;color:var(--bakir)">${kacis(c.klasor)}</span>
       <span style="color:var(--soluk)">—</span>
       <span style="color:var(--murdum);font-weight:600">${kacis(c.asama)}</span>
-      <span style="color:var(--soluk)">(${dk} dk)</span>
+      <span style="color:var(--soluk)">(${dk} dk${sira ? ` · ${sira} iş sırada` : ''})</span>
       <button class="btn-ikincil" id="durdurBtn" style="padding:4px 10px;font-size:12px;margin-left:6px">Durdur</button>
     `;
     $('#durdurBtn').onclick = async () => {
-      if (confirm('Ajanın çalışması durdurulsun mu?')) {
+      if (confirm('Ajanın çalışması durdurulsun mu? Sıradaki işler de iptal edilir.')) {
         await api('/api/durdur', {});
         yenile();
       }
@@ -1002,20 +1063,48 @@ function detay() {
     seciliAsama = b.asamalar[0].id;
   }
 
+  const mod = TANIM.modlar[v.mod] || TANIM.modlar.kredisiz;
+  const hepsiBitti = b.asamalar.every(a => v.asamalar[a.id]?.durum === 'bitti');
+  const akista = v.otomatik || (v.kuyrukta || []).length || VERI.calisan?.klasor === v.klasor;
   let html = `
     <div class="aktif-proje-bar">
       <div class="aktif-proje-bilgi">
         <h2>${kacis(v.konu || v.klasor)}</h2>
         <code>Klasör: ${v.klasor}</code>
+        <div class="proje-etiketleri">
+          <span>${kacis(mod.ad)}</span><span>${v.sure} sn</span>
+          ${v.mod === 'kredili' ? `<span>Kredi: ${v.harcanan} / ${v.butce || 0}</span>` : ''}
+        </div>
       </div>
-      <div>
-        <span style="font-size:12.5px;color:var(--soluk);margin-right:8px">Hattın Durumu:</span>
-        <span class="rozet-rozet ${b.asamalar.every(a => v.asamalar[a.id]?.durum === 'bitti') ? 'bitti' : 'bekliyor'}">
+      <div style="display:flex;gap:10px;align-items:center">
+        <span class="rozet-rozet ${hepsiBitti ? 'bitti' : 'bekliyor'}">
           ${b.asamalar.filter(a => v.asamalar[a.id]?.durum === 'bitti').length} / ${b.asamalar.length} Aşama Bitti
         </span>
+        ${v.bekleyen ? '' : akista ? '<span class="rozet-rozet calisiyor">Otomatik akış sürüyor</span>'
+          : hepsiBitti ? '' : `<button class="btn-ana" id="otoBtn" style="width:auto;padding:8px 18px">▶ Tümünü çalıştır</button>`}
       </div>
     </div>
+    <div class="hata-bildirimi" id="otoHata"></div>
   `;
+
+  if (v.bekleyen) {
+    const ba = b.asamalar.find(a => a.id === v.bekleyen.asama) || {};
+    const tur = v.bekleyen.tur;
+    const baslik = tur === 'hata' ? `Hata: ${ba.ad}` : tur === 'sorun' ? `Denetimde sorun: ${ba.ad}` : `${ba.onay?.baslik} — ${ba.onay?.soru}`;
+    html += `
+      <div class="onay-seridi ${tur === 'hata' ? 'hata' : ''}">
+        <h4>${kacis(baslik)}</h4>
+        <div class="ozet">${kacis((v.asamalar[ba.id]?.ozet || '').replace(/\n*(SONUC|HARCANAN_KREDI):.*$/gim, '').slice(0, 1500))}</div>
+        <div class="dugmeler">
+          ${tur === 'hata' ? '<button class="btn-ana" data-karar="tekrar" style="width:auto">Tekrar dene</button>'
+            : `<button class="btn-ana" data-karar="devam" style="width:auto">${kacis(tur === 'sorun' ? 'Yine de devam' : ba.onay?.devam || 'Devam')}</button>`}
+          <textarea id="onayNotu" placeholder="Düzeltme notu (ör. 3. karede kavanoz daha küçük olsun)"></textarea>
+          <button class="btn-ikincil" data-karar="duzelt">Not ile düzelt</button>
+          <button class="btn-ikincil" data-karar="iptal">İptal</button>
+        </div>
+        <div class="hata-bildirimi" id="onayHata"></div>
+      </div>`;
+  }
 
   // Eğer Referans Video bölümündeyse Gamze'nin video yükleme kutusu
   if (bolum === 'cekim') {
@@ -1070,7 +1159,7 @@ function detay() {
                 <span class="rozet-rozet ${d.durum || 'bekliyor'}">
                   ${durumMetin[d.durum] || 'Uyuyor (Boşta)'}
                 </span>
-                <span class="kredi-etiket">${a.kredili ? 'Kredili' : '0 Kredi'}</span>
+                <span class="kredi-etiket">${kacis(a.tahmin?.[v.mod] || '0 Kredi')}</span>
               </div>
             </div>
           `;
@@ -1093,6 +1182,19 @@ function detay() {
   });
 
   masaDetayiCiz(v, b);
+
+  if ($('#otoBtn')) $('#otoBtn').onclick = async () => {
+    try { await api('/api/otomatik', { klasor: v.klasor }); sonImza = ''; yenile(); }
+    catch (e) { $('#otoHata').textContent = e.message; }
+  };
+  document.querySelectorAll('.onay-seridi [data-karar]').forEach(btn => {
+    btn.onclick = async () => {
+      const not = $('#onayNotu').value.trim();
+      if (btn.dataset.karar === 'duzelt' && !not) { $('#onayHata').textContent = 'Önce ne düzeltileceğini yazın.'; return; }
+      try { await api('/api/onay', { klasor: v.klasor, karar: btn.dataset.karar, not }); sonImza = ''; yenile(); }
+      catch (e) { $('#onayHata').textContent = e.message; }
+    };
+  });
 
   if (bolum === 'cekim') {
     yuklemeBagla(v);
@@ -1135,15 +1237,15 @@ function masaDetayiCiz(v, b) {
             <textarea id="asamaNotu" class="not-giris" placeholder="ör. Kavanoz daha küçük olsun, 2. sahneyi gerçek referansa daha yakın yap..."></textarea>
           </div>
 
-          ${a.kredili ? `
+          ${a.kredili && v.mod === 'kredili' ? `
             <div class="kredi-onay-alani">
               <label>
                 <input type="checkbox" id="krediOnayKutu">
-                <span>TopView / ElevenLabs Kredi Kullanımını Onaylıyorum</span>
+                <span>TopView Kredi Kullanımını Onaylıyorum</span>
               </label>
               <div style="font-size:12px;color:var(--soluk);display:flex;gap:10px;align-items:center">
-                <span>Tahmin: ${kacis(a.tahmin || '')}</span>
-                <span>En Fazla Limit: <input type="number" id="krediLimitKutu" value="${a.varsayilanLimit || 35}" style="width:70px;border-radius:4px;border:1px solid var(--cizgi);padding:2px 6px"></span>
+                <span>Tahmin: ${kacis(a.tahmin?.kredili || '')}</span>
+                <span>En Fazla Limit: <input type="number" id="krediLimitKutu" value="${Math.max(1, Math.ceil((v.butce || 0) - (v.harcanan || 0)) || Math.ceil((a.saniyeBasina || 0.2) * v.sure))}" style="width:70px;border-radius:4px;border:1px solid var(--cizgi);padding:2px 6px"></span>
               </div>
             </div>
           ` : ''}
@@ -1235,7 +1337,7 @@ function ciz() {
 let sonImza = '';
 async function yenile() {
   VERI = await api('/api/videolar');
-  const imza = JSON.stringify([VERI.calisan, VERI.videolar.map(v => [v.klasor, v.asamalar, v.kaynaklar])]);
+  const imza = JSON.stringify([VERI.calisan, VERI.kuyruk, VERI.videolar.map(v => [v.klasor, v.asamalar, v.kaynaklar, v.bekleyen, v.otomatik, v.harcanan])]);
   if (imza !== sonImza) {
     sonImza = imza;
     liste();
@@ -1257,7 +1359,10 @@ $('#olusturBtn').onclick = async () => {
   }
 
   try {
-    const r = await api('/api/videolar', { bolum, konu });
+    const butce = $('#butceGiris') ? Number($('#butceGiris').value) : 0;
+    const r = await api('/api/videolar', { bolum, konu, mod: yeniMod, sure: Number($('#sureGiris').value), butce });
+    // Çekim bölümünde önce video yüklenmeli; otomatik akış yükleme sonrası "Tümünü çalıştır" ile başlar.
+    if ($('#otoGiris').checked && bolum === 'tarif') await api('/api/otomatik', { klasor: r.klasor });
     $('#konuGiris').value = '';
     secili = r.klasor;
     seciliAsama = null;
@@ -1273,6 +1378,8 @@ $('#olusturBtn').onclick = async () => {
   try {
     TANIM = await api('/api/tanim');
     VERI = await api('/api/videolar');
+    $('#sureGiris').min = TANIM.sure.en; $('#sureGiris').max = TANIM.sure.cok; $('#sureGiris').value = TANIM.sure.varsayilan;
+    $('#sureGiris').oninput = tahminGuncelle;
     ciz();
     setInterval(yenile, 2500);
   } catch (e) {
