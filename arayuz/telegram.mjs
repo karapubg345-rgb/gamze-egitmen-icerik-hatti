@@ -1,9 +1,9 @@
-// Telegram botu — Gamze Hoca telefondan video başlatır, iki kısa onay verir (kareler/kesitler + teslim).
+// Telegram botu — Gamze Hoca telefondan video başlatır; tam otomatikte yalnız bitmiş video gelir (istenirse "onaylı": kareler/kesitler + teslim).
 // sunucu.mjs içinden başlar (.env: TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID). Bağımlılıksız: Node fetch + long polling.
 // Yalnız TELEGRAM_CHAT_ID'deki sohbetlere cevap verir; kimlik boşsa yalnız "kimliğiniz şu" der.
 import fs from 'node:fs';
 import path from 'node:path';
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { Readable } from 'node:stream';
 
 const API = `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}`;
@@ -12,16 +12,17 @@ const IZINLI = new Set((process.env.TELEGRAM_CHAT_ID || '').split(',').map(s => 
 const YENIDEN_BASLAT = 75; // STUDYO-AC.bat bu çıkış koduyla sunucuyu yeniden açar
 
 const YARDIM = `Komutlar:
-/yeni <konu> [süre] [kredili] — tarif videosu başlatır
+/yeni <konu> [süre] [kredili] [onaylı] — tarif videosu başlatır
    ör. /yeni bal zencefil 20sn
-   ör. /yeni zencefilli limon 15sn kredili 30kredi
+   ör. /yeni zencefilli limon 45sn kredili
 Çekim videosu: videoyu bu sohbete gönderin, açıklamasına konuyu yazın (ör. "hacamat 25sn").
 /durum — çalışan ve bekleyen işler
 /dur — çalışan işi durdurur
 /guncelle — sistemi günceller ve yeniden başlatır
 
 Süre 10-60 sn (30 sn üstü iki parçada üretilip birleştirilir). Varsayılan: 25 sn, kredisiz (TopView Sınırsız, 0 kredi). "kredili" yazarsanız tarayıcı açılmadan hızlı üretilir.
-Hat iki yerde onay ister: kareler (çekimde kesitler) hazır olunca ve teslimde.`;
+Tam otomatik: Claude her aşamayı kendi denetler, sorunluysa kendisi yeniden yapar; size yalnız bitmiş video gelir. Beğenmezseniz "Düzelt"e basıp ne istediğinizi yazın, Claude hangi aşamadan düzelteceğine kendisi karar verir.
+"onaylı" yazarsanız o video kareler ve teslimde sizi bekler.`;
 
 async function tg(yontem, govde) {
   const r = await fetch(`${API}/${yontem}`, govde instanceof FormData ? { method: 'POST', body: govde }
@@ -56,23 +57,34 @@ async function dosyalariGonder(hat, chat, klasor, desenler) {
     await tg('sendMediaGroup', f).catch(e => yaz(chat, 'Görseller gönderilemedi: ' + e.message));
   }
   for (const y of yollar.filter(y => /\.mp4$/i.test(y)).slice(0, 1)) {
-    if (fs.statSync(y).size > 49e6) { await yaz(chat, `Video 50 MB'den büyük, Telegram'a sığmıyor. Bilgisayarda: ${path.relative(hat.KOK, y)}`); continue; }
-    await tg('sendVideo', dosyaForm(chat, 'video', y, { supports_streaming: 'true' })).catch(e => yaz(chat, 'Video gönderilemedi: ' + e.message));
+    const gonderilecek = fs.statSync(y).size > 49e6 ? telegramKopyasi(hat, klasor, y) : y;
+    if (!gonderilecek) { await yaz(chat, `Video Telegram'a sığmıyor (50 MB). Bilgisayarda: ${path.relative(hat.KOK, y)}`); continue; }
+    const ek = { supports_streaming: 'true', ...(gonderilecek !== y ? { caption: 'Telegram için küçültülmüş kopya; asıl dosya bilgisayarda teslim/ klasöründe.' } : {}) };
+    await tg('sendVideo', dosyaForm(chat, 'video', gonderilecek, ek)).catch(e => yaz(chat, 'Video gönderilemedi: ' + e.message));
   }
   for (const y of yollar.filter(y => /\.(txt|md)$/i.test(y)).slice(0, 1)) await yaz(chat, fs.readFileSync(y, 'utf8'));
 }
 
+// 50 MB'yi aşan teslim videosundan Telegram'a sığan kopya (.arayuz/ altında; teslim klasörüne karışmaz).
+function telegramKopyasi(hat, klasor, kaynak) {
+  const hedef = path.join(hat.KOK, klasor, '.arayuz', 'telegram.mp4');
+  const r = spawnSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', kaynak, '-vf', 'scale=-2:1280', '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '28',
+    '-maxrate', '4M', '-bufsize', '8M', '-c:a', 'aac', '-b:a', '128k', '-movflags', '+faststart', hedef], { windowsHide: true });
+  return r.status === 0 && fs.existsSync(hedef) && fs.statSync(hedef).size < 49e6 ? hedef : null;
+}
+
 const kisa = (s, n = 700) => (s || '').length > n ? s.slice(0, n) + '…' : (s || '');
 
-// "/yeni bal zencefil 20sn kredili 40kredi" → { konu, sure, mod, butce }
+// "/yeni bal zencefil 20sn kredili 40kredi onaylı" → { konu, sure, mod, butce, onaylar }
 function ayristir(metin, SURE) {
-  let s = ` ${metin} `, sure, mod, butce;
+  let s = ` ${metin} `, sure, mod, butce, onaylar;
   // \b Türkçe harfleri (ı, ü) tanımaz; kelime sınırı boşlukla aranır (metin iki yandan boşlukla sarılı).
   s = s.replace(/\s(\d+)\s*kredi(?=\s)/i, (_, n) => { butce = Number(n); return ' '; });
   s = s.replace(/\s(\d+)\s*(sn|s|saniye|sec)(?=\s)/i, (_, n) => { sure = Number(n); return ' '; });
   s = s.replace(/\s(kredili|hızlı|hizli)(?=\s)/i, () => { mod = 'kredili'; return ' '; });
   s = s.replace(/\s(kredisiz|ücretsiz|ucretsiz)(?=\s)/i, () => { mod = 'kredisiz'; return ' '; });
-  return { konu: s.trim().replace(/\s+/g, ' '), sure: sure || SURE.varsayilan, mod: mod || 'kredisiz', butce };
+  s = s.replace(/\s(onaylı|onayli|onayla)(?=\s)/i, () => { onaylar = 'iki'; return ' '; });
+  return { konu: s.trim().replace(/\s+/g, ' '), sure: sure || SURE.varsayilan, mod, butce, onaylar };
 }
 
 function baslatildiMetni(hat, klasor) {
@@ -80,7 +92,8 @@ function baslatildiMetni(hat, klasor) {
   const b = hat.bolumBul(d.bolum);
   const kredi = d.mod === 'kredili' ? `Kredili (bütçe ${d.butce} kredi)` : 'Kredisiz (0 kredi)';
   const ilk = b.asamalar.find(a => a.onay);
-  return `Başladı: ${d.konu}\n${b.ad} · ${d.sure} sn · ${kredi}\n${ilk.onay.baslik.toLowerCase().replace(/ hazır$/, '')} hazır olunca haber vereceğim.`;
+  const sonra = d.onaylar === 'iki' ? `${ilk.onay.baslik.toLowerCase().replace(/ hazır$/, '')} hazır olunca haber vereceğim.` : 'Bitince videoyu buraya göndereceğim; arada size bir şey sormayacağım.';
+  return `Başladı: ${d.konu}\n${b.ad} · ${d.sure} sn · ${kredi}\n${sonra}`;
 }
 
 function dugmeler(klasor, tur, onay) {
@@ -99,12 +112,14 @@ function durumMetni(hat) {
 }
 
 export function telegramBaslat(hat) {
-  const notBekleyen = new Map(); // chat → klasor ("Düzelt"ten sonra gelen metin not olur)
+  const notBekleyen = new Map(); // chat → { klasor, son } ("Düzelt"ten sonra gelen metin not olur; son = bitmiş videoya düzeltme)
 
   hat.olaylar.on('asama', o => {
     if (o.durum === 'basladi') return;
     const d = hat.durumOku(o.klasor);
     if (!d.otomatik && o.durum === 'bitti') return; // elle çalıştırılan aşamalarda sessiz
+    if (o.durum === 'geri') return herkese(`Düzeltme için "${o.ad}" aşamasından yeniden yapıyorum · ${d.konu}`);
+    if (d.onaylar === 'yok') return; // tam otomatikte ara mesaj yok
     herkese(`${o.ad}: ${o.durum === 'bitti' ? 'bitti' : o.durum}${o.sure != null ? ` (${o.sure} dk)` : ''} · ${d.konu}`);
   });
 
@@ -126,7 +141,15 @@ export function telegramBaslat(hat) {
     }
   });
 
-  hat.olaylar.on('bitti', o => herkese(`Tamamlandı: ${o.konu}. Teslim dosyası teslim/ klasöründe.`));
+  hat.olaylar.on('bitti', async o => {
+    if (o.onayli) return herkese(`Tamamlandı: ${o.konu}. Teslim dosyası teslim/ klasöründe.`); // teslim zaten onayda gönderildi
+    const kredi = o.mod === 'kredili' ? `\nHarcanan: ${o.harcanan} / ${o.butce} kredi` : '';
+    const uyari = o.uyarilar.length ? `\n\nDenetimden tam geçmeyenler (yine de tamamlandı):\n${o.uyarilar.map(u => '- ' + kisa(u, 200)).join('\n')}` : '';
+    for (const chat of IZINLI) {
+      await dosyalariGonder(hat, chat, o.klasor, o.gonder);
+      await yaz(chat, `Hazır: ${o.konu}${kredi}${uyari}`, { reply_markup: { inline_keyboard: [[{ text: 'Düzelt', callback_data: `n|${o.klasor}` }]] } });
+    }
+  });
 
   async function mesaj(m) {
     const chat = String(m.chat.id);
@@ -138,8 +161,8 @@ export function telegramBaslat(hat) {
     const video = m.video || (m.document?.mime_type?.startsWith('video/') ? m.document : null);
     if (video) return cekimAl(chat, m, video, metin);
     if (notBekleyen.has(chat) && !metin.startsWith('/')) {
-      const klasor = notBekleyen.get(chat); notBekleyen.delete(chat);
-      try { const s = hat.onayVer({ klasor, karar: 'duzelt', not: metin }); if (s !== 'hata') return yaz(chat, s === 'kuyruk' ? 'Not alındı, sıraya girdi.' : 'Not alındı, yeniden çalışıyor.'); }
+      const { klasor, son } = notBekleyen.get(chat); notBekleyen.delete(chat);
+      try { const s = son ? hat.duzelt({ klasor, not: metin }) : hat.onayVer({ klasor, karar: 'duzelt', not: metin }); if (s !== 'hata') return yaz(chat, s === 'kuyruk' ? 'Not alındı, sıraya girdi.' : 'Not alındı, yeniden çalışıyor.'); }
       catch (e) { return yaz(chat, e.message); }
     }
     const [komut, ...geri] = metin.split(/\s+/);
@@ -196,7 +219,7 @@ export function telegramBaslat(hat) {
     await tg('answerCallbackQuery', { callback_query_id: q.id }).catch(() => {});
     await tg('editMessageReplyMarkup', { chat_id: chat, message_id: q.message.message_id, reply_markup: { inline_keyboard: [] } }).catch(() => {});
     try {
-      if (tur === 'z') { notBekleyen.set(chat, klasor); return yaz(chat, 'Neyi düzelteyim? Kısaca yazın (ör. "3. karede kavanoz daha küçük olsun").'); }
+      if (tur === 'z' || tur === 'n') { notBekleyen.set(chat, { klasor, son: tur === 'n' }); return yaz(chat, 'Neyi düzelteyim? Kısaca yazın (ör. "kavanoz daha küçük olsun", "altyazı büyüsün").'); }
       const karar = { d: 'devam', t: 'tekrar', i: 'iptal' }[tur];
       const s = hat.onayVer({ klasor, karar });
       if (s === 'devam' && hat.durumOku(klasor).teslim && !hat.durumOku(klasor).otomatik) return; // son onay: "Tamamlandı" zaten gitti

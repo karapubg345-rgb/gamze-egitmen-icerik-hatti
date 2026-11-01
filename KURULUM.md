@@ -71,18 +71,20 @@ Repodaki gerçek dosyalarla dener, çıktıları `ornekler\cikti\` klasörüne k
    - `/yeni bal zencefil 20sn` → tarif videosu, kredisiz (0 kredi).
    - `/yeni bal zencefil 20sn kredili` → tarayıcı açılmadan hızlı (bütçe otomatik hesaplanır; `40kredi` yazılırsa o).
    - Çekim videosu: videoyu sohbete gönder, açıklamasına konuyu yaz (`hacamat 25sn`). Telegram botlar **20 MB**'den büyük dosya indiremez; büyükse Stüdyo'dan yükleyin.
-   - Hat iki yerde düğmeyle onay ister: **kareler** (çekimde **kesitler**) hazır olunca ve **teslimde**. "Düzelt"e basıp kısa not yazınca o aşama notla yeniden yapılır.
+   - **Tam otomatik** (varsayılan): arada soru gelmez; Claude her aşamayı kendisi denetler, sorunluysa kendisi yeniden yapar. Sohbete yalnız bitmiş video + açıklama metni gelir. Beğenmezseniz **Düzelt** → ne istediğinizi yazın; Claude hangi aşamadan düzelteceğine kendisi karar verir.
+   - `onaylı` yazılırsa o video **kareler** (çekimde **kesitler**) hazır olunca ve **teslimde** düğmeyle onay bekler.
+   - Varsayılanlar `.env`'de: `VARSAYILAN_MOD` (kredisiz/kredili), `VARSAYILAN_ONAY` (yok/iki).
    - `/durum`, `/dur`, `/guncelle` (GitHub'dan son sürümü çeker, Stüdyo'yu kendisi yeniden başlatır).
 4. **Bilgisayar açık kalmalı:** bot ve üretim bu bilgisayarda çalışır. Denetim Masası → Güç seçenekleri → "Bilgisayarı uyku moduna geçir: **Hiçbir zaman**". Açılışta kendiliğinden başlasın: `Win+R` → `shell:startup` → açılan klasöre `STUDYO-AC.bat`'ın **kısayolunu** koy.
 
 ## 7. Stüdyo (bilgisayardan)
 Repo klasöründeki **`STUDYO-AC.bat`** dosyasına çift tıkla (masaüstüne kısayol yapılabilir). Chrome'da `http://127.0.0.1:4747` açılır; siyah pencere açık kaldıkça arayüz ve Telegram botu çalışır.
 
-- **Yeni üretim:** konu → **mod** (Kredisiz / Kredili) → **süre** (10-60 sn; 30 sn üstü iki parçada üretilip birleştirilir) → Oluştur. "Hemen otomatik başlat" işaretliyse hat sona kadar kendi yürür, yalnız onay kapılarında durur (onay şeridi hem burada hem Telegram'da çıkar).
+- **Yeni üretim:** konu → **mod** (Kredisiz / Kredili) → **süre** (10-60 sn; 30 sn üstü iki parçada üretilip birleştirilir) → Oluştur. "Hemen otomatik başlat" işaretliyse hat sona kadar kendi yürür. **Tam otomatik** seçiliyse hiçbir yerde durmaz (yalnız düzelemeyen hata olursa); **Onaylı** seçiliyse onay kapılarında durur (onay şeridi hem burada hem Telegram'da çıkar).
   - **Kredisiz:** TopView Sınırsız mod, tarayıcıdan; kareler ve video 0 kredi. Video kuyrukta bekler.
   - **Kredili:** Chrome açılmaz; TopView MCP + ElevenLabs MCP. Kare 0,2 kredi, video ~1,2 kredi/sn. Baştaki bütçe tek onaydır; aşılırsa hat durur.
-- **1 · Tarif videoları:** Senaryo ve gerçek referans → Nesne kilidi ve kareler (onay) → Video üretimi → Anlatım sesi → Kurgu ve teslim (onay).
-- **2 · Referans video (Video Edit):** Oluştur → kendi çekimini sürükle-bırak → **▶ Tümünü çalıştır** → Kesitler (onay) → Video Edit dönüşümü → Anlatım sesi → Kurgu ve teslim (onay).
+- **1 · Tarif videoları:** Senaryo ve gerçek referans → Nesne kilidi ve kareler → Video üretimi → Anlatım sesi → Kurgu ve teslim (onaylıda kareler ve teslimde durur).
+- **2 · Referans video (Video Edit):** Oluştur → kendi çekimini sürükle-bırak → **▶ Tümünü çalıştır** → Kesitler → Video Edit dönüşümü → Anlatım sesi → Kurgu ve teslim (onaylıda kesitler ve teslimde durur).
 - Her aşamanın çıktısı kartın altında görünür. Tek aşamayı elle de çalıştırabilirsin: masaya tıkla, not yaz, **Yeniden görevlendir**.
 - Aynı anda tek aşama çalışır; fazlası sıraya girer. Kredisiz modda çalışırken TopView/ElevenLabs sekmelerine dokunma; Chrome açık kalsın.
 

@@ -824,8 +824,12 @@
     </div>
     <div class="tahmin-notu" id="tahminNotu"></div>
     <label style="display:flex;gap:6px;align-items:center;font-size:12.5px;color:var(--soluk);margin-top:10px">
-      <input type="checkbox" id="otoGiris" checked> Hemen otomatik başlat (kareler ve teslimde onay ister)
+      <input type="checkbox" id="otoGiris" checked> Hemen otomatik başlat
     </label>
+    <select id="onayGiris" class="giris-kutu" style="margin-top:8px;padding:7px 10px;font-size:12.5px">
+      <option value="yok">Tam otomatik — Claude karar verir, yalnız bitmiş video gelir</option>
+      <option value="iki">Onaylı — kareler (çekimde kesitler) ve teslimde sor</option>
+    </select>
 
     <div style="margin-top:12px">
       <button class="btn-ana" id="olusturBtn">
@@ -1072,7 +1076,7 @@ function detay() {
         <h2>${kacis(v.konu || v.klasor)}</h2>
         <code>Klasör: ${v.klasor}</code>
         <div class="proje-etiketleri">
-          <span>${kacis(mod.ad)}</span><span>${v.sure} sn</span>
+          <span>${kacis(mod.ad)}</span><span>${v.sure} sn</span><span>${v.onaylar === 'yok' ? 'Tam otomatik' : 'Onaylı'}</span>
           ${v.mod === 'kredili' ? `<span>Kredi: ${v.harcanan} / ${v.butce || 0}</span>` : ''}
         </div>
       </div>
@@ -1094,7 +1098,7 @@ function detay() {
     html += `
       <div class="onay-seridi ${tur === 'hata' ? 'hata' : ''}">
         <h4>${kacis(baslik)}</h4>
-        <div class="ozet">${kacis((v.asamalar[ba.id]?.ozet || '').replace(/\n*(SONUC|HARCANAN_KREDI):.*$/gim, '').slice(0, 1500))}</div>
+        <div class="ozet">${kacis((v.asamalar[ba.id]?.ozet || '').replace(/\n*(SONUC|HARCANAN_KREDI|GERI):.*$/gim, '').slice(0, 1500))}</div>
         <div class="dugmeler">
           ${tur === 'hata' ? '<button class="btn-ana" data-karar="tekrar" style="width:auto">Tekrar dene</button>'
             : `<button class="btn-ana" data-karar="devam" style="width:auto">${kacis(tur === 'sorun' ? 'Yine de devam' : ba.onay?.devam || 'Devam')}</button>`}
@@ -1103,6 +1107,17 @@ function detay() {
           <button class="btn-ikincil" data-karar="iptal">İptal</button>
         </div>
         <div class="hata-bildirimi" id="onayHata"></div>
+      </div>`;
+  } else if (v.teslim && !akista) {
+    html += `
+      <div class="onay-seridi" style="border-color:var(--yesil);background:var(--yesil-acik)">
+        <h4>Video teslim edildi</h4>
+        ${(v.uyarilar || []).length ? `<div class="ozet">Denetimden tam geçmeyenler:\n${kacis(v.uyarilar.join('\n'))}</div>` : ''}
+        <div class="dugmeler">
+          <textarea id="sonNot" placeholder="Beğenmediğiniz bir şey varsa yazın; Claude hangi aşamadan düzelteceğine kendisi karar verir."></textarea>
+          <button class="btn-ikincil" id="sonDuzeltBtn">Düzelt</button>
+        </div>
+        <div class="hata-bildirimi" id="sonHata"></div>
       </div>`;
   }
 
@@ -1186,6 +1201,10 @@ function detay() {
   if ($('#otoBtn')) $('#otoBtn').onclick = async () => {
     try { await api('/api/otomatik', { klasor: v.klasor }); sonImza = ''; yenile(); }
     catch (e) { $('#otoHata').textContent = e.message; }
+  };
+  if ($('#sonDuzeltBtn')) $('#sonDuzeltBtn').onclick = async () => {
+    try { await api('/api/duzelt', { klasor: v.klasor, not: $('#sonNot').value }); sonImza = ''; yenile(); }
+    catch (e) { $('#sonHata').textContent = e.message; }
   };
   document.querySelectorAll('.onay-seridi [data-karar]').forEach(btn => {
     btn.onclick = async () => {
@@ -1337,7 +1356,7 @@ function ciz() {
 let sonImza = '';
 async function yenile() {
   VERI = await api('/api/videolar');
-  const imza = JSON.stringify([VERI.calisan, VERI.kuyruk, VERI.videolar.map(v => [v.klasor, v.asamalar, v.kaynaklar, v.bekleyen, v.otomatik, v.harcanan])]);
+  const imza = JSON.stringify([VERI.calisan, VERI.kuyruk, VERI.videolar.map(v => [v.klasor, v.asamalar, v.kaynaklar, v.bekleyen, v.otomatik, v.harcanan, v.teslim])]);
   if (imza !== sonImza) {
     sonImza = imza;
     liste();
@@ -1360,7 +1379,7 @@ $('#olusturBtn').onclick = async () => {
 
   try {
     const butce = $('#butceGiris') ? Number($('#butceGiris').value) : 0;
-    const r = await api('/api/videolar', { bolum, konu, mod: yeniMod, sure: Number($('#sureGiris').value), butce });
+    const r = await api('/api/videolar', { bolum, konu, mod: yeniMod, sure: Number($('#sureGiris').value), butce, onaylar: $('#onayGiris').value });
     // Çekim bölümünde önce video yüklenmeli; otomatik akış yükleme sonrası "Tümünü çalıştır" ile başlar.
     if ($('#otoGiris').checked && bolum === 'tarif') await api('/api/otomatik', { klasor: r.klasor });
     $('#konuGiris').value = '';

@@ -38,7 +38,10 @@ Kullanıcıya hiçbir kare/video denetimden geçmeden gösterilmez. Her video kl
 - Kredi: kredisiz aşamada kredili işlem yok; kredili aşamada arayüzde onaylanan sınır aşılmaz.
 - Çıktılar `asamalar.json`daki `ciktilar` yollarına yazılır (arayüz oradan gösterir). Yeni aşama/değişen yol olursa `asamalar.json` da güncellenir.
 - Terminalden çalışırken de aynı bölüm ve aşama sırası geçerlidir.
-- **Otomatik akış:** aşamalar sırayla kendiliğinden çalışır; `asamalar.json`'da `onay` tanımlı aşamada (kareler / kesitler / teslim), hata ya da `SONUC: SORUN` raporunda durur. Her aşama raporu `SONUC: TAMAM|SORUN` ve `HARCANAN_KREDI: <sayı>` satırlarıyla biter (sunucu bunları okur).
+- **Otomatik akış** (`durum.json` → `onaylar`):
+  - **yok** (tam otomatik, varsayılan): Claude karar verir. Hata 1 kez, `SONUC: SORUN` 2 kez notla kendiliğinden yeniden denenir; sonra sorunlu sonuçla devam edilir ve son mesajda uyarı olarak yazılır. Kullanıcıya yalnız bitmiş video gider; "Düzelt" notu son aşamadan başlar, aşama işin daha geride yapılması gerektiğine karar verirse `GERI: <aşama-id>` yazar ve hat oradan yeniden yürür (en fazla 2 kez).
+  - **iki** (onaylı): `onay` tanımlı aşamada (kareler / kesitler / teslim), hata ya da sorunda durup sorar.
+  - Her aşama raporu `SONUC: TAMAM|SORUN`, gerekirse `GERI: <id>` ve `HARCANAN_KREDI: <sayı>` satırlarıyla biter (sunucu bunları okur).
 - **Telegram** (`arayuz/telegram.mjs`, sunucuyla aynı süreçte): `/yeni`, çekim videosu gönderme, onay düğmeleri, `/guncelle`. Yalnız `.env`'deki `TELEGRAM_CHAT_ID`'ye cevap verir.
 
 ## Ortak geliştirme

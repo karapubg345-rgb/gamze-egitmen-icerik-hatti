@@ -87,10 +87,12 @@ function durumOku(klasor) {
     d.konu = klasor.replace(/^video-\d+-?/, '').replace(/-/g, ' ');
   }
   d.mod = d.mod || 'kredisiz';
+  d.onaylar = d.onaylar || 'iki'; // eski videolar onaylı kalır
   d.sure = d.sure || SURE.varsayilan;
   d.harcanan = d.harcanan || 0;
   d.asamalar = d.asamalar || {};
-  for (const a of bolumBul(d.bolum).asamalar) {
+  // Çıktıdan "bitti" tahmini yalnız arayüzden önce açılmış klasörler için; yeni videoda eski çıktı (ör. geri dönüşten kalan) aşamayı atlatmasın.
+  if (!d.olusturma) for (const a of bolumBul(d.bolum).asamalar) {
     if (!d.asamalar[a.id] && a.ciktilar.some(c => eslesen(klasor, c).length)) d.asamalar[a.id] = { durum: 'bitti', tahmini: true };
   }
   if (calisan && calisan.klasor === klasor) d.asamalar[calisan.asama] = { ...(d.asamalar[calisan.asama] || {}), durum: 'calisiyor' };
@@ -109,15 +111,18 @@ function slug(s) {
   return s.toLocaleLowerCase('tr').replace(/[çğıöşüâîû]/g, c => harita[c]).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'video';
 }
 
-function yeniKlasor({ bolum, konu, mod, sure, butce }) {
+// onaylar: 'yok' = tam otomatik (Claude denetime göre karar verir, yalnız bitmiş video gelir) | 'iki' = kareler/kesitler + teslimde onay.
+// Varsayılanlar .env'den: VARSAYILAN_MOD, VARSAYILAN_ONAY.
+function yeniKlasor({ bolum, konu, mod, sure, butce, onaylar }) {
   if (!bolumBul(bolum) || !konu?.trim()) throw new Error('bölüm ve konu gerekli');
-  mod = mod === 'kredili' ? 'kredili' : 'kredisiz';
+  mod = (mod || process.env.VARSAYILAN_MOD) === 'kredili' ? 'kredili' : 'kredisiz';
+  onaylar = (onaylar || process.env.VARSAYILAN_ONAY) === 'iki' ? 'iki' : 'yok';
   sure = Math.min(SURE.cok, Math.max(SURE.en, Math.round(Number(sure) || SURE.varsayilan)));
   const no = videoKlasorleri().reduce((m, k) => Math.max(m, Number(k.match(/^video-(\d+)/)[1])), 0) + 1;
   const ad = `video-${String(no).padStart(2, '0')}-${slug(konu)}`;
   fs.mkdirSync(guvenliYol(ad), { recursive: true });
   butce = mod === 'kredili' ? (Number(butce) > 0 ? Number(butce) : tahminiKredi(bolum, sure, mod)) : 0;
-  durumYaz(ad, { bolum, konu: konu.trim(), mod, sure, butce, harcanan: 0, olusturma: new Date().toISOString(), kaynaklar: [], asamalar: {} });
+  durumYaz(ad, { bolum, konu: konu.trim(), mod, sure, butce, onaylar, harcanan: 0, olusturma: new Date().toISOString(), kaynaklar: [], asamalar: {} });
   return ad;
 }
 
@@ -191,7 +196,7 @@ function isEkle(is) {
   return 'basladi';
 }
 
-function calistir({ klasor, asama, not, krediOnay, krediLimit }) {
+function calistir({ klasor, asama, not, krediOnay, krediLimit, otoDeneme }) {
   if (calisan) throw new Error(`Şu an çalışan bir iş var: ${calisan.klasor} · ${calisan.asama}`);
   const d = durumOku(klasor);
   const b = bolumBul(d.bolum);
@@ -211,7 +216,7 @@ function calistir({ klasor, asama, not, krediOnay, krediLimit }) {
     .replaceAll('{kaynaklar}', (d.kaynaklar || []).join(', ') || 'referans-videolar/ altındaki ilgili çekim')
     .replaceAll('{not}', (not || '').trim() || 'yok').replaceAll('{sure}', String(d.sure)).replaceAll('{planSayisi}', String(planSayisi(d.sure))).replaceAll('{parcalar}', parcalar(d.sure))
     .replaceAll('{butce}', String(d.otomatik ? d.butce : kalan)).replaceAll('{harcanan}', String(d.otomatik ? d.harcanan : 0))
-    .replaceAll('{kalan}', String(Math.max(0, Math.round(kalan * 100) / 100)));
+    .replaceAll('{asamaIdleri}', b.asamalar.map(x => x.id).join(', ')).replaceAll('{kalan}', String(Math.max(0, Math.round(kalan * 100) / 100)));
   const istem = doldur(t.ortak).replace('ÜRETİM MODU: {mod}', 'ÜRETİM MODU: ' + doldur(modKurali))
     + '\n\nAŞAMA — ' + a.ad + ':\n' + doldur(a.talimat)
     + '\n\nRaporun sondan bir önceki satırı `SONUC: TAMAM` ya da `SONUC: SORUN` olsun (denetimden geçmeyen kare/video, bütçe ya da Sınırsız mod nedeniyle yapılamayan gönderim, eksik çıktı varsa SORUN).';
@@ -238,7 +243,7 @@ function calistir({ klasor, asama, not, krediOnay, krediLimit }) {
   });
   proc.stderr.on('data', p => log.write('[stderr] ' + p.toString('utf8')));
   calisan = { klasor, asama, proc, baslangic: Date.now() };
-  d.asamalar[asama] = { durum: 'calisiyor', baslangic: new Date().toISOString() };
+  d.asamalar[asama] = { durum: 'calisiyor', baslangic: new Date().toISOString(), deneme: otoDeneme ? d.asamalar[asama]?.deneme || 0 : 0 };
   durumYaz(klasor, d);
   olaylar.emit('asama', { klasor, asama, ad: a.ad, durum: 'basladi' });
   proc.on('close', kod => {
@@ -265,12 +270,32 @@ function asamaBitti(klasor, a, { kod, durduruldu, sonuc, sure }) {
   if (k) d.harcanan = Math.round((d.harcanan + Number(k[1].replace(',', '.'))) * 100) / 100;
   const sorun = /SONUC:\s*SORUN/i.test(sonuc);
   const durum = durduruldu ? 'durduruldu' : kod === 0 ? 'bitti' : 'hata';
-  d.asamalar[a.id] = { durum, bitis: new Date().toISOString(), ozet: sonuc.slice(0, 4000), ...(sorun ? { sorun: true } : {}) };
+  const deneme = d.asamalar[a.id]?.deneme || 0;
+  d.asamalar[a.id] = { durum, bitis: new Date().toISOString(), ozet: sonuc.slice(0, 4000), deneme, ...(sorun ? { sorun: true } : {}) };
   if (durduruldu) { d.otomatik = false; durumYaz(klasor, d); return; }
-  const ozet = sonuc.replace(/\n*SONUC:.*$|\n*HARCANAN_KREDI:.*$/gim, '').trim();
+  const ozet = sonuc.replace(/\n*(SONUC|HARCANAN_KREDI|GERI):.*$/gim, '').trim();
   if (!d.otomatik) { durumYaz(klasor, d); olaylar.emit('asama', { klasor, asama: a.id, ad: a.ad, durum, sure, ozet }); return; }
-  // Otomatik akış: hata / sorun / onay kapısında dur, değilse sonraki aşamaya geç.
-  const tur = durum === 'hata' ? 'hata' : sorun ? 'sorun' : a.onay ? 'onay' : null;
+  // Claude notun daha önceki bir aşamada giderilmesi gerektiğine karar verdiyse (GERI: <id>) oradan yeniden başla (en fazla 2 kez).
+  const geri = sonuc.match(/GERI:\s*([a-z]+)/i)?.[1];
+  const asamalar = bolumBul(d.bolum).asamalar, i = asamalar.findIndex(x => x.id === geri);
+  if (durum !== 'hata' && i >= 0 && i < asamalar.findIndex(x => x.id === a.id) && (d.geriSayisi || 0) < 2) {
+    d.geriSayisi = (d.geriSayisi || 0) + 1;
+    for (const x of asamalar.slice(i)) delete d.asamalar[x.id];
+    durumYaz(klasor, d);
+    olaylar.emit('asama', { klasor, asama: geri, ad: asamalar[i].ad, durum: 'geri' });
+    return isEkle({ klasor, asama: geri, not: d.sonNot || ozet.slice(0, 800) });
+  }
+  // Tam otomatikte Claude karar verir: hata 1 kez, denetim sorunu 2 kez (raporu not olarak) kendiliğinden yeniden denenir.
+  // Denemeler bitince sorunlu sonuçla devam edilir (son mesajda uyarı); hata ise durup haber verir.
+  if (d.onaylar === 'yok' && (durum === 'hata' || sorun) && deneme < (durum === 'hata' ? 1 : 2)) {
+    d.asamalar[a.id].deneme = deneme + 1;
+    durumYaz(klasor, d);
+    olaylar.emit('asama', { klasor, asama: a.id, ad: a.ad, durum: 'yeniden', sure });
+    return isEkle({ klasor, asama: a.id, otoDeneme: true, not: `Önceki deneme ${durum === 'hata' ? 'hata verdi' : 'denetimden geçmedi'}; raporu: ${ozet.slice(0, 1500)} — sorunları gider.` });
+  }
+  if (d.onaylar === 'yok' && sorun) (d.uyarilar = d.uyarilar || []).push(`${a.ad}: ${ozet.slice(0, 300)}`);
+  // Hata her zaman durur; onaylı akışta sorun ve onay kapısında da durulur.
+  const tur = durum === 'hata' ? 'hata' : d.onaylar === 'yok' ? null : sorun ? 'sorun' : a.onay ? 'onay' : null;
   if (tur) {
     d.bekleyen = { asama: a.id, tur, zaman: new Date().toISOString() };
     durumYaz(klasor, d);
@@ -289,7 +314,9 @@ function sonrakiniBaslat(klasor) {
   if (!s) {
     d.otomatik = false; d.teslim = new Date().toISOString();
     durumYaz(klasor, d);
-    return olaylar.emit('bitti', { klasor, konu: d.konu, harcanan: d.harcanan });
+    const son = bolumBul(d.bolum).asamalar.at(-1);
+    return olaylar.emit('bitti', { klasor, konu: d.konu, mod: d.mod, harcanan: d.harcanan, butce: d.butce, uyarilar: d.uyarilar || [],
+      gonder: son.onay?.gonder || ['teslim/*.mp4', 'teslim/ACIKLAMA.txt'], onayli: d.onaylar === 'iki' });
   }
   isEkle({ klasor, asama: s.id });
 }
@@ -321,6 +348,16 @@ function onayVer({ klasor, karar, not }) {
   }
   durumYaz(klasor, d);
   return isEkle({ klasor, asama: bek.asama, not: karar === 'duzelt' ? not : '' });
+}
+
+function duzelt({ klasor, not }) {
+  if (!not?.trim()) throw new Error('Düzeltme notu gerekli.');
+  if (calisan?.klasor === klasor || kuyruk.some(k => k.klasor === klasor)) throw new Error('Bu video zaten çalışıyor.');
+  const d = durumOku(klasor);
+  const son = bolumBul(d.bolum).asamalar.at(-1);
+  Object.assign(d, { otomatik: true, bekleyen: null, teslim: null, uyarilar: [], geriSayisi: 0, sonNot: not.trim() });
+  durumYaz(klasor, d);
+  return isEkle({ klasor, asama: son.id, not: not.trim() });
 }
 
 function durdur() {
@@ -372,6 +409,7 @@ const sunucu = http.createServer(async (req, res) => {
     if (u.pathname === '/api/calistir' && req.method === 'POST') { calistir(await govdeOku(req)); return json(res, 200, { ok: true }); }
     if (u.pathname === '/api/otomatik' && req.method === 'POST') { otomatikBaslat((await govdeOku(req)).klasor); return json(res, 200, { ok: true }); }
     if (u.pathname === '/api/onay' && req.method === 'POST') return json(res, 200, { sonuc: onayVer(await govdeOku(req)) });
+    if (u.pathname === '/api/duzelt' && req.method === 'POST') return json(res, 200, { sonuc: duzelt(await govdeOku(req)) });
     if (u.pathname === '/api/durdur' && req.method === 'POST') { durdur(); return json(res, 200, { ok: true }); }
     if (u.pathname === '/api/log') {
       const f = path.join(guvenliYol(q.klasor), '.arayuz', `${path.basename(q.asama)}.log`);
@@ -398,7 +436,7 @@ if (process.env.TELEGRAM_BOT_TOKEN) {
   const { telegramBaslat } = await import('./telegram.mjs');
   telegramBaslat({
     KOK, olaylar, SURE, tanim, bolumBul, eslesen, durumOku, tahminiKredi, planSayisi,
-    yeniKlasor, kaynakEkle, otomatikBaslat, onayVer, durdur, durumListesi,
+    yeniKlasor, kaynakEkle, otomatikBaslat, onayVer, duzelt, durdur, durumListesi,
     mesgul: () => !!calisan
   });
 }
