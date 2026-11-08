@@ -17,7 +17,8 @@ Video dosyası (`klipler/*.mp4`), üretimde kullanılan prompt (zaman damgalı),
 1. **Teknik:** `ffprobe` — çözünürlük, fps, süre, ses akışı var mı; `volumedetect`.
 2. **Kontak sayfası:** `ffmpeg -vf "fps=1,scale=200:-1,tile=9x3"` → saniye saniye genel bakış. Read ile bak.
 3. **Geçişler:** `select='gt(scene,0.3)',showinfo` ile kesme anları; yoksa kontak sayfasından sahne sınırlarını belirle. Promptun zaman damgalarıyla karşılaştır (±0,5 sn tolerans).
-4. **Kritik kareler:** her sahnenin ortasından 360 px genişlikte kare çıkar (hstack) ve yakından bak: el anatomisi (parmak sayısı, eldiven), kol/kelepçe kuralı, nesne kilidiyle aynılık, mekân öğeleri, fizik (sıvı akışı, kesme, damlama).
+4. **Kritik kareler:** her sahnenin ortasından 360 px genişlikte kare çıkar (hstack) ve yakından bak: el anatomisi (parmak sayısı, eldiven), kol/kelepçe kuralı (sunucu elinde çıplak ten = HATA), nesne kilidiyle aynılık, mekân öğeleri, fizik (sıvı akışı, kesme, damlama).
+4b. **Gösterim bedeni** (SENARYO.md → '## Gösterim bedeni' tablosunda B kodu olan planlar; kilit `beden-kilidi/B?-*.png`): planda bölge var mı, kilitle aynı mı (ten rengi, yaş, oran, tırnak); fazla/eksik parmak; yüz/kafa/kıyafet/takı/dövme görünüyor mu; çocuk (B1) için el dışında bölge (ayak hariç) var mı; yara/kızarıklık/kan var mı; sunucu eli ile karışma (eldivenli gösterim bedeni, çıplak sunucu eli) — hepsi HATA. B kodu olmayan planda çıplak beden belirmesi = HATA. Adım 5'teki zamansal bozulmayı bu bölgede de ara (ten rengi kayması, parmak sayısının değişmesi).
 5. **Zamansal bozulma:** sahne içinde 0,25 sn arayla 6-8 kare çıkar; nesne şekil değiştiriyor mu, eşya beliriyor/kayboluyor mu, el eriyor mu?
 6. **Anlatımla eşleşme:** anlatım zamanları varsa her sahnenin anlatılan adımla örtüştüğünü kontrol et; kayma > 1 sn ise kurgu için kaydırma öner.
 
@@ -25,7 +26,7 @@ Video dosyası (`klipler/*.mp4`), üretimde kullanılan prompt (zaman damgalı),
    - Uydurma nesne: çıktıda bir elde kaynakta olmayan nesne var mı (bilinen hata: pompasız planda boştaki ele pompa)?
    - Kol: hiçbir karede kol/bilek siyah olmayacak; yalnız parmak ucu görünen el kola dönmüş mü?
    - Hareket kayması: el/kupa aynı anda aynı yerde mi; çıktı süresi kaynaktan kısaysa geçiş anlarını yeniden ölç.
-   - Hasta: kafa/yüz/kıyafet görünen saniyeleri listele (kurguda kırpılacak).
+   - Hasta: kafa/yüz/kıyafet/takı görünen saniyeleri listele (kurguda kırpılacak); uygulama bölgesinin (sırt, kol, ayak) görünmesi kabul.
    - Kan: hafif damla kabul; yoğun akış ŞÜPHELİ yaz.
 
 ## Çıktı

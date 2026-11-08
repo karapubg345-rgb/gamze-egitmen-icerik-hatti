@@ -113,9 +113,30 @@ function slug(s) {
   return s.toLocaleLowerCase('tr').replace(/[çğıöşüâîû]/g, c => harita[c]).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'video';
 }
 
+// Gösterim bedeni ipucu: istek metninde "çocuk eli", "erkek kolu", "ayak", "sırt", "çimdik" gibi bir ifade varsa
+// senaryo aşamasına beden kilidi önerisi olarak geçer ({beden}; beden-kilidi/BEDEN-KILIDI.md). Karar yine senaryonundur.
+const BEDEN_IPUCLARI = [ // \p{L}: Türkçe harfler (ı, ğ, ş) de kelimenin parçası
+  { kod: 'B1 çocuk eli', re: /(^|\s)(çocu[kğ]\p{L}*|bebe[kğ]\p{L}*)\s+(el|eli|elin\p{L}*|elle\p{L}*|parma\p{L}*)(?=\s|$)/u },
+  { kod: 'çocuk ayağı (kilit yok: B1 çocuk eliyle aynı ten, B3 ayak kadrajı; raporda belirt)', re: /(^|\s)(çocu[kğ]\p{L}*|bebe[kğ]\p{L}*)\s+aya[kğ]\p{L}*(?=\s|$)/u },
+  { kod: 'B2 yetişkin erkek ön kol', re: /(^|\s)(erke[kğ]\p{L}*\s+(kol\p{L}*|el|eli|elin\p{L}*|bile[kğ]\p{L}*)|ön\s?kol\p{L}*|elin?\s+(üst|sırt)\p{L}*|çimdi[kğ]\p{L}*)(?=\s|$)/u },
+  { kod: 'B3 yetişkin ayak', re: /(^|\s)(aya[kğ]\p{L}*|topu[kğ]\p{L}*)(?=\s|$)/u },
+  { kod: 'B4 yetişkin sırt', re: /(^|\s)(sırt\p{L}*|bel|bele|beli|beline|belde|belden)(?=\s|$)/u },
+];
+function bedenIpucu(...metinler) {
+  const m = ' ' + metinler.filter(Boolean).join(' ').toLocaleLowerCase('tr').replace(/[^\p{L}\p{N}\s]+/gu, ' ') + ' ';
+  const bulunan = [];
+  for (const b of BEDEN_IPUCLARI) {
+    const e = m.match(b.re);
+    // "çocuk ayağı" yetişkin ayak ipucunu, "çocuk eli" erkek kolu ipucunu tetiklemesin
+    if (!e || bulunan.some(x => x.ifade.includes(e[0].trim()))) continue;
+    bulunan.push({ kod: b.kod, ifade: e[0].trim() });
+  }
+  return bulunan.map(x => `${x.kod} (istekte: "${x.ifade}")`).join('; ');
+}
+
 // onaylar: 'yok' = tam otomatik (Claude denetime göre karar verir, yalnız bitmiş video gelir) | 'iki' = kareler/kesitler + teslimde onay.
 // Varsayılanlar .env'den: VARSAYILAN_MOD, VARSAYILAN_ONAY.
-function yeniKlasor({ bolum, konu, mod, sure, butce, onaylar }) {
+function yeniKlasor({ bolum, konu, mod, sure, butce, onaylar, ipucu }) {
   if (!bolumBul(bolum) || !konu?.trim()) throw new Error('bölüm ve konu gerekli');
   mod = (mod || process.env.VARSAYILAN_MOD) === 'kredili' ? 'kredili' : 'kredisiz';
   onaylar = (onaylar || process.env.VARSAYILAN_ONAY) === 'iki' ? 'iki' : 'yok';
@@ -124,7 +145,8 @@ function yeniKlasor({ bolum, konu, mod, sure, butce, onaylar }) {
   const ad = `video-${String(no).padStart(2, '0')}-${slug(konu)}`;
   fs.mkdirSync(guvenliYol(ad), { recursive: true });
   butce = mod === 'kredili' ? (Number(butce) > 0 ? Number(butce) : tahminiKredi(bolum, sure, mod)) : 0;
-  durumYaz(ad, { bolum, konu: konu.trim(), mod, sure, butce, onaylar, harcanan: 0, olusturma: new Date().toISOString(), kaynaklar: [], asamalar: {} });
+  const beden = bedenIpucu(konu, ipucu);
+  durumYaz(ad, { bolum, konu: konu.trim(), mod, sure, butce, onaylar, ...(beden ? { beden } : {}), harcanan: 0, olusturma: new Date().toISOString(), kaynaklar: [], asamalar: {} });
   return ad;
 }
 
@@ -233,7 +255,7 @@ function calistir({ klasor, asama, not, krediOnay, krediLimit, otoDeneme, surdur
     .replaceAll('{not}', (not || '').trim() || 'yok').replaceAll('{sure}', String(d.sure)).replaceAll('{planSayisi}', String(planSayisi(d.sure))).replaceAll('{parcalar}', parcalar(d.sure))
     .replaceAll('{butce}', String(d.otomatik ? d.butce : kalan)).replaceAll('{harcanan}', String(d.otomatik ? d.harcanan : 0))
     .replaceAll('{asamaIdleri}', b.asamalar.map(x => x.id).join(', ')).replaceAll('{kalan}', String(Math.max(0, Math.round(kalan * 100) / 100)))
-    .replaceAll('{asama}', asama);
+    .replaceAll('{asama}', asama).replaceAll('{beden}', d.beden || 'yok');
 
   const logDir = path.join(guvenliYol(klasor), '.arayuz');
   fs.mkdirSync(logDir, { recursive: true });
@@ -517,7 +539,7 @@ sunucu.listen(PORT, '127.0.0.1', () => console.log(`Arayüz hazır: http://127.0
 if (process.env.TELEGRAM_BOT_TOKEN) {
   const { telegramBaslat } = await import('./telegram.mjs');
   telegramBaslat({
-    KOK, olaylar, SURE, tanim, bolumBul, eslesen, durumOku, tahminiKredi, planSayisi,
+    KOK, olaylar, SURE, tanim, bolumBul, eslesen, durumOku, tahminiKredi, planSayisi, bedenIpucu,
     yeniKlasor, kaynakEkle, otomatikBaslat, onayVer, duzelt, durdur, durumListesi, ogrenme,
     mesgul: () => !!calisan
   });

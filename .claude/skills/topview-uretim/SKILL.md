@@ -22,6 +22,7 @@ Playwright MCP uzantı modunda kullanıcının kendi Chrome'u ve TopView oturumu
 
 ## Görsel üretimi (Image Edit)
 - Image1 = `mekan-kilidi/M0-ana-mekan.png` (ya da ilgili açı), Image2 = `nesne-kilidi/P1-*.png`.
+- Gösterim bedeni olan planda Image3 = `beden-kilidi/B?-*.png` (beden kilidi; `beden-kilidi/BEDEN-KILIDI.md`). Promptta: "the <region> is exactly the same as Image3 (same skin tone, proportions, nails); only that region visible, no face, no clothing, no jewelry". Sunucu eli o planda yoksa "no gloved hands in this frame". Kilit yoksa önce kilit bir kez üretilir (aynı model/ayar; kredisizde Sınırsız).
 - Kalıplar `mekan-kilidi/MEKAN-KILIDI.md` içinde (açı kalıbı, eller kalıbı). Mekânı metinle baştan tarif ETME.
 
 ## Video (Seedance 2.5 Omni Reference)
@@ -58,7 +59,7 @@ Videonun `durum.json`'unda `mod: kredili` ise (Stüdyo/Telegram "kredili") Chrom
 ## 60 sn'ye kadar (parçalı üretim)
 Seedance 2.5 tek görevde en fazla **30 sn** üretir (Omni Reference ve Video Edit). 31-60 sn'lik video **parça parça** üretilir; sunucu istemde parça sayısını verir ("2 parça (~30 + ~30 sn)").
 1. **Dikiş = plan kesmesi.** Parça sınırını iki plan arasındaki sert kesmeye koy (planlar zaten sert kesmeyle bağlanır). Kesintisiz hareket dikişten geçmez; böylece dikiş görünmez, yalnız nesne/el/mekân sürekliliği gerekir.
-2. **Kilitler her parçada aynı:** Image1 = mekân (`M0`), Image2 = nesne kilidi, ardından yalnız O parçanın plan kareleri. Promptun başlık bloğu (eller: siyah pamuk eldiven + mürdüm kol + leylak manşet + bakır kelepçe; mekân; nesne tarifi; "no face, no text, no music") parçalar arasında **birebir aynı** metin.
+2. **Kilitler her parçada aynı:** Image1 = mekân (`M0`), Image2 = nesne kilidi, (gösterim bedeni varsa beden kilidi de her parçada aynı), ardından yalnız O parçanın plan kareleri. Promptun başlık bloğu (eller: siyah pamuk eldiven + mürdüm kol + leylak manşet + bakır kelepçe; mekân; nesne tarifi; "no face, no text, no music") parçalar arasında **birebir aynı** metin.
 3. **2. parça 1. parçaya bağlanır:** 1. parça inince son karesini al (`ffmpeg -sseof -0.1 -i klipler/parca-1.mp4 -frames:v 1 klipler/parca-1-son.png`), 2. parçada Image3 olarak ver ve promptta "lighting, color grade, jar fill level and hand positions continue exactly from <<<Image3>>> / @Image3" yaz. Malzeme miktarı (kavanoz doluluğu, kesilmiş dilimler) 1. parçanın sonundaki hâlinden devam eder.
 4. **Zaman damgaları parçanın kendi saatiyle** (her parça 0 sn'den başlar); kurguda birleştirilir.
 5. **Birleştir:** `ffmpeg -f concat` (aynı codec/çözünürlük; değilse önce aynı ayarla yeniden kodla) → `klipler/tam.mp4` (Video Edit'te `klipler/edit-tam.mp4`). video-denetci dikiş karesini ayrıca kontrol eder (renk sıçraması, nesne değişimi, el/kol rengi).

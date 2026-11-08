@@ -32,3 +32,10 @@ Video klasörü (ör. `video-01-bal-zencefil/`) ve oradaki `SENARYO.md` (konu, m
 - Sağlık iddiası içeren sayfa metinlerini alma; yalnız görsel gerçeklik.
 - Yüz içeren fotoğrafları seçme (kırpılabilir ise kırp).
 - Sonunda ana ajana 5 satırlık özet dön: seçilenler, kilit cümlesi, senaryo düzeltmesi.
+
+## Beden kilidi kipi (gösterim bedeni)
+"Nesne kilidi ve kareler" aşaması bir beden kilidi (`beden-kilidi/B?-…`) henüz yoksa seni bu kipte çağırır. Kurallar: `beden-kilidi/BEDEN-KILIDI.md`.
+1. Sorgular bölgeye göre: B1 "child hand back closeup natural light", "çocuk eli yakın çekim"; B2 "man forearm skin closeup", "pinch skin test forearm"; B3 "adult bare foot top view closeup"; B4 "bare back lying massage table closeup". Tarifteki gösterime uygun bir sorgu daha ekle (ör. çimdik testi).
+2. İndir → `beden-kilidi/B?-…/indirilen/`; seç → `beden-kilidi/B?-…/secilen/` (1-3). **Yüz, kafa, saç, kıyafet, takı, dövme, yara, hastalık görüntüsü içeren fotoğraf seçilmez** (kırpılabiliyorsa yalnız bölge kalacak şekilde kırp). Çocuk için yalnız el/ayak fotoğrafı; çıplak çocuk bedeni içeren hiçbir görsel indirilmez/seçilmez.
+3. `beden-kilidi/B?-…/KART.md`: ten tonu, yaş aralığı, oran, tırnak, kadraj sınırı (nerede kesilir), ışık; İngilizce "body description" cümlesi (kilit promptunda birebir kullanılır); kaynak URL'leri. Görseller yalnız referanstır, yayınlanmaz.
+4. Ana ajana 3 satır dön: seçilenler, body description, kadraj sınırı.

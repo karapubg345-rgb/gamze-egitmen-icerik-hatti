@@ -42,3 +42,7 @@ ornekler/cikti/
 
 # Gamze Hoca'nın öğrenilmiş tercihleri ve tepki günlüğü (yalnız üretim bilgisayarında; git pull bozulmasın)
 ogrenilen/
+
+# Beden kilidi görselleri ve gerçek referans fotoğrafları (üretim bilgisayarında ilk kullanımda oluşur; kurallar BEDEN-KILIDI.md git'te)
+beden-kilidi/*
+!beden-kilidi/BEDEN-KILIDI.md

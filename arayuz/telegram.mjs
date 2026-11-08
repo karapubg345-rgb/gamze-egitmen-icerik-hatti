@@ -20,6 +20,7 @@ Sesli tarif: tarifi sesli mesajla anlatın (malzemeler, ölçüler, yapılışı
 Çekim videosu: videoyu bu sohbete gönderin, açıklamasına konuyu yazın (ör. "hacamat 25sn").
 Video linki: Instagram/TikTok/YouTube linkini yanına konuyla yazın (ör. "https://instagram.com/reel/… hacamat 25sn"). Video indirilir, eller ve ortam bizimkilerle değiştirilir; üstündeki yazı ve logolar kaldırılır.
 Linkten yalnız tarif: linkin yanına "tarif" yazın (ör. "https://instagram.com/reel/… tarif 30sn"). Videodaki konuşma ve gönderi açıklaması okunur, tarif çıkarılır; görüntü kullanılmaz, video sıfırdan bizim mutfağımızda üretilir.
+Bedende gösterim: tarif bir bedende gösterilecekse isteğe yazın: "çocuk eli", "erkek kolu", "ön kol", "ayak", "sırt" (ör. "https://… tarif 25sn çocuk eli" ya da "/yeni çimdik testi erkek kolu 20sn"). Bu ipucu senaryoya geçer; o planda yüzsüz bir gösterim bedeni (el, ön kol, ayak, sırt) kullanılır.
 /durum — çalışan ve bekleyen işler
 /tercihler — sistemin sizden öğrendikleri
 /unut <no> — yanlış öğrenilen bir tercihi siler
@@ -322,7 +323,7 @@ export function telegramBaslat(hat) {
       const p = ayristir(metin, hat.SURE);
       const konu = p.konu || await konuBul([anlatim, aciklama].filter(Boolean).join('\n'));
       const sirada = hat.mesgul();
-      const klasor = hat.yeniKlasor({ bolum: 'tarif', ...p, konu });
+      const klasor = hat.yeniKlasor({ bolum: 'tarif', ...p, konu, ipucu: metin });
       const hedef = path.join(hat.KOK, klasor, 'sesli-tarif');
       fs.mkdirSync(hedef, { recursive: true });
       fs.copyFileSync(dosya, path.join(hedef, 'kaynak' + path.extname(dosya).toLowerCase()));
@@ -359,7 +360,7 @@ export function telegramBaslat(hat) {
       const p = ayristir(metin, hat.SURE); // açıklama yalnız seçenekler için (süre, kredili, onaylı); konu da yazılabilir
       const konu = p.konu || await konuBul(anlatim);
       const sirada = hat.mesgul();
-      const klasor = hat.yeniKlasor({ bolum: 'tarif', ...p, konu });
+      const klasor = hat.yeniKlasor({ bolum: 'tarif', ...p, konu, ipucu: metin });
       const hedef = path.join(hat.KOK, klasor, 'sesli-tarif');
       fs.mkdirSync(hedef, { recursive: true });
       fs.copyFileSync(kayit, path.join(hedef, 'kayit' + uzanti));

@@ -26,6 +26,7 @@ Referans video/fotoğraf varsa **kadraj ve his referanstan gelir; mekân kilidi 
    - **Doku:** gözenek, tüy, ter, doğal ışık, hafif bulanıklık var mı yoksa stüdyo/stok fotoğraf temizliği mi?
    - **Eylem odağı:** tedavi anı (kupa, pompa, çizme, akış) detayda ve kadrajın merkezinde mi?
    - **Kamera hissi:** telefonla elde çekilmiş gibi mi, sahnelenmiş gibi mi?
+   - **Gösterim bedeni** (SENARYO.md'de o plana B kodu yazılmışsa; puan değil, eleme): kilide (`beden-kilidi/B?-*.png`) uymayan ten rengi/şekil, fazla/eksik parmak, yüz/kafa/kıyafet/takı görünmesi, çocuk görselinde (B1) el dışında bölge (ayak hariç), sunucu elinde çıplak ten → puan ne olursa olsun **YENİDEN ÜRET**. Referanstaki kişinin yüzü/kıyafeti göründüğü için üretilen karede de görünmesi gerekmez — his referanstan, kimlik kuralı CLAUDE.md'den gelir.
 4. Ortalama < 4 olan kare = **YENİDEN ÜRET**; düzeltmeyi somut yaz ("kamerayı sırtın 30 cm üstüne indir, baş ve sedye kadraj dışı, kupa kadrajın %40'ı").
 
 ## Çıktı
