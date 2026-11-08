@@ -18,6 +18,7 @@ const YARDIM = `Komutlar:
    ör. /yeni zencefilli limon 45sn kredili
 Sesli tarif: tarifi sesli mesajla anlatın (malzemeler, ölçüler, yapılışı). Ona uygun tarif videosu hazırlanır. Ses dosyası gönderirseniz açıklamasına süre/mod yazabilirsiniz (ör. "30sn kredili").
 Çekim videosu: videoyu bu sohbete gönderin, açıklamasına konuyu yazın (ör. "hacamat 25sn").
+Video linki: Instagram/TikTok/YouTube linkini yanına konuyla yazın (ör. "https://instagram.com/reel/… hacamat 25sn"). Video indirilir, eller ve ortam bizimkilerle değiştirilir; üstündeki yazı ve logolar kaldırılır.
 /durum — çalışan ve bekleyen işler
 /tercihler — sistemin sizden öğrendikleri
 /unut <no> — yanlış öğrenilen bir tercihi siler
@@ -176,6 +177,8 @@ export function telegramBaslat(hat) {
       try { const s = son ? hat.duzelt({ klasor, not: metin }) : hat.onayVer({ klasor, karar: 'duzelt', not: metin }); if (s !== 'hata') return yaz(chat, s === 'kuyruk' ? 'Not alındı, sıraya girdi.' : 'Not alındı, yeniden çalışıyor.'); }
       catch (e) { return yaz(chat, e.message); }
     }
+    const link = metin.startsWith('/') ? null : metin.match(/https?:\/\/\S+/i)?.[0];
+    if (link) return linkAl(chat, link, metin.replace(link, ' '));
     const [komut, ...geri] = metin.split(/\s+/);
     const arg = geri.join(' ');
     switch (komut.replace(/@.*$/, '').toLowerCase()) {
@@ -219,6 +222,65 @@ export function telegramBaslat(hat) {
       hat.otomatikBaslat(klasor);
       return yaz(chat, baslatildiMetni(hat, klasor));
     } catch (e) { return yaz(chat, 'Çekim alınamadı: ' + e.message); }
+  }
+
+  // Video linki (Instagram, TikTok, YouTube…): indir → çekim videosu gibi Video Edit hattına girer.
+  // Telegram'ın 20 MB sınırı burada yok. Videodaki yazı/logo/filigran Video Edit promptunda kaldırılır (cekim-donusturucu).
+  async function linkAl(chat, link, metin) {
+    const gecici = fs.mkdtempSync(path.join(os.tmpdir(), 'link-video-'));
+    try {
+      await yaz(chat, 'Link alındı, video indiriliyor…');
+      const dosya = await linkIndir(link, gecici);
+      const p = ayristir(metin, hat.SURE);
+      const sirada = hat.mesgul();
+      const klasor = hat.yeniKlasor({ bolum: 'cekim', ...p, konu: p.konu || 'çekim' });
+      await hat.kaynakEkle(klasor, klasor + path.extname(dosya).toLowerCase(), fs.createReadStream(dosya));
+      fs.writeFileSync(path.join(hat.KOK, klasor, 'KAYNAK-LINK.txt'), `${link}\n${new Date().toISOString()}\n`);
+      hat.otomatikBaslat(klasor);
+      return yaz(chat, baslatildiMetni(hat, klasor) + (sirada ? '\n(Önceki iş bitince başlayacak.)' : ''));
+    } catch (e) { return yaz(chat, 'Linkteki video alınamadı: ' + e.message + '\nVideoyu dosya olarak da gönderebilirsiniz.'); }
+    finally { fs.rmSync(gecici, { recursive: true, force: true }); }
+  }
+
+  // Önce yt-dlp (yerel, ücretsiz; uvx her seferinde güncel sürümü kullanır — site değişikliklerine karşı).
+  // Olmazsa ve .env'de APIFY_TOKEN varsa Apify (Instagram / TikTok).
+  async function linkIndir(link, dizin) {
+    const bul = () => fs.readdirSync(dizin).find(f => /^video\.(mp4|mov|m4v|webm)$/i.test(f));
+    let ytHata;
+    try {
+      // -S res:1080 → en çok 1080p (hat 720p kullanır; 4K gereksiz büyük). --js-runtimes node → YouTube için (Node zaten kurulu).
+      await komut('uvx', ['yt-dlp@latest', '--no-playlist', '--no-progress', '--js-runtimes', 'node', '-f', 'bv*+ba/b', '-S', 'res:1080,ext:mp4:m4a',
+        '--merge-output-format', 'mp4', '-o', path.join(dizin, 'video.%(ext)s'), link], 10 * 60e3);
+      if (bul()) return path.join(dizin, bul());
+      ytHata = new Error('yt-dlp dosya bırakmadı');
+    } catch (e) { ytHata = e; }
+    if (!process.env.APIFY_TOKEN) throw ytHata;
+    const url = await apifyVideoAdresi(link);
+    const r = await fetch(url);
+    if (!r.ok) throw new Error(`Apify videosu indirilemedi (${r.status})`);
+    const hedef = path.join(dizin, 'video.mp4');
+    fs.writeFileSync(hedef, Buffer.from(await r.arrayBuffer()));
+    return hedef;
+  }
+
+  async function apifyVideoAdresi(link) {
+    const tiktok = /tiktok\.com/i.test(link);
+    const aktor = tiktok ? 'clockworks~tiktok-scraper' : 'apify~instagram-scraper';
+    const girdi = tiktok ? { postURLs: [link], shouldDownloadVideos: true, resultsPerPage: 1 }
+      : { directUrls: [link], resultsType: 'posts', resultsLimit: 1 };
+    const r = await fetch(`https://api.apify.com/v2/acts/${aktor}/run-sync-get-dataset-items?timeout=240`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.APIFY_TOKEN}` }, body: JSON.stringify(girdi)
+    });
+    if (!r.ok) throw new Error(`Apify hata verdi (${r.status}): ${kisa(await r.text(), 200)}`);
+    // Aktörlerin alan adları değişebiliyor: öğede video adresi gibi duran ilk değeri al.
+    const ara = (o, anahtar = '') => {
+      if (typeof o === 'string') return /^https?:/.test(o) && (/\.mp4(\?|$)/i.test(o) || /video.*url|downloadaddr|mediaurls/i.test(anahtar)) ? o : null;
+      if (o && typeof o === 'object') for (const [k, v] of Object.entries(o)) { const s = ara(v, Array.isArray(o) ? anahtar : k); if (s) return s; }
+      return null;
+    };
+    const adres = ara(await r.json());
+    if (!adres) throw new Error('Apify sonucunda video adresi yok (gönderi video olmayabilir ya da gizli hesap)');
+    return adres;
   }
 
   // Sesli tarif: kaydı indir → whisper ile deşifre (yerel, 0 kredi) → konu adı → tarif videosu.
