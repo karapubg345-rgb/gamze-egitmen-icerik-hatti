@@ -198,12 +198,26 @@ function isEkle(is) {
   return 'basladi';
 }
 
-function calistir({ klasor, asama, not, krediOnay, krediLimit, otoDeneme }) {
+// Aşamanın kredi başlangıç kaydı: Claude aşamanın ilk çalışmasında TopView bakiyesini buraya yazar; yarıda kalıp sürdürülen
+// çalışma aynı kaydı kullanır, böylece kesilen çalışmada harcanan kredi kaybolmaz. Aşama bitince ya da sıfırdan başlarken silinir.
+const krediKaydi = (klasor, asama) => path.join(guvenliYol(klasor), '.arayuz', `kredi-${asama}.json`);
+
+// TopView'a gönderilmiş ama sonucu indirilmemiş görevler (.arayuz/topview-dosyalar.json → gorevler[]).
+function bekleyenGorevler(klasor, asama) {
+  try {
+    const t = JSON.parse(fs.readFileSync(path.join(guvenliYol(klasor), '.arayuz', 'topview-dosyalar.json'), 'utf8'));
+    return (t.gorevler || []).filter(g => (!g.asama || g.asama === asama) && !['indirildi', 'hata', 'iptal'].includes(g.durum));
+  } catch { return []; }
+}
+
+function calistir({ klasor, asama, not, krediOnay, krediLimit, otoDeneme, surdur }) {
   if (calisan) throw new Error(`Şu an çalışan bir iş var: ${calisan.klasor} · ${calisan.asama}`);
   const d = durumOku(klasor);
   const b = bolumBul(d.bolum);
   const a = b.asamalar.find(x => x.id === asama);
   if (!a) throw new Error('aşama yok');
+  // Yarıda kalmış aşama hangi yoldan başlatılırsa başlatılsın (açılış, "Devam", elle) sürdürme kipinde çalışır.
+  surdur = !!surdur || d.asamalar[asama]?.durum === 'yarida';
   const krediHarcar = d.mod === 'kredili' && a.kredili;
   // Otomatik akışta bütçe baştan onaylıdır; elle çalıştırmada kutu işaretlenmeli.
   const kalan = d.otomatik ? (d.butce || 0) - d.harcanan : Number(krediLimit) || 0;
@@ -218,18 +232,32 @@ function calistir({ klasor, asama, not, krediOnay, krediLimit, otoDeneme }) {
     .replaceAll('{kaynaklar}', (d.kaynaklar || []).join(', ') || 'referans-videolar/ altındaki ilgili çekim')
     .replaceAll('{not}', (not || '').trim() || 'yok').replaceAll('{sure}', String(d.sure)).replaceAll('{planSayisi}', String(planSayisi(d.sure))).replaceAll('{parcalar}', parcalar(d.sure))
     .replaceAll('{butce}', String(d.otomatik ? d.butce : kalan)).replaceAll('{harcanan}', String(d.otomatik ? d.harcanan : 0))
-    .replaceAll('{asamaIdleri}', b.asamalar.map(x => x.id).join(', ')).replaceAll('{kalan}', String(Math.max(0, Math.round(kalan * 100) / 100)));
+    .replaceAll('{asamaIdleri}', b.asamalar.map(x => x.id).join(', ')).replaceAll('{kalan}', String(Math.max(0, Math.round(kalan * 100) / 100)))
+    .replaceAll('{asama}', asama);
+
+  const logDir = path.join(guvenliYol(klasor), '.arayuz');
+  fs.mkdirSync(logDir, { recursive: true });
+  const logYolu = path.join(logDir, `${asama}.log`);
+  let surdurBlogu = '';
+  if (surdur) {
+    // Kesilen çalışmanın günlüğü silinmesin: neyin gönderildiği orada yazıyor.
+    let eskiLog = '';
+    if (fs.existsSync(logYolu)) { eskiLog = `.arayuz/${asama}.yarida-${Date.now()}.log`; fs.renameSync(logYolu, path.join(guvenliYol(klasor), eskiLog)); }
+    const gorevler = bekleyenGorevler(klasor, asama);
+    surdurBlogu = '\n\nSÜRDÜRME — BU AŞAMA YARIDA KALMIŞTI (sunucu kapandı). Baştan başlama: yukarıdaki SÜRDÜRME kuralını uygula, hazır olanı koru, kaldığın yerden devam et.'
+      + (eskiLog ? ` Kesilen çalışmanın günlüğü: {klasor}/${eskiLog} — önce onu oku (en son ne yapılıyordu, hangi görev gönderildi).` : '')
+      + (gorevler.length ? `\nGÖNDERİLMİŞ, SONUCU ALINMAMIŞ TopView görevleri (YENİ GÖREV AÇMA; önce bunları sorgula — kredisizde topview_list_board_tasks / topview_query_task, kredilide topview_query_task; bitmişse indir, sürüyorsa bekle, hata verdiyse durumunu 'hata' yap):\n${gorevler.map(g => '- ' + JSON.stringify(g)).join('\n')}` : '')
+      + (fs.existsSync(krediKaydi(klasor, asama)) ? `\nKREDİ: .arayuz/kredi-${asama}.json kesilen çalışmanın başlangıç bakiyesidir; ÜZERİNE YAZMA. Kesilen çalışmada harcanan = o başlangıç − şimdiki bakiye; bu aşamada harcayabileceğin kalan = {kalan} − bu tutar. HARCANAN_KREDI = başlangıç − son bakiye (iki çalışmanın toplamı).` : '');
+  } else fs.rmSync(krediKaydi(klasor, asama), { force: true }); // sıfırdan çalışma: eski kayıt hesabı bozmasın
   const istem = doldur(t.ortak).replace('ÜRETİM MODU: {mod}', 'ÜRETİM MODU: ' + doldur(modKurali))
-    + '\n\nAŞAMA — ' + a.ad + ':\n' + doldur(a.talimat)
+    + '\n\nAŞAMA — ' + a.ad + ':\n' + doldur(t.surdurme) + (a.surdur ? ' Bu aşamada: ' + doldur(a.surdur) : '') + '\n' + doldur(a.talimat) + doldur(surdurBlogu)
     + '\n\nRAPOR SONU (sunucu okur, bu sırayla): denetimde bulduğun her eksik için bir `EKSIK: <kısa, kullanıcının anlayacağı dille>` satırı (en fazla 6); '
     + '`UYUM: <0-100>` — çıktının isteğe (senaryo, CLAUDE.md kuralları, kullanıcı notu) genel uyum yüzdesi, denetçi raporlarına dayanarak dürüstçe; '
     + '`SONUC: TAMAM` ya da `SONUC: SORUN` (denetimden geçmeyen kare/video, bütçe ya da Sınırsız mod nedeniyle yapılamayan gönderim, eksik çıktı varsa SORUN); gerekiyorsa `GERI: <aşama-id>`; en son `HARCANAN_KREDI: <sayı>`.'
     + '\nKREDİ PAYI: kredili üretimi (video, Video Edit, ücretli görsel) bu aşama içinde kendiliğinden YENİDEN GÖNDERME — denetim kötüyse düşük UYUM ve EKSIK yaz, yeniden üretme kararı hattındır. Kredisiz işlerde (Sınırsız kareler) en fazla 1 düzeltme turu yap.';
 
-  const logDir = path.join(guvenliYol(klasor), '.arayuz');
-  fs.mkdirSync(logDir, { recursive: true });
-  const log = fs.createWriteStream(path.join(logDir, `${asama}.log`));
-  log.write(`# ${new Date().toLocaleString('tr-TR')} · ${klasor} · ${a.ad} · ${t.modlar[d.mod].ad} · ${d.sure} sn\n# Not: ${(not || '').trim() || '-'}\n\n`);
+  const log = fs.createWriteStream(logYolu);
+  log.write(`# ${new Date().toLocaleString('tr-TR')} · ${klasor} · ${a.ad} · ${t.modlar[d.mod].ad} · ${d.sure} sn${surdur ? ' · SÜRDÜRME' : ''}\n# Not: ${(not || '').trim() || '-'}\n\n`);
 
   const araclar = TEMEL_ARACLAR + (tarayici ? ',mcp__playwright' : '');
   const yasak = d.mod === 'kredili' ? [] : ['--disallowedTools', KREDILI_MCP.join(',')];
@@ -248,7 +276,7 @@ function calistir({ klasor, asama, not, krediOnay, krediLimit, otoDeneme }) {
   });
   proc.stderr.on('data', p => log.write('[stderr] ' + p.toString('utf8')));
   calisan = { klasor, asama, proc, baslangic: Date.now() };
-  d.asamalar[asama] = { durum: 'calisiyor', baslangic: new Date().toISOString(), deneme: otoDeneme ? d.asamalar[asama]?.deneme || 0 : 0 };
+  d.asamalar[asama] = { durum: 'calisiyor', baslangic: new Date().toISOString(), deneme: otoDeneme ? d.asamalar[asama]?.deneme || 0 : 0, ...(surdur ? { surdurme: true } : {}) };
   durumYaz(klasor, d);
   olaylar.emit('asama', { klasor, asama, ad: a.ad, durum: 'basladi' });
   proc.on('close', kod => {
@@ -273,6 +301,7 @@ function asamaBitti(klasor, a, { kod, durduruldu, sonuc, sure }) {
   const d = durumOku(klasor);
   const k = sonuc.match(/HARCANAN_KREDI:\s*([\d.,]+)/);
   if (k) d.harcanan = Math.round((d.harcanan + Number(k[1].replace(',', '.'))) * 100) / 100;
+  if (k || !durduruldu) fs.rmSync(krediKaydi(klasor, a.id), { force: true }); // harcama durum.json'a geçti
   const sorun = /SONUC:\s*SORUN/i.test(sonuc);
   const durum = durduruldu ? 'durduruldu' : kod === 0 ? 'bitti' : 'hata';
   const deneme = d.asamalar[a.id]?.deneme || 0;
@@ -397,14 +426,47 @@ function dosyaGonder(req, res, tam) {
   }
 }
 
-// Önceki oturumdan "çalışıyor" kalmış aşamalar yarıda kesilmiştir.
+// Önceki oturumdan "çalışıyor" kalmış aşamalar yarıda kesilmiştir → "yarida" (hata değil). Sürdürme açılışta, Telegram bağlandıktan sonra.
+const surdurulecek = []; // { klasor, asama | null }  (asama null: kuyrukta beklerken kapanmış otomatik iş)
 for (const k of videoKlasorleri()) {
   try {
     const d = JSON.parse(fs.readFileSync(durumYolu(k), 'utf8'));
-    let degisti = false;
-    for (const a of Object.values(d.asamalar || {})) if (a.durum === 'calisiyor') { a.durum = 'hata'; a.ozet = 'Sunucu kapandığı için yarıda kaldı.'; degisti = true; }
-    if (degisti) { d.otomatik = false; fs.writeFileSync(durumYolu(k), JSON.stringify(d, null, 2)); }
+    let yarida = null;
+    for (const [id, a] of Object.entries(d.asamalar || {})) if (a.durum === 'calisiyor') {
+      Object.assign(a, { durum: 'yarida', ozet: 'Sunucu kapandığı için yarıda kaldı; kaldığı yerden sürdürülüyor.', kesilme: new Date().toISOString() });
+      yarida = id;
+    }
+    if (yarida) fs.writeFileSync(durumYolu(k), JSON.stringify(d, null, 2));
+    if (d.otomatik && !d.bekleyen && !d.teslim) surdurulecek.push({ klasor: k, asama: yarida });
   } catch {}
+}
+
+// Otomatik işleri sırayla kuyruğa verir (tek seferde tek iş; isEkle). Onay bekleyenler beklemeye devam eder.
+// Sürdürme de deneme sayılır: aşama zaten 1 kez yeniden denendiyse sürdürülmez, hata kapısına düşer (sonsuz döngü yok).
+function acilistaSurdur() {
+  surdurulecek.sort((x, y) => (y.asama ? 1 : 0) - (x.asama ? 1 : 0)); // yarıda kalan önce, kuyrukta bekleyenler sonra
+  for (const { klasor, asama } of surdurulecek) {
+    try {
+      const d = durumOku(klasor);
+      if (!asama) { olaylar.emit('surduruluyor', { klasor, konu: d.konu, ad: sonrakiAsama(d)?.ad }); sonrakiniBaslat(klasor); continue; }
+      const a = bolumBul(d.bolum).asamalar.find(x => x.id === asama);
+      const deneme = d.asamalar[asama].deneme || 0;
+      if (deneme >= 1) {
+        // Durum "yarida" kalır: "Tekrar dene" (onayVer → isEkle → calistir) sürdürme kipinde başlar.
+        const ozet = 'Sunucu kapandığı için yarıda kaldı; bu aşama zaten yeniden denenmişti, kendiliğinden sürdürülmedi. "Tekrar dene" ile kaldığı yerden devam eder.';
+        d.asamalar[asama].ozet = ozet;
+        d.bekleyen = { asama, tur: 'hata', zaman: new Date().toISOString() };
+        durumYaz(klasor, d);
+        olaylar.emit('onay', { klasor, asama, tur: 'hata', ozet });
+        continue;
+      }
+      d.asamalar[asama].deneme = deneme + 1;
+      durumYaz(klasor, d);
+      olaylar.emit('surduruluyor', { klasor, konu: d.konu, ad: a.ad, asama });
+      console.log(`Sürdürülüyor: ${klasor} · ${a.ad} (yarıda kalmıştı)`);
+      isEkle({ klasor, asama, otoDeneme: true, surdur: true });
+    } catch (e) { console.log('Sürdürülemedi:', klasor, e.message); }
+  }
 }
 
 const durumListesi = () => ({
@@ -460,3 +522,5 @@ if (process.env.TELEGRAM_BOT_TOKEN) {
     mesgul: () => !!calisan
   });
 }
+
+acilistaSurdur(); // Telegram dinleyicileri bağlandıktan sonra: "sürdürülüyor" mesajı kaybolmasın

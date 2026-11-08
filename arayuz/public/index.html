@@ -368,6 +368,7 @@
   .nokta-adim.bitti { background: var(--yesil); }
   .nokta-adim.calisiyor { background: var(--bakir); animation: pulse 1.2s infinite; }
   .nokta-adim.hata { background: var(--kirmizi); }
+  .nokta-adim.yarida { background: var(--sari); }
 
   /* Office Space / Stüdyo Katı */
   .ofis-alani {
@@ -512,6 +513,7 @@
   .ajan-avatar .durum-noktasi.bitti { background: var(--yesil); }
   .ajan-avatar .durum-noktasi.calisiyor { background: var(--bakir); animation: pulse 1.2s infinite; }
   .ajan-avatar .durum-noktasi.hata { background: var(--kirmizi); }
+  .ajan-avatar .durum-noktasi.yarida { background: var(--sari); }
 
   .masa-sira {
     font-size: 11.5px;
@@ -566,6 +568,7 @@
   .rozet-rozet.calisiyor { background: var(--bakir-acik); color: var(--bakir); }
   .rozet-rozet.bekliyor { background: var(--zemin); color: var(--soluk); }
   .rozet-rozet.hata { background: var(--kirmizi-acik); color: var(--kirmizi); }
+  .rozet-rozet.yarida { background: var(--sari-acik); color: var(--sari); }
   .kredi-etiket {
     color: var(--bakir);
     font-weight: 600;
@@ -860,7 +863,7 @@
 
 <script>
 const $ = s => document.querySelector(s);
-const durumMetin = { bitti: 'Tamamlandı', calisiyor: 'Çalışıyor', hata: 'Hata', durduruldu: 'Durduruldu' };
+const durumMetin = { bitti: 'Tamamlandı', calisiyor: 'Çalışıyor', hata: 'Hata', durduruldu: 'Durduruldu', yarida: 'Yarıda kaldı · sürdürülecek' };
 
 // Ajanların Ofis Masa Konfigürasyonu (Gamze Eğitmen Projesi kurallarına göre)
 const AJAN_MASALARI = {

@@ -1,5 +1,6 @@
 {
-  "ortak": "Gamze Eğitmen içerik hattı — ARAYÜZDEN çalıştırılan TEK aşama. CLAUDE.md ve SISTEM.md kurallarına harfiyen uy. Video klasörü: {klasor}. Konu: {konu}. Bölüm: {bolum}. Hedef video süresi: {sure} sn. Yalnız BU aşamayı yap, sonraki aşamaya GEÇME, kullanıcıya soru sorma (cevap veremez): karar gerekiyorsa en güvenli seçeneği uygula ve raporda belirt. ÜRETİM MODU: {mod}. Kullanıcının ek notu: {not}. Bitince kısa Türkçe rapor yaz: ne üretildi (dosya yolları), denetim sonucu, sorunlar ve kullanıcının bakması gerekenler. Kullanıcının notu bu aşamada giderilemiyorsa (ör. kurguda \"kavanoz değişsin\") o işi zorlama: raporun sonuna `GERI: <aşama-id>` yaz (bu bölümün aşamaları: {asamaIdleri}); hat o aşamadan notla yeniden başlar. HARCANAN_KREDI bu aşamada harcanan TopView kredisidir (yoksa 0).",
+  "ortak": "Gamze Eğitmen içerik hattı — ARAYÜZDEN çalıştırılan TEK aşama. CLAUDE.md ve SISTEM.md kurallarına harfiyen uy. Video klasörü: {klasor}. Konu: {konu}. Bölüm: {bolum}. Hedef video süresi: {sure} sn. Yalnız BU aşamayı yap, sonraki aşamaya GEÇME, kullanıcıya soru sorma (cevap veremez): karar gerekiyorsa en güvenli seçeneği uygula ve raporda belirt. ÜRETİM MODU: {mod}. Kullanıcının ek notu: {not}. Bitince kısa Türkçe rapor yaz: ne üretildi (dosya yolları), denetim sonucu, sorunlar ve kullanıcının bakması gerekenler. Kullanıcının notu bu aşamada giderilemiyorsa (ör. kurguda \"kavanoz değişsin\") o işi zorlama: raporun sonuna `GERI: <aşama-id>` yaz (bu bölümün aşamaları: {asamaIdleri}); hat o aşamadan notla yeniden başlar. HARCANAN_KREDI bu aşamada harcanan TopView kredisidir (yoksa 0). GÖREV KAYDI (iki modda da): TopView'a her görev gönderdiğin AN (sonucu beklemeden) görev kimliğini {klasor}/.arayuz/topview-dosyalar.json içindeki \"gorevler\" dizisine ekle — {\"taskId\", \"taskType\", \"asama\": \"{asama}\", \"ad\": hedef dosya adı (ör. video-25sn, kare-03, parca-1), \"hedef\": inecek yol, \"gonderim\": ISO zaman, \"durum\": \"gonderildi\"}; kredisizde taskId'yi gönderimin hemen ardından topview_list_board_tasks'tan al. Sonuç inince o kaydı \"durum\": \"indirildi\" (görev hata verdiyse \"hata\") yap. Dosyadaki diğer alanlara (fileId'ler) dokunma; dosya yoksa {\"gorevler\": []} ile oluştur.",
+  "surdurme": "SÜRDÜRME KURALI (her çalışmada, önce bunu yap): işe başlamadan bu aşamanın çıktılarına ({klasor} altındaki çıktı dosyaları ve klasörleri), {klasor}/.arayuz/ kayıtlarına (durum.json, topview-dosyalar.json → gorevler, önceki günlükler) bak. Tamamlanmış ve denetimden geçmiş kısmı YENİDEN ÜRETME, eksik kalan kısımdan devam et. İstisna: kullanıcı notu ya da önceki denemenin eksikleri belirli bir çıktının değişmesini istiyorsa yalnız O çıktı yeniden üretilir; notla ilgisi olmayan hazır çıktılar korunur. topview-dosyalar.json'da bu aşamaya ait \"gonderildi\" durumunda görev varsa YENİ GÖREV AÇMA: o görevi sorgula, bitmişse indir, sürüyorsa bekle. Raporda 'HAZIR BULUNUP ATLANAN:' başlığıyla neyi hazır bulduğunu ve atladığını yaz.",
   "modlar": {
     "kredisiz": {
       "ad": "Kredisiz",
@@ -9,7 +10,7 @@
     "kredili": {
       "ad": "Kredili (hızlı)",
       "aciklama": "Tarayıcı açılmaz: TopView ve ElevenLabs MCP. Kareler 0,2 kredi, video ≈ 1,2 kredi/sn.",
-      "kural": "KREDİLİ — TARAYICI AÇMA, Playwright kullanma. TopView işleri yalnız TopView MCP ile (topview-uretim skill'i → 'Kredili mod (MCP)' bölümü): dosya yükleme ta_upload_credential + curl PUT + ta_upload_check_file; görsel topview_generate_image (image_edit, GPT Image 2, 9:16, 1K, medium); video topview_generate_video (omni_reference, Seedance 2.5); sonuç topview_query_task ile alınıp curl ile indirilir. Bu videonun toplam bütçesi {butce} kredi, şimdiye kadar harcanan {harcanan}; bu aşamada en fazla {kalan} kredi harcayabilirsin. Başta ve sonda topview_get_credit oku, farkı HARCANAN_KREDI olarak yaz. Bir gönderim kalan bütçeyi aşacaksa GÖNDERME, dur ve raporla. Ses: ElevenLabs MCP (mcp__elevenlabs__*, elevenlabs-ses skill'i → 'MCP yolu'); MCP bağlı değilse dur ve raporla (tarayıcıya geçme)."
+      "kural": "KREDİLİ — TARAYICI AÇMA, Playwright kullanma. TopView işleri yalnız TopView MCP ile (topview-uretim skill'i → 'Kredili mod (MCP)' bölümü): dosya yükleme ta_upload_credential + curl PUT + ta_upload_check_file; görsel topview_generate_image (image_edit, GPT Image 2, 9:16, 1K, medium); video topview_generate_video (omni_reference, Seedance 2.5); sonuç topview_query_task ile alınıp curl ile indirilir. Bu videonun toplam bütçesi {butce} kredi, şimdiye kadar harcanan {harcanan}; bu aşamada en fazla {kalan} kredi harcayabilirsin. Başta topview_get_credit oku; {klasor}/.arayuz/kredi-{asama}.json YOKSA {\"baslangic\": remainCredit, \"zaman\": ISO} olarak yaz, VARSA üzerine yazma (yarıda kalmış çalışmanın başlangıcıdır). Sonda tekrar oku; HARCANAN_KREDI = kayıttaki başlangıç − son bakiye. Bir gönderim kalan bütçeyi aşacaksa GÖNDERME, dur ve raporla. Ses: ElevenLabs MCP (mcp__elevenlabs__*, elevenlabs-ses skill'i → 'MCP yolu'); MCP bağlı değilse dur ve raporla (tarayıcıya geçme)."
     }
   },
   "bolumler": [
@@ -21,6 +22,7 @@
       "asamalar": [
         {
           "id": "senaryo",
+          "surdur": "SENARYO.md ve gercek-referans/REFERANS-KARTI.md varsa ve kullanıcı notu senaryoyu değiştirmeyi istemiyorsa yeniden yazma; gercek-referans/ altında indirilmiş fotoğraflar varsa aramayı baştan yapma, yalnız eksik kalan kartı tamamla.",
           "ad": "Senaryo ve gerçek referans",
           "aciklama": "Kanca, kısa planlar, taslak anlatım, açıklama ve uyarı satırı; tarifin gerçek fotoğraflarla doğrulanması.",
           "talimat": "SISTEM.md Bölüm 1 adım 1-2: {klasor}/SENARYO.md yaz (kanca yazısı, {sure} sn'ye uyan taslak anlatım, {planSayisi} kısa plan — her biri 2-3 sn, toplam {sure} sn —, açıklama metni, uyarı satırı; sağlık iddiası filtresi). Sonra gercek-referans ajanını çağır ({klasor}/gercek-referans/REFERANS-KARTI.md) ve gerekiyorsa senaryoyu gerçeğe göre düzelt. SESLİ TARİF: {klasor}/SESLI-TARIF.md varsa bu video Gamze Hoca'nın kendi sesli anlattığı tariftir ve senaryonun TEK kaynağıdır — malzemeler, ölçüler, sıra, süreler ve püf noktaları ondan birebir alınır; kendinden malzeme/adım ekleme, sırayı değiştirme. Metin otomatik deşifredir: bağlamdan açıkça anlaşılan yanlış duyulmuş kelimeleri düzelt (ör. 'tarçım' → tarçın), anlaşılmayanı uydurma, raporda EKSIK olarak yaz. Gerçek referans yalnız GÖRÜNÜMÜ doğrular (kıvam, renk, kap); Gamze'nin tarifiyle çelişirse tarif onunki kalır, görünüm gerçeğe göre kurulur. Anlatımdaki sağlık iddialarını CLAUDE.md sağlık diline çevir ('geleneksel olarak kullanılır'). Anlatım tarifin tamamını {sure} sn'ye sığdıramıyorsa en görsel adımları seç, atılanları raporda belirt. SENARYO.md'nin başına '## Kaynak: SESLI-TARIF.md' bölümüyle tarifi (malzeme + adım listesi) yaz. LİNKTEN TARİF: SESLI-TARIF.md başlığı 'Linkten alınan tarif' ise kaynak başka bir hesabın videosudur — tarifin kendisi (malzeme, ölçü, sıra) yine oradan alınır, 'Videodaki konuşma' ile 'Gönderi açıklaması' birlikte okunur (ölçüde yazılı açıklama esas); ama kanca ve anlatım cümleleri kopyalanmaz, Gamze Hoca'nın üslubuyla yeniden yazılır; kaynak hesabın adı, markası, ürün tanıtımı ve çağrıları (takip et, link bio vb.) alınmaz.",
@@ -29,6 +31,7 @@
         },
         {
           "id": "kareler",
+          "surdur": "nesne-kilidi/ ve kareler/ içindeki, DENETIM.md'de GEÇTİ (KULLAN/geçti) yazan dosyalar yeniden üretilmez; yalnız eksik kareler, DENETIM.md'de DÜZELT yazanlar ya da hiç denetlenmemiş kareler üretilir/denetlenir. Nesne kilidi (P1) varsa ve geçtiyse yeniden üretme — sonraki kareler onu referans alır.",
           "ad": "Nesne kilidi ve kareler",
           "aciklama": "GPT Image 2 · 9:16 · 1K: ana nesne bir kez, sonra her plan karesi; sahne-denetci süreklilik denetimi.",
           "talimat": "SISTEM.md Bölüm 1 adım 3-5 ve topview-uretim skill'i: nesne kilidi ({klasor}/nesne-kilidi/P1-*.png), sonra plan kareleri ({klasor}/kareler/), hepsi GPT Image 2 · 9:16 · 1K (moda göre: kredisizde Sınırsız tarayıcı, kredilide MCP). sahne-denetci ajanıyla denetle ({klasor}/DENETIM.md); DÜZELT olanları düzelt ve yeniden denetle (en fazla 1 tur; kalan küçük kusurları EKSIK olarak yaz).",
@@ -40,6 +43,7 @@
         },
         {
           "id": "video",
+          "surdur": "klipler/ altında hedef süreye (±1 sn; ffprobe ile ölç) uyan video varsa YENİDEN ÜRETME, doğrudan video-denetci denetiminden devam et (VIDEO-DENETIM.md yoksa yaz). Parçalı üretimde inmiş parçalar korunur, yalnız eksik parça üretilir. topview-dosyalar.json'da 'gonderildi' durumunda video görevi varsa yeni görev açma: o görevi sorgula, bitmişse indir, sürüyorsa bekle.",
           "ad": "Video üretimi",
           "aciklama": "Seedance 2.5 Omni Reference: tüm kareler + zaman damgalı tek prompt; video-denetci kontrolü.",
           "talimat": "SISTEM.md Bölüm 1 adım 6-7: kareleri Image1..N olarak verip Seedance 2.5 Omni Reference ile zaman damgalı prompt (planın gerçek eylemi, kamera hareketi), toplam {sure} sn, 720p, 9:16. Üretim: {parcalar}. Tek parçadan fazlaysa topview-uretim skill'inin '60 sn'ye kadar (parçalı üretim)' bölümünü uygula: parça sınırı bir plan kesmesine denk gelir, her parça kendi planlarının kareleriyle + aynı mekân/nesne/eller referanslarıyla + önceki parçanın son karesiyle üretilir, ortak başlık (eller, mekân, nesne tarifi) her parçada birebir aynıdır; parçaları ffmpeg ile birleştirip {klasor}/klipler/tam.mp4 yap ve dikiş noktasını video-denetci'ye ayrıca denetlet. Videoyu {klasor}/klipler/ altına indir, video-denetci ajanıyla {klasor}/VIDEO-DENETIM.md yaz.",
@@ -50,6 +54,7 @@
         },
         {
           "id": "ses",
+          "surdur": "ses/ altında whisper doğrulamasından geçmiş (metinle uyuşan) ses dosyası varsa ve anlatım metni değişmediyse ElevenLabs'ta yeniden üretme; yalnız doğrulanmamışsa doğrula, eksikse üret.",
           "ad": "Anlatım sesi",
           "aciklama": "Anlatım metni videodaki gerçek sahne zamanlarına göre yazılır; ElevenLabs Gamze sesi; whisper doğrulaması.",
           "talimat": "SISTEM.md Bölüm 1 adım 8: anlatım metnini VIDEO-DENETIM.md'deki gerçek sahne zamanlarına ve videoda görünen hareketlere göre kesinleştir ({sure} sn'yi aşmasın; SENARYO.md'ye yaz), elevenlabs-ses skill'iyle Gamze sesinde üret ({klasor}/ses/), whisper ile doğrula. {klasor}/SESLI-TARIF.md varsa anlatımda Gamze Hoca'nın kendi ifadelerini ve hitap biçimini mümkün olduğunca koru (sağlık dili kuralı yine geçerli); başlığı 'Linkten alınan tarif' ise oradaki cümleleri kopyalama, Gamze Hoca'nın üslubuyla yeniden yaz.",
@@ -59,6 +64,7 @@
         },
         {
           "id": "kurgu",
+          "surdur": "teslim/ altında hazır teslim videosu ve ACIKLAMA.txt varsa ve kullanıcı notu kurgunun değişmesini istemiyorsa yeniden render alma; yalnız kontrolleri yap (süre, ses seviyesi, altyazı bandı, açıklamadaki uyarı satırı) ve eksik kontrol görselini üret.",
           "ad": "Kurgu ve teslim",
           "aciklama": "Dijital kamera planları, altyazı, kanca, ortam sesi; −14 LUFS teslim dosyası ve altyazı bandı kontrolü.",
           "talimat": "kurgu-ajani talimatlarıyla {klasor}/kurgu/ kur, render al, araclar/teslim.sh ile {klasor}/teslim/ altına teslim et, altyazı bandını kontrol et. {klasor}/teslim/ACIKLAMA.txt (açıklama + uyarı satırı) yaz.",
@@ -76,6 +82,7 @@
       "asamalar": [
         {
           "id": "kesitler",
+          "surdur": "kaynak/kurgu30.mp4, kaynak/sheet.jpg ve NOTLAR.md varsa kesit kurgusunu baştan yapma; yalnız eksik olanı tamamla.",
           "ad": "Kesitler ve kaynak video",
           "aciklama": "Yüklenen çekimden hedef süreye kesit kurgusu; her planda gerçekte ne olduğu ve hastanın göründüğü saniyeler.",
           "talimat": "cekim-donusturucu ajanının 1. adımı: kaynak çekimler: {kaynaklar}. Kesitleri seç, ≤ {sure} sn TEK kaynak video {klasor}/kaynak/kurgu30.mp4 yap (ad tarihsel; 30 sn'den uzun olabilir — dönüşüm {parcalar} olarak yapılacak, parça sınırlarını bir plan kesmesine koy ve NOTLAR.md'ye yaz), kontak şeridini {klasor}/kaynak/sheet.jpg olarak kaydet, {klasor}/NOTLAR.md'ye her planın gerçek içeriğini (hangi el ne tutuyor, hangi planda hangi nesne YOK) ve hastanın kafa/kıyafetinin göründüğü saniyeleri yaz, {klasor}/SENARYO.md'ye kesit tablosunu yaz.",
@@ -85,6 +92,7 @@
         },
         {
           "id": "donustur",
+          "surdur": "klipler/edit-*.mp4 altında kaynak süresine uyan dönüşüm varsa YENİDEN GÖNDERME, karşılaştırma ve video-denetci denetiminden devam et. Parçalı dönüşümde inmiş parçalar korunur. topview-dosyalar.json'da 'gonderildi' durumunda Video Edit görevi varsa yeni görev açma: o görevi sorgula, bitmişse indir, sürüyorsa bekle.",
           "ad": "Video Edit dönüşümü",
           "aciklama": "Seedance 2.5 Video Edit: plan plan yazılmış prompt, gönderim kontrol listesi, kaynakla kare kare karşılaştırma.",
           "talimat": "cekim-donusturucu ajanının 2-4. adımları: dönüşüm {parcalar}; birden fazla parçada kaynak NOTLAR.md'deki plan kesmelerinden ffmpeg ile bölünür (kaynak/parca-1.mp4 …), her parça aynı referanslar ve aynı el/mekân tarifiyle ayrı Video Edit görevi olur, sonra birleştirilir ({klasor}/klipler/edit-tam.mp4) ve dikiş denetlenir. {klasor}/prompt.js (plan rehberli, ortak prompt yok; parça başına bir prompt; her promptta yazı/logo temizliği: 'Remove all on-screen text, captions, stickers, usernames, logos and watermarks; no text, no logo, no watermark' — kaynakta yazı/kesme olması için uyarı verilmez). Kredisiz modda sayfayı yeniden yükleyip araclar/topview/video-edit-gonder.js ile gönder (inputVideos = 1, duration = -1 kontrolü); kredili modda aynı promptu topview_generate_video ile gönder (omni_reference, omniReferenceTaskType=edit, duration=-1, kaynak inputVideos'ta, referanslar inputImages'ta). Çıktıyı {klasor}/klipler/ altına indir, kaynakla karşılaştır ({klasor}/klipler/karsilastir-*.mp4), video-denetci ajanının Video Edit maddeleriyle {klasor}/VIDEO-DENETIM.md yaz.",
@@ -95,6 +103,7 @@
         },
         {
           "id": "ses",
+          "surdur": "ses/ altında whisper doğrulamasından geçmiş ses dosyası varsa ve anlatım metni değişmediyse yeniden üretme.",
           "ad": "Anlatım sesi",
           "aciklama": "Gamze'nin canlı eğitmen dili; aynı kesit sırası önceden seslendirildiyse o ses yeniden kullanılır.",
           "talimat": "Anlatımı videodaki gerçek planlara göre Gamze'nin canlı eğitmen diliyle yaz ('şimdi kupamızı alıyoruz… bakın…'; sağlık iddiası yok; {sure} sn'yi aşmasın), {klasor}/SENARYO.md'ye ekle. Aynı kesit sırası daha önce bir video klasöründe seslendirildiyse o sesi kullan; değilse elevenlabs-ses skill'iyle Gamze sesinde üret ({klasor}/ses/), whisper ile doğrula.",
@@ -104,6 +113,7 @@
         },
         {
           "id": "kurgu",
+          "surdur": "teslim/ altında hazır teslim videosu ve ACIKLAMA.txt varsa ve kullanıcı notu kurgunun değişmesini istemiyorsa yeniden render alma; yalnız kontrolleri (hasta görünmüyor mu, süre, ses, altyazı bandı, uyarı satırı) yap.",
           "ad": "Kurgu ve teslim",
           "aciklama": "Hasta gizlenir (geniş planlar kırpılır), altyazı, kanca; −14 LUFS teslim dosyası.",
           "talimat": "kurgu-ajani talimatlarıyla (Bölüm 2 maddeleri: hasta görünen saniyelerde kırpma/kesme, gerekirse minterpolate ağır çekim) {klasor}/kurgu/ kur, render al, araclar/teslim.sh ile {klasor}/teslim/ altına teslim et; kırpılan planlardan büyük kare alıp hastanın görünmediğini doğrula. {klasor}/teslim/ACIKLAMA.txt yaz.",

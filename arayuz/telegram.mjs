@@ -147,6 +147,8 @@ export function telegramBaslat(hat) {
     }
   });
 
+  hat.olaylar.on('surduruluyor', o => herkese(`Stüdyo yeniden açıldı; ${o.konu} işi ${o.ad ? `"${o.ad}" aşamasından` : 'kaldığı yerden'} sürüyor. Hazır olan kısımlar yeniden üretilmeyecek.`));
+
   hat.olaylar.on('ogrendi', o => herkese(`Sizden yeni şeyler öğrendim, bundan sonraki videolarda uygulayacağım:\n${o.yeniler.map(y => '- ' + y).join('\n')}\n\nTüm liste: /tercihler · yanlışsa: /unut <no>`));
 
   hat.olaylar.on('bitti', async o => {
