@@ -19,6 +19,7 @@ const YARDIM = `Komutlar:
 Sesli tarif: tarifi sesli mesajla anlatın (malzemeler, ölçüler, yapılışı). Ona uygun tarif videosu hazırlanır. Ses dosyası gönderirseniz açıklamasına süre/mod yazabilirsiniz (ör. "30sn kredili").
 Çekim videosu: videoyu bu sohbete gönderin, açıklamasına konuyu yazın (ör. "hacamat 25sn").
 Video linki: Instagram/TikTok/YouTube linkini yanına konuyla yazın (ör. "https://instagram.com/reel/… hacamat 25sn"). Video indirilir, eller ve ortam bizimkilerle değiştirilir; üstündeki yazı ve logolar kaldırılır.
+Linkten yalnız tarif: linkin yanına "tarif" yazın (ör. "https://instagram.com/reel/… tarif 30sn"). Videodaki konuşma ve gönderi açıklaması okunur, tarif çıkarılır; görüntü kullanılmaz, video sıfırdan bizim mutfağımızda üretilir.
 /durum — çalışan ve bekleyen işler
 /tercihler — sistemin sizden öğrendikleri
 /unut <no> — yanlış öğrenilen bir tercihi siler
@@ -226,11 +227,15 @@ export function telegramBaslat(hat) {
 
   // Video linki (Instagram, TikTok, YouTube…): indir → çekim videosu gibi Video Edit hattına girer.
   // Telegram'ın 20 MB sınırı burada yok. Videodaki yazı/logo/filigran Video Edit promptunda kaldırılır (cekim-donusturucu).
+  // Linkin yanında "tarif" kelimesi varsa video kopyalanmaz: sesi deşifre edilir (+ gönderi açıklaması) → tarif videosu hattı.
   async function linkAl(chat, link, metin) {
+    let yalnizTarif = false;
+    metin = ` ${metin} `.replace(/\s(sadece|yalnız|yalniz)?\s*(tarif|tarifi|tarifini)(?=\s)/i, () => { yalnizTarif = true; return ' '; });
+    if (yalnizTarif) return linkTarifAl(chat, link, metin);
     const gecici = fs.mkdtempSync(path.join(os.tmpdir(), 'link-video-'));
     try {
       await yaz(chat, 'Link alındı, video indiriliyor…');
-      const dosya = await linkIndir(link, gecici);
+      const { dosya } = await linkIndir(link, gecici);
       const p = ayristir(metin, hat.SURE);
       const sirada = hat.mesgul();
       const klasor = hat.yeniKlasor({ bolum: 'cekim', ...p, konu: p.konu || 'çekim' });
@@ -244,23 +249,28 @@ export function telegramBaslat(hat) {
 
   // Önce yt-dlp (yerel, ücretsiz; uvx her seferinde güncel sürümü kullanır — site değişikliklerine karşı).
   // Olmazsa ve .env'de APIFY_TOKEN varsa Apify (Instagram / TikTok).
+  // Dönüş: { dosya, aciklama } — aciklama gönderinin yazısı (caption/description), tarif çıkarırken kullanılır.
   async function linkIndir(link, dizin) {
     const bul = () => fs.readdirSync(dizin).find(f => /^video\.(mp4|mov|m4v|webm)$/i.test(f));
     let ytHata;
     try {
       // -S res:1080 → en çok 1080p (hat 720p kullanır; 4K gereksiz büyük). --js-runtimes node → YouTube için (Node zaten kurulu).
       await komut('uvx', ['yt-dlp@latest', '--no-playlist', '--no-progress', '--js-runtimes', 'node', '-f', 'bv*+ba/b', '-S', 'res:1080,ext:mp4:m4a',
-        '--merge-output-format', 'mp4', '-o', path.join(dizin, 'video.%(ext)s'), link], 10 * 60e3);
-      if (bul()) return path.join(dizin, bul());
+        '--merge-output-format', 'mp4', '--write-info-json', '-o', path.join(dizin, 'video.%(ext)s'), link], 10 * 60e3);
+      if (bul()) {
+        let aciklama = '';
+        try { const i = JSON.parse(fs.readFileSync(path.join(dizin, 'video.info.json'), 'utf8')); aciklama = [i.title, i.description].filter(Boolean).filter((s, n, a) => a.indexOf(s) === n).join('\n\n'); } catch {}
+        return { dosya: path.join(dizin, bul()), aciklama };
+      }
       ytHata = new Error('yt-dlp dosya bırakmadı');
     } catch (e) { ytHata = e; }
     if (!process.env.APIFY_TOKEN) throw ytHata;
-    const url = await apifyVideoAdresi(link);
-    const r = await fetch(url);
+    const { adres, aciklama } = await apifyVideoAdresi(link);
+    const r = await fetch(adres);
     if (!r.ok) throw new Error(`Apify videosu indirilemedi (${r.status})`);
     const hedef = path.join(dizin, 'video.mp4');
     fs.writeFileSync(hedef, Buffer.from(await r.arrayBuffer()));
-    return hedef;
+    return { dosya: hedef, aciklama };
   }
 
   async function apifyVideoAdresi(link) {
@@ -278,9 +288,56 @@ export function telegramBaslat(hat) {
       if (o && typeof o === 'object') for (const [k, v] of Object.entries(o)) { const s = ara(v, Array.isArray(o) ? anahtar : k); if (s) return s; }
       return null;
     };
-    const adres = ara(await r.json());
+    const veri = await r.json();
+    const adres = ara(veri);
     if (!adres) throw new Error('Apify sonucunda video adresi yok (gönderi video olmayabilir ya da gizli hesap)');
-    return adres;
+    const oge = Array.isArray(veri) ? veri[0] : veri;
+    const aciklama = typeof oge?.caption === 'string' ? oge.caption : typeof oge?.text === 'string' ? oge.text : '';
+    return { adres, aciklama };
+  }
+
+  // Ses dosyasını (ses ya da video) whisper ile deşifre eder → { anlatim, desifre (klasör) }. Yerel, 0 kredi.
+  async function desifreEt(kayit, gecici) {
+    const desifre = path.join(gecici, 'desifre');
+    await komut('uv', ['run', '--with', 'faster-whisper', 'python', path.join(hat.KOK, 'araclar', 'desifre.py'), '--audio', kayit, '--out', desifre, '--model', 'medium'], 20 * 60e3);
+    const anlatim = fs.readFileSync(path.join(desifre, 'okunur.txt'), 'utf8').split(/\r?\n/).map(s => s.replace(/^\[[\d:.]+\]\s*/, '').trim()).filter(Boolean).join(' ');
+    return { anlatim, desifre };
+  }
+
+  // Linkteki videonun sesinden (+ gönderi açıklamasından) tarif çıkarır → tarif videosu hattı. Video hareketi kopyalanmaz.
+  async function linkTarifAl(chat, link, metin) {
+    const gecici = fs.mkdtempSync(path.join(os.tmpdir(), 'link-tarif-'));
+    try {
+      await yaz(chat, 'Link alındı, video indiriliyor; sonra tarifi dinleyeceğim… (2-5 dk sürebilir)');
+      const { dosya, aciklama } = await linkIndir(link, gecici);
+      let anlatim = '', desifre = null;
+      try { ({ anlatim, desifre } = await desifreEt(dosya, gecici)); }
+      catch (e) { console.log('Link deşifresi:', e.message); } // sessiz video: ses izi yok olabilir; açıklama yetebilir
+      const konusma = anlatim.split(/\s+/).filter(Boolean).length >= 5;
+      const yazili = aciklama.trim().split(/\s+/).filter(Boolean).length >= 5;
+      if (!konusma && !yazili) return yaz(chat, 'Linkte konuşma bulamadım, gönderi açıklamasında da tarif yok. Tarifi sesli mesajla anlatabilir ya da /yeni ile konuyu yazabilirsiniz.');
+
+      const p = ayristir(metin, hat.SURE);
+      const konu = p.konu || await konuBul([anlatim, aciklama].filter(Boolean).join('\n'));
+      const sirada = hat.mesgul();
+      const klasor = hat.yeniKlasor({ bolum: 'tarif', ...p, konu });
+      const hedef = path.join(hat.KOK, klasor, 'sesli-tarif');
+      fs.mkdirSync(hedef, { recursive: true });
+      fs.copyFileSync(dosya, path.join(hedef, 'kaynak' + path.extname(dosya).toLowerCase()));
+      if (desifre) for (const d of fs.readdirSync(desifre)) fs.copyFileSync(path.join(desifre, d), path.join(hedef, d));
+      fs.writeFileSync(path.join(hat.KOK, klasor, 'KAYNAK-LINK.txt'), `${link}\n${new Date().toISOString()}\n`);
+      fs.writeFileSync(path.join(hat.KOK, klasor, 'SESLI-TARIF.md'),
+        `# Linkten alınan tarif\n\nKaynak: ${link} (${new Date().toLocaleString('tr-TR')}) · video ve zamanlı deşifre: sesli-tarif/\n` +
+        `Not: Bu tarif Gamze Hoca'nın kendi sesi DEĞİL, başka bir hesabın videosundan alındı. Tarif (malzeme, ölçü, sıra) buradan alınır; ` +
+        `anlatım metni kelimesi kelimesine kopyalanmaz, Gamze Hoca'nın üslubuyla yeniden yazılır. Videonun görüntüsü kullanılmaz.\n` +
+        `Not: konuşma otomatik deşifredir; yanlış duyulmuş kelimeler olabilir. Konuşma ile açıklama çelişirse ölçüde açıklamadaki yazılı değer esas alınır.\n\n` +
+        `## Videodaki konuşma\n\n${konusma ? anlatim : '(konuşma yok ya da anlaşılmadı)'}\n\n## Gönderi açıklaması\n\n${yazili ? aciklama.trim() : '(açıklama yok)'}\n`);
+      hat.otomatikBaslat(klasor);
+      const ozet = konusma ? `Videoda duyduğum:\n"${kisa(anlatim, 900)}"` : 'Videoda konuşma yok; tarifi gönderi açıklamasından aldım.';
+      return yaz(chat, `${ozet}\n\n` + baslatildiMetni(hat, klasor) + (sirada ? '\n(Önceki iş bitince başlayacak.)' : '') +
+        '\n\nYalnız tarif alındı; videonun görüntüsü kullanılmayacak, sıfırdan bizim mutfağımızda üretilecek.');
+    } catch (e) { return yaz(chat, 'Linkten tarif alınamadı: ' + e.message + '\nTarifi sesli mesajla da anlatabilirsiniz.'); }
+    finally { fs.rmSync(gecici, { recursive: true, force: true }); }
   }
 
   // Sesli tarif: kaydı indir → whisper ile deşifre (yerel, 0 kredi) → konu adı → tarif videosu.
@@ -294,9 +351,7 @@ export function telegramBaslat(hat) {
       const uzanti = path.extname(ses.file_name || f.file_path).toLowerCase() || '.ogg';
       const kayit = path.join(gecici, 'kayit' + uzanti);
       fs.writeFileSync(kayit, Buffer.from(await (await fetch(`${DOSYA}/${f.file_path}`)).arrayBuffer()));
-      const desifre = path.join(gecici, 'desifre');
-      await komut('uv', ['run', '--with', 'faster-whisper', 'python', path.join(hat.KOK, 'araclar', 'desifre.py'), '--audio', kayit, '--out', desifre, '--model', 'medium'], 20 * 60e3);
-      const anlatim = fs.readFileSync(path.join(desifre, 'okunur.txt'), 'utf8').split(/\r?\n/).map(s => s.replace(/^\[[\d:.]+\]\s*/, '').trim()).filter(Boolean).join(' ');
+      const { anlatim, desifre } = await desifreEt(kayit, gecici);
       if (anlatim.split(/\s+/).length < 5) return yaz(chat, 'Kayıtta anlaşılır bir tarif duyamadım. Biraz daha yakından ve sessiz bir yerde tekrar gönderir misiniz?');
 
       const p = ayristir(metin, hat.SURE); // açıklama yalnız seçenekler için (süre, kredili, onaylı); konu da yazılabilir
