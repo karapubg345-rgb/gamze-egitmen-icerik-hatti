@@ -2,6 +2,7 @@
 // sunucu.mjs içinden başlar (.env: TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID). Bağımlılıksız: Node fetch + long polling.
 // Yalnız TELEGRAM_CHAT_ID'deki sohbetlere cevap verir; kimlik boşsa yalnız "kimliğiniz şu" der.
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { spawn, spawnSync } from 'node:child_process';
 import { Readable } from 'node:stream';
@@ -15,6 +16,7 @@ const YARDIM = `Komutlar:
 /yeni <konu> [süre] [kredili] [onaylı] — tarif videosu başlatır
    ör. /yeni bal zencefil 20sn
    ör. /yeni zencefilli limon 45sn kredili
+Sesli tarif: tarifi sesli mesajla anlatın (malzemeler, ölçüler, yapılışı). Ona uygun tarif videosu hazırlanır. Ses dosyası gönderirseniz açıklamasına süre/mod yazabilirsiniz (ör. "30sn kredili").
 Çekim videosu: videoyu bu sohbete gönderin, açıklamasına konuyu yazın (ör. "hacamat 25sn").
 /durum — çalışan ve bekleyen işler
 /tercihler — sistemin sizden öğrendikleri
@@ -167,6 +169,8 @@ export function telegramBaslat(hat) {
     }
     const video = m.video || (m.document?.mime_type?.startsWith('video/') ? m.document : null);
     if (video) return cekimAl(chat, m, video, metin);
+    const ses = m.voice || m.audio || (m.document?.mime_type?.startsWith('audio/') ? m.document : null);
+    if (ses) return sesliTarifAl(chat, ses, metin);
     if (notBekleyen.has(chat) && !metin.startsWith('/')) {
       const { klasor, son } = notBekleyen.get(chat); notBekleyen.delete(chat);
       try { const s = son ? hat.duzelt({ klasor, not: metin }) : hat.onayVer({ klasor, karar: 'duzelt', not: metin }); if (s !== 'hata') return yaz(chat, s === 'kuyruk' ? 'Not alındı, sıraya girdi.' : 'Not alındı, yeniden çalışıyor.'); }
@@ -215,6 +219,64 @@ export function telegramBaslat(hat) {
       hat.otomatikBaslat(klasor);
       return yaz(chat, baslatildiMetni(hat, klasor));
     } catch (e) { return yaz(chat, 'Çekim alınamadı: ' + e.message); }
+  }
+
+  // Sesli tarif: kaydı indir → whisper ile deşifre (yerel, 0 kredi) → konu adı → tarif videosu.
+  // Deşifre {klasor}/SESLI-TARIF.md'ye yazılır; senaryo aşaması tarifi oradan kurar (asamalar.json).
+  async function sesliTarifAl(chat, ses, metin) {
+    if (ses.file_size > 20e6) return yaz(chat, 'Ses kaydı 20 MB\'den büyük; Telegram botlar daha büyüğünü indiremiyor. Daha kısa bir kayıt gönderin.');
+    const gecici = fs.mkdtempSync(path.join(os.tmpdir(), 'sesli-tarif-'));
+    try {
+      await yaz(chat, 'Ses kaydı alındı, dinliyorum… (1-3 dk sürebilir)');
+      const f = await tg('getFile', { file_id: ses.file_id });
+      const uzanti = path.extname(ses.file_name || f.file_path).toLowerCase() || '.ogg';
+      const kayit = path.join(gecici, 'kayit' + uzanti);
+      fs.writeFileSync(kayit, Buffer.from(await (await fetch(`${DOSYA}/${f.file_path}`)).arrayBuffer()));
+      const desifre = path.join(gecici, 'desifre');
+      await komut('uv', ['run', '--with', 'faster-whisper', 'python', path.join(hat.KOK, 'araclar', 'desifre.py'), '--audio', kayit, '--out', desifre, '--model', 'medium'], 20 * 60e3);
+      const anlatim = fs.readFileSync(path.join(desifre, 'okunur.txt'), 'utf8').split(/\r?\n/).map(s => s.replace(/^\[[\d:.]+\]\s*/, '').trim()).filter(Boolean).join(' ');
+      if (anlatim.split(/\s+/).length < 5) return yaz(chat, 'Kayıtta anlaşılır bir tarif duyamadım. Biraz daha yakından ve sessiz bir yerde tekrar gönderir misiniz?');
+
+      const p = ayristir(metin, hat.SURE); // açıklama yalnız seçenekler için (süre, kredili, onaylı); konu da yazılabilir
+      const konu = p.konu || await konuBul(anlatim);
+      const sirada = hat.mesgul();
+      const klasor = hat.yeniKlasor({ bolum: 'tarif', ...p, konu });
+      const hedef = path.join(hat.KOK, klasor, 'sesli-tarif');
+      fs.mkdirSync(hedef, { recursive: true });
+      fs.copyFileSync(kayit, path.join(hedef, 'kayit' + uzanti));
+      for (const d of fs.readdirSync(desifre)) fs.copyFileSync(path.join(desifre, d), path.join(hedef, d));
+      fs.writeFileSync(path.join(hat.KOK, klasor, 'SESLI-TARIF.md'),
+        `# Gamze Hoca'nın sesli tarifi\n\nKaynak: Telegram sesli mesajı (${new Date().toLocaleString('tr-TR')}) · kayıt ve zamanlı deşifre: sesli-tarif/\n` +
+        `Not: otomatik deşifredir; yanlış duyulmuş kelimeler olabilir (şüpheliler: sesli-tarif/supheli.txt).\n\n## Anlatım\n\n${anlatim}\n`);
+      hat.otomatikBaslat(klasor);
+      return yaz(chat, `Anladığım tarif:\n"${kisa(anlatim, 1200)}"\n\n` + baslatildiMetni(hat, klasor) + (sirada ? '\n(Önceki iş bitince başlayacak.)' : '') +
+        '\n\nYanlış duyduğum bir yer varsa iş bitince "Düzelt" ile yazabilirsiniz ya da /dur deyip kaydı yeniden gönderin.');
+    } catch (e) { return yaz(chat, 'Ses kaydı işlenemedi: ' + e.message); }
+    finally { fs.rmSync(gecici, { recursive: true, force: true }); }
+  }
+
+  function komut(prog, args, sinir, girdi) {
+    return new Promise((ok, hata) => {
+      // shell: Windows'ta claude/uv .cmd olabilir; argümanlar tırnaklanır (boşluklu yol, boş --tools değeri).
+      const p = spawn([prog, ...args.map(a => `"${a}"`)].join(' '), { cwd: hat.KOK, windowsHide: true, shell: true });
+      let cikti = '';
+      const z = setTimeout(() => { p.kill(); hata(new Error(`${prog} zaman aşımı`)); }, sinir);
+      p.stdout.on('data', c => (cikti += c)); p.stderr.on('data', c => (cikti += c));
+      p.on('error', e => { clearTimeout(z); hata(e); });
+      p.on('close', kod => { clearTimeout(z); kod === 0 ? ok(cikti) : hata(new Error(`${prog} hata verdi: ${kisa(cikti.trim().split('\n').slice(-3).join(' '), 300)}`)); });
+      if (girdi != null) p.stdin.end(girdi);
+    });
+  }
+
+  // Anlatımdan kısa konu adı (klasör adı ve mesajlar için). Araçsız, kısa bir claude -p; olmazsa ilk kelimeler.
+  async function konuBul(anlatim) {
+    try {
+      const c = await komut('claude', ['-p', '--model', 'haiku', '--tools', '', '--strict-mcp-config'], 90e3,
+        'Aşağıdaki sesli tarif anlatımının konusunu 2-5 kelimelik Türkçe bir tarif adıyla yaz (ör. "bal zencefil macunu"). Yalnız adı yaz; tırnak, nokta, açıklama yok.\n\n' + anlatim.slice(0, 4000));
+      const ad = c.trim().split('\n').pop().replace(/["'.*]/g, '').trim();
+      if (ad && ad.length <= 60) return ad;
+    } catch (e) { console.log('Konu adı çıkarılamadı:', e.message); }
+    return anlatim.split(/\s+/).slice(0, 5).join(' ').replace(/[.,!?]/g, '') || 'sesli tarif';
   }
 
   function guncelle(chat) {

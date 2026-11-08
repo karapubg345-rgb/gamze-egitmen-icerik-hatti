@@ -70,6 +70,7 @@ Repodaki gerçek dosyalarla dener, çıktıları `ornekler\cikti\` klasörüne k
 3. Kullanım:
    - `/yeni bal zencefil 20sn` → tarif videosu, kredisiz (0 kredi).
    - `/yeni bal zencefil 20sn kredili` → tarayıcı açılmadan hızlı (bütçe otomatik hesaplanır; `40kredi` yazılırsa o).
+   - **Sesli tarif:** tarifi bota sesli mesajla anlatın (malzemeler, ölçüler, yapılışı). Bot dinler, anladığı metni geri yazar ve o tarife uygun video hazırlar (kredisiz, 25 sn). Ses dosyası olarak gönderirseniz açıklamasına `30sn`, `kredili`, `onaylı` yazılabilir. Deşifre bu bilgisayarda Whisper ile yapılır (0 kredi, 1 dk ses ≈ 1-3 dk).
    - Çekim videosu: videoyu sohbete gönder, açıklamasına konuyu yaz (`hacamat 25sn`). Telegram botlar **20 MB**'den büyük dosya indiremez; büyükse Stüdyo'dan yükleyin.
    - **Tam otomatik** (varsayılan): arada soru gelmez; Claude her aşamayı kendisi denetler, sorunluysa kendisi yeniden yapar. Sohbete yalnız bitmiş video + açıklama metni gelir. Kredi korumak için küçük kusurlarda tekrar tekrar üretmez: sonuç isteğe %70 ve üstü uyuyorsa videoyu gönderir, eksikleri listeler ve "isterseniz düzeltmeye başlayabilirim" der (**Eksikleri düzelt** düğmesi). Payın altındaki sonuç yalnız bir kez yeniden denenir. Beğenmezseniz **Düzelt** → ne istediğinizi yazın; Claude hangi aşamadan düzelteceğine kendisi karar verir.
    - `onaylı` yazılırsa o video **kareler** (çekimde **kesitler**) hazır olunca ve **teslimde** düğmeyle onay bekler.

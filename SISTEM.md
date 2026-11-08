@@ -10,6 +10,7 @@ Gamze konuyu/tarifi verir → hat 10-60 sn'lik yüzsüz Reel çıkarır (30 sn �
 
 ## Bölüm 1 — Tarif videoları (arayüz sekmesi 1 · sıfırdan yapay zekâ; çekimi olmayan konular)
 Akış (her video `video-NN-konu/` klasörü):
+0. **Sesli tarif (varsa)** — Gamze Hoca tarifi Telegram'dan sesli mesajla gönderdiyse bot onu whisper ile deşifre eder → `SESLI-TARIF.md` (+ `sesli-tarif/` kayıt ve zamanlı deşifre). Senaryonun TEK kaynağı odur: malzeme, ölçü, sıra birebir; gerçek referans yalnız görünümü doğrular; sağlık dili filtresi yine uygulanır.
 1. **SENARYO.md** — kanca + 20-30 sn metin + 4-6 sahne listesi + açıklama metni + uyarı satırı. İddia filtresi: "tedavi eder/geçer" yok, "geleneksel olarak" dili.
 2. **gercek-referans** ajanı — tarifin gerçek fotoğrafları → `gercek-referans/` + REFERANS-KARTI.md (+ gerekiyorsa senaryo düzeltmesi).
 3. **Nesne kilidi** — ana nesne(ler) (kavanoz, kâse, sülük kabı...) M0 mekânında, gerçek referansa göre BİR kez üretilir → `nesne-kilidi/P1-*.png`. Sonraki her karede Image2 olarak verilir.

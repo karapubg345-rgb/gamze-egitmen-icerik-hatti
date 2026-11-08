@@ -23,9 +23,9 @@
           "id": "senaryo",
           "ad": "Senaryo ve gerçek referans",
           "aciklama": "Kanca, kısa planlar, taslak anlatım, açıklama ve uyarı satırı; tarifin gerçek fotoğraflarla doğrulanması.",
-          "talimat": "SISTEM.md Bölüm 1 adım 1-2: {klasor}/SENARYO.md yaz (kanca yazısı, {sure} sn'ye uyan taslak anlatım, {planSayisi} kısa plan — her biri 2-3 sn, toplam {sure} sn —, açıklama metni, uyarı satırı; sağlık iddiası filtresi). Sonra gercek-referans ajanını çağır ({klasor}/gercek-referans/REFERANS-KARTI.md) ve gerekiyorsa senaryoyu gerçeğe göre düzelt.",
+          "talimat": "SISTEM.md Bölüm 1 adım 1-2: {klasor}/SENARYO.md yaz (kanca yazısı, {sure} sn'ye uyan taslak anlatım, {planSayisi} kısa plan — her biri 2-3 sn, toplam {sure} sn —, açıklama metni, uyarı satırı; sağlık iddiası filtresi). Sonra gercek-referans ajanını çağır ({klasor}/gercek-referans/REFERANS-KARTI.md) ve gerekiyorsa senaryoyu gerçeğe göre düzelt. SESLİ TARİF: {klasor}/SESLI-TARIF.md varsa bu video Gamze Hoca'nın kendi sesli anlattığı tariftir ve senaryonun TEK kaynağıdır — malzemeler, ölçüler, sıra, süreler ve püf noktaları ondan birebir alınır; kendinden malzeme/adım ekleme, sırayı değiştirme. Metin otomatik deşifredir: bağlamdan açıkça anlaşılan yanlış duyulmuş kelimeleri düzelt (ör. 'tarçım' → tarçın), anlaşılmayanı uydurma, raporda EKSIK olarak yaz. Gerçek referans yalnız GÖRÜNÜMÜ doğrular (kıvam, renk, kap); Gamze'nin tarifiyle çelişirse tarif onunki kalır, görünüm gerçeğe göre kurulur. Anlatımdaki sağlık iddialarını CLAUDE.md sağlık diline çevir ('geleneksel olarak kullanılır'). Anlatım tarifin tamamını {sure} sn'ye sığdıramıyorsa en görsel adımları seç, atılanları raporda belirt. SENARYO.md'nin başına '## Kaynak: SESLI-TARIF.md' bölümüyle tarifi (malzeme + adım listesi) yaz.",
           "kredili": false,
-          "ciktilar": ["SENARYO.md", "gercek-referans/REFERANS-KARTI.md"]
+          "ciktilar": ["SENARYO.md", "gercek-referans/REFERANS-KARTI.md", "SESLI-TARIF.md"]
         },
         {
           "id": "kareler",
@@ -52,7 +52,7 @@
           "id": "ses",
           "ad": "Anlatım sesi",
           "aciklama": "Anlatım metni videodaki gerçek sahne zamanlarına göre yazılır; ElevenLabs Gamze sesi; whisper doğrulaması.",
-          "talimat": "SISTEM.md Bölüm 1 adım 8: anlatım metnini VIDEO-DENETIM.md'deki gerçek sahne zamanlarına ve videoda görünen hareketlere göre kesinleştir ({sure} sn'yi aşmasın; SENARYO.md'ye yaz), elevenlabs-ses skill'iyle Gamze sesinde üret ({klasor}/ses/), whisper ile doğrula.",
+          "talimat": "SISTEM.md Bölüm 1 adım 8: anlatım metnini VIDEO-DENETIM.md'deki gerçek sahne zamanlarına ve videoda görünen hareketlere göre kesinleştir ({sure} sn'yi aşmasın; SENARYO.md'ye yaz), elevenlabs-ses skill'iyle Gamze sesinde üret ({klasor}/ses/), whisper ile doğrula. {klasor}/SESLI-TARIF.md varsa anlatımda Gamze Hoca'nın kendi ifadelerini ve hitap biçimini mümkün olduğunca koru (sağlık dili kuralı yine geçerli).",
           "kredili": false,
           "tahmin": { "kredisiz": "ElevenLabs karakteri (30 sn ≈ 450)", "kredili": "ElevenLabs karakteri (30 sn ≈ 450)" },
           "ciktilar": ["ses/*.mp3", "SENARYO.md"]
