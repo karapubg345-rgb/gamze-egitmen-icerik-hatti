@@ -11,7 +11,7 @@ description: Reel anlatımını ElevenLabs (Eleven v4, duygu etiketli) ile üret
 - Karakter ≈ kredi. Metni ve tahmini krediyi kullanıcıya göster.
 
 ## 2. Ses kimliği
-`.env` → `ELEVENLABS_VOICE_ID`. Demo sesi: "Gamze – Soft, Young and Encouraging" (`oDu9B15AlAcHxBVp7d6a`). Ses hesabın "My voices"ında yoksa ses seçicide ara → "Add to My Voices".
+`.env` → `ELEVENLABS_VOICE_ID`. Ses (10 Kas 2026, Gamze Hoca'nın isteğiyle değişti): `Xen0soH4tcGo78ododZU` — eski "Gamze – Soft, Young and Encouraging" (`oDu9B15AlAcHxBVp7d6a`) artık KULLANILMAZ. Ses hesabın "My voices"ında yoksa ses seçicide ara → "Add to My Voices".
 
 ## 3. Üret (Playwright, uzantı modu)
 1. `https://elevenlabs.io/app/speech-synthesis/text-to-speech`, `main .ProseMirror` bekle.
@@ -37,7 +37,7 @@ Oynatıcıdaki ses **blob**'dur ve fetch/XHR ile okunamaz. Gerçek zamanlı kayd
 ## MCP yolu (öncelikli — iki modda da; tarayıcı açılmaz)
 ElevenLabs'in barındırılan MCP sunucusu (`.mcp.json` → `elevenlabs`, `https://api.elevenlabs.io/v1/mcp`, OAuth; API anahtarı gerekmez). Araçlar `mcp__elevenlabs__*`.
 1. İlk kullanımda araç listesine bak (ToolSearch `elevenlabs`): metinden ses üreten aracı (text_to_speech benzeri) ve ses/model listeleyen aracı bul; parametre adlarını şemadan al, tahmin etme.
-2. Ses: `ELEVENLABS_VOICE_ID` (`oDu9B15AlAcHxBVp7d6a`, "Gamze"). Model: hesapta varsa Eleven v4, yoksa `eleven_v3` (duygu etiketleri bu modellerde çalışır). Çıktı mp3 44.1 kHz.
+2. Ses: `ELEVENLABS_VOICE_ID` (`Xen0soH4tcGo78ododZU`). Model: hesapta varsa Eleven v4, yoksa `eleven_v3` (duygu etiketleri bu modellerde çalışır). Çıktı mp3 44.1 kHz.
 3. Sonuç üç biçimde gelebilir — hangisiyse: **dosya yolu** → `ses/` altına kopyala; **URL** → `curl -L -o ses/<ad>.mp3`; **base64 / kaynak** → çözüp `ses/<ad>.mp3` yaz. `file ses/<ad>.mp3` "Audio" demeli.
 4. MCP bağlı değilse ya da yetki hatası verirse: kredili modda DUR ve raporla ("ElevenLabs MCP bağlı değil: claude → /mcp → elevenlabs → Authenticate"); kredisiz modda yukarıdaki web arayüzü yoluna (3-4. adım) geç.
 5. Sonra 5. adım (whisper) aynı.

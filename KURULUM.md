@@ -34,7 +34,7 @@ Bittiğinde **PowerShell'i kapatıp yeniden aç** (yeni programlar PATH'e girsin
 |---|---|---|
 | **Claude** (Pro/Max) | Sistemi çalıştıran asistan | repo klasöründe `claude` yaz → tarayıcıda giriş yap |
 | **TopView** (Ultra önerilir) | Görsel (Sınırsız mod) + Seedance video / Video Edit | topview.ai — **Chrome'da** giriş yapılı kalsın |
-| **ElevenLabs** | Seslendirme | elevenlabs.io — Chrome'da giriş yapılı kalsın; "Gamze" sesini (`oDu9B15AlAcHxBVp7d6a`) My Voices'a ekle |
+| **ElevenLabs** | Seslendirme | elevenlabs.io — Chrome'da giriş yapılı kalsın; sesi (`Xen0soH4tcGo78ododZU`) My Voices'a ekle |
 | Serper / Pixabay (isteğe bağlı) | Gerçek referans fotoğraf araması | `.env.example` içindeki adresler; yoksa Bing Görseller tarayıcıdan kullanılır |
 
 ## 4. MCP (Claude'un araç bağlantıları)
