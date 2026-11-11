@@ -4,7 +4,7 @@ Gamze konuyu/tarifi verir → hat 10-60 sn'lik yüzsüz Reel çıkarır (30 sn �
 
 ## Sabitler
 - `mekan-kilidi/` — kusursuz klinik-mutfak, M0 ana referans (MEKAN-KILIDI.md).
-- Eller kuralı — sunucu eli: siyah eldiven, mürdüm kol, sol bilekte bakır kelepçe; yüz/karakter yok; sunucu elinde çıplak ten = hata.
+- Eller kuralı — sunucu eli: siyah eldiven, mürdüm kol + leylak manşet, bilezik/kelepçe yok; yüz/karakter yok; sunucu elinde çıplak ten = hata.
 - `beden-kilidi/` — gösterim bedeni (B1 çocuk eli, B2 yetişkin erkek ön kol, B3 yetişkin ayak, B4 yetişkin sırt; BEDEN-KILIDI.md). Tarif bedende gösterim gerektirdiğinde o planda yüzsüz, kıyafetsiz, takısız tek bölge; ilk kullanımda gerçek fotoğrafa göre bir kez üretilir, videolar arasında ortaktır.
 - Ses — ElevenLabs sabit ses (seçilecek).
 - Yazı stili — Remotion şablonu (kanca yazısı, logo, altyazı, "açıklamada").

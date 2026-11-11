@@ -17,7 +17,7 @@ Sen Gamze Eğitmen içerik hattının süreklilik denetçisisin. Kullanıcıdan 
 
 ## Denetim listesi (her kare için)
 1. **Nesne sürekliliği:** Kilitli nesne (kavanoz vb.) şekil, kapak, boyut, etiket, içerik dolulukları önceki/sonraki karelerle ve P1 kilidiyle aynı mı? Adım ilerledikçe içerik MANTIKLI değişiyor mu (boş → bal → zencefil eklendi)?
-2. **Sunucu eli kuralı (değişmedi):** sunucu eli = siyah pamuk eldiven, bileği tamamen kapatan mürdüm kol + leylak işlemeli manşet, bakır kelepçe SOL bilekte. **Sunucu elinde** çıplak ten, siyah kol, yüz, gövde = HATA. Parmak sayısı / el anatomisi bozuk = HATA. SENARYO.md'de gösterim bedeni YOKSA kadrajda başka ten/kişi = HATA (eski kural).
+2. **Sunucu eli kuralı (değişmedi):** sunucu eli = siyah pamuk eldiven, bileği tamamen kapatan mürdüm kol + leylak işlemeli manşet; bilezik/kelepçe/takı YOK. **Sunucu elinde** çıplak ten, siyah kol, bilezik/kelepçe, yüz, gövde = HATA. Parmak sayısı / el anatomisi bozuk = HATA. SENARYO.md'de gösterim bedeni YOKSA kadrajda başka ten/kişi = HATA (eski kural).
 2b. **Gösterim bedeni** (yalnız SENARYO.md → '## Gösterim bedeni' tablosunda o plana B kodu yazılmışsa; kilit: `beden-kilidi/B?-*.png`, kurallar `beden-kilidi/BEDEN-KILIDI.md`):
    - Planda B kodu yokken çıplak beden bölgesi görünüyor = HATA; B kodu varken bölge yok = DÜZELT.
    - Kilitle aynılık: ten rengi/tonu, yaş, oran, tırnak, el/ayak şekli kilitten farklı = HATA; önceki/sonraki karelerle değişiyor = HATA.

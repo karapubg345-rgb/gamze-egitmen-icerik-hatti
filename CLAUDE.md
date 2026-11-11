@@ -3,7 +3,7 @@
 Bu klasör Gamze Eğitmen'in (@gamze.egitmen) Instagram Reels üretim sistemidir. Her zaman **Türkçe** konuş. Akışın tamamı `SISTEM.md`'de.
 
 ## Değişmez kurallar
-- **Yüz yok, karakter yok.** Sunucu (Gamze'nin) elleri değişmez: siyah pamuk eldiven, bileği tamamen kapatan mürdüm kol (leylak işlemeli manşet), sol bilekte manşetin üstünde dövme bakır kelepçe. **Sunucu elinde çıplak ten = hata.**
+- **Yüz yok, karakter yok.** Sunucu (Gamze'nin) elleri değişmez: siyah pamuk eldiven, bileği tamamen kapatan mürdüm kol (leylak işlemeli manşet). Bilezik/kelepçe/takı YOK (Gamze Hoca'nın isteği, 11 Kas 2026; bakır kelepçe kaldırıldı). **Sunucu elinde çıplak ten = hata.**
 - **İstisna — gösterim bedeni** (8 Kas 2026; yalnız bundan sonraki üretimlerde): tarif bedende bir gösterim gerektiriyorsa (deri çimdik testi, el üstü / ön kol / ayak / sırt uygulaması) o planda sunucu elinden AYRI bir beden bölgesi gösterilebilir. Bölge `beden-kilidi/`deki kilitlerden biridir (B1 çocuk eli, B2 yetişkin erkek ön kol, B3 yetişkin ayak, B4 yetişkin sırt; `beden-kilidi/BEDEN-KILIDI.md`) ve nesne kilidi gibi her karede referans verilir, kareden kareye aynı kalır. Yalnız o bölge görünür: yüz, kafa, kıyafet, takı, dövme, ben/iz gibi kimliği belli eden işaret yok. Çocuk bedeni yalnız el ya da ayak olabilir. Ten hafif ve doğal; yara, kan, hastalık görüntüsü yok (kan kuralı ayrıca geçerli). Sunucu eli aynı karedeyse eldiven/mürdüm kol kuralı ona aynen uygulanır. SENARYO.md'de gösterim bedeni olmayan videolarda (video-01…05 dâhil) eski kural değişmeden geçerlidir.
 - **Tek mekân:** `mekan-kilidi/M0-ana-mekan.png` (aydınlık klinik-mutfak). Her sahne bu görsel referans verilerek üretilir.
 - **Nesne kilidi:** ana nesne (kavanoz, kâse…) gerçek fotoğrafa göre bir kez üretilir, her karede referans verilir. Nesne kareden kareye değişmez.
@@ -12,7 +12,7 @@ Bu klasör Gamze Eğitmen'in (@gamze.egitmen) Instagram Reels üretim sistemidir
 - **Kan:** hafif kan (kupada damlalar) şimdilik kabul (kullanıcı, 29 Eki); uzun yoğun akış ve yara yakın planı yok. Yapay zekâ üretiminde kan HAFİF yazılır.
 - **Gamze'nin kendi çekimi önce gelir:** uygulama videosu (hacamat vb.) için önce Gamze'nin çekimi `cekim-donusturucu` ile Seedance Video Edit'ten geçirilir (hareket çekimden, eller ve ortam bizden). Sıfırdan yapay zekâ uygulama videosu yalnız çekim yoksa (Gamze ilk denemeyi "yanlış sonuç çok" diye beğenmedi).
 - **Kişi tanınmaz:** hastanın/gösterim bedeninin kafası, yüzü, kıyafeti, takısı kadraja girmez; çekimde girerse kurguda kırpılır ya da o saniyeler kesilir. Görünen yalnız uygulama/gösterim bölgesi (sırt, ön kol, el üstü, ayak; kupalar) ve sunucu elleri. Yapay zekâ üretiminde bu bölge bir beden kilidinden gelir (yukarıdaki istisna); Gamze'nin çekiminde gerçek hastanın bölgesi Video Edit'te korunur, yalnız kimliği belli eden kısımlar gizlenir.
-- **Kol asla siyah değil:** yalnız eldiven siyah; bilek/kol her zaman mürdüm. Net referans: `mekan-kilidi/ELLER-referans.jpg`.
+- **Kol asla siyah değil:** yalnız eldiven siyah; bilek/kol her zaman mürdüm. Net referans: `mekan-kilidi/ELLER-referans.jpg` (bileziksiz).
 - **Prompt planın gerçeğini anlatır:** video promptunda her plan zaman damgasıyla gerçekte ne oluyorsa onu söyler; o planda olmayan nesne adı geçmez ya da "bu planda X YOK" diye yazılır. Kesitlere ortak/genel prompt yazılmaz.
 - **Sıra:** anlatım metni ve ses, video üretilip denetlendikten SONRA yazılır.
 - **Ses:** iki modda da ElevenLabs MCP (`.mcp.json` → `elevenlabs`, OAuth); bağlı değilse kredisiz modda web arayüzü.
