@@ -93,10 +93,61 @@ function bolumBul(id) { return tanim().bolumler.find(b => b.id === id); }
 const planSayisi = sure => Math.max(4, Math.round(sure / 2.6)); // 25 sn → 10 plan, 15 sn → 6
 
 // Kredili modda bir videonun tahmini toplam TopView kredisi (%15 pay ile).
-function tahminiKredi(bolum, sure, mod) {
+function tahminiKredi(bolum, sure, mod, asamalar) {
   if (mod !== 'kredili') return 0;
-  const t = bolumBul(bolum).asamalar.reduce((s, a) => s + (a.kartBasina || 0) * (planSayisi(sure) + 2) + (a.saniyeBasina || 0) * sure, 0);
+  const t = (asamalar || bolumBul(bolum).asamalar).reduce((s, a) => s + (a.kartBasina || 0) * (planSayisi(sure) + 2) + (a.saniyeBasina || 0) * sure, 0);
   return Math.ceil(t * 1.15);
+}
+
+// Kredisizde takılma bekçisi: kredili olabilen aşama (kareler, video, Video Edit) TAKILMA_DK'dan (varsayılan 90) uzun sürerse
+// ya da herhangi bir aşamanın günlüğü TAKILMA_SESSIZ_DK (varsayılan 30) dakikadır yazılmıyorsa Telegram'a "kredili devam?" sorulur.
+// Aynı çalışma için bir kez sorulur; "Beklemeye devam" denirse 60 dk sonra yeniden yoklanır.
+const TAKILMA_DK = Number(process.env.TAKILMA_DK) || 90;
+const TAKILMA_SESSIZ_DK = Number(process.env.TAKILMA_SESSIZ_DK) || 30;
+setInterval(() => {
+  if (!calisan || calisan.gecis || (calisan.takildiSoruldu || 0) > Date.now()) return;
+  const d = durumOku(calisan.klasor);
+  if (d.mod === 'kredili' || !d.otomatik) return;
+  const a = bolumBul(d.bolum)?.asamalar.find(x => x.id === calisan.asama);
+  if (!a) return;
+  const dk = (Date.now() - calisan.baslangic) / 60000;
+  let sessiz = 0;
+  try { sessiz = (Date.now() - fs.statSync(path.join(guvenliYol(calisan.klasor), '.arayuz', `${a.id}.log`)).mtimeMs) / 60000; } catch {}
+  const uzun = a.kredili && dk > TAKILMA_DK, durgun = sessiz > TAKILMA_SESSIZ_DK;
+  if (!uzun && !durgun) return;
+  calisan.takildiSoruldu = Infinity; // cevap gelene kadar yeniden sorma
+  const kalanlar = bolumBul(d.bolum).asamalar.filter(x => d.asamalar[x.id]?.durum !== 'bitti');
+  olaylar.emit('takildi', { klasor: calisan.klasor, asama: a.id, ad: a.ad, konu: d.konu, dk: Math.round(dk), sessiz: Math.round(sessiz), neden: durgun ? 'sessiz' : 'uzun',
+    kredi: tahminiKredi(d.bolum, d.sure, 'kredili', kalanlar) });
+}, 5 * 60e3).unref();
+
+// "Beklemeye devam": bekçi bu çalışmayı dk dakika sonra yeniden yoklar.
+function takilmaErtele(klasor, dk = 60) {
+  if (calisan?.klasor !== klasor) return false;
+  calisan.takildiSoruldu = Date.now() + dk * 60e3;
+  return true;
+}
+
+// Kredisizde takılan videoyu kredili moda geçirir: çalışan aşama durdurulur, aynı aşama kredili (MCP) olarak yeniden başlar.
+// Hazır çıktılar korunur; bütçe = harcanan + kalan aşamaların tahmini (bu düğme tek onaydır).
+function krediliyeGec(klasor) {
+  const d = durumOku(klasor);
+  if (d.mod === 'kredili') throw new Error('Bu video zaten kredili.');
+  const kalanlar = bolumBul(d.bolum).asamalar.filter(x => d.asamalar[x.id]?.durum !== 'bitti');
+  if (!kalanlar.length) throw new Error('Bu videoda kalan aşama yok.');
+  const asama = calisan?.klasor === klasor ? calisan.asama : d.bekleyen?.asama || kalanlar[0].id;
+  Object.assign(d, { mod: 'kredili', butce: (d.harcanan || 0) + tahminiKredi(d.bolum, d.sure, 'kredili', kalanlar), otomatik: true, bekleyen: null });
+  durumYaz(klasor, d);
+  ogrenme.kaydet({ tur: 'krediliye-gecis', klasor, konu: d.konu, asama });
+  const not = 'Bu aşama kredisiz (TopView Sınırsız) modda takıldı; Gamze Hoca kredili devam etmeyi onayladı. Hazır ve denetimden geçmiş çıktıları KORU, '
+    + 'yeniden üretme. Sınırsız kuyrukta bekleyen tarayıcı görevlerini bekleme; eksik kalanı kredili MCP ile üret. Kesilen kredisiz çalışmanın günlüğü: '
+    + `{klasor}/.arayuz/${asama}.kredisiz-*.log (ne hazırdı, ne takıldı).`;
+  if (calisan?.klasor === klasor) {
+    calisan.gecis = { not };
+    spawn('taskkill', ['/pid', String(calisan.proc.pid), '/T', '/F']);
+    return 'gecis';
+  }
+  return isEkle({ klasor, asama, not });
 }
 
 function durumOku(klasor) {
@@ -171,6 +222,17 @@ function yeniKlasor({ bolum, konu, mod, sure, butce, onaylar, ipucu }) {
   const beden = bedenIpucu(konu, ipucu);
   durumYaz(ad, { bolum, konu: konu.trim(), mod, sure, butce, onaylar, ...(beden ? { beden } : {}), harcanan: 0, olusturma: new Date().toISOString(), kaynaklar: [], asamalar: {} });
   return ad;
+}
+
+// Henüz başlamamış videonun modunu/süresini değiştirir (Telegram ayar kartı). Bütçe yeniden hesaplanır.
+function ayarDegistir(klasor, { mod, sure }) {
+  const d = durumOku(klasor);
+  if (d.otomatik || Object.keys(d.asamalar || {}).length) throw new Error('Bu video başladı; ayarı artık değişmez.');
+  if (mod) d.mod = mod === 'kredili' ? 'kredili' : 'kredisiz';
+  if (sure) d.sure = Math.min(SURE.cok, Math.max(SURE.en, Math.round(Number(sure))));
+  d.butce = d.mod === 'kredili' ? tahminiKredi(d.bolum, d.sure, d.mod) : 0;
+  durumYaz(klasor, d);
+  return d;
 }
 
 // Gamze'nin çekimini referans-videolar/ altına kaydeder ve videonun kaynaklarına ekler.
@@ -326,10 +388,14 @@ function calistir({ klasor, asama, not, krediOnay, krediLimit, otoDeneme, surdur
   olaylar.emit('asama', { klasor, asama, ad: a.ad, durum: 'basladi' });
   proc.on('close', kod => {
     log.end(`\n# bitti · çıkış kodu ${kod}\n`);
-    const durduruldu = !!calisan?.durduruldu;
+    const durduruldu = !!calisan?.durduruldu, gecis = calisan?.gecis;
     const sure = Math.round((Date.now() - calisan.baslangic) / 60000);
     calisan = null;
-    asamaBitti(klasor, a, { kod, durduruldu, sonuc, sure });
+    if (gecis) { // krediliye geçiş: aynı aşama kredili olarak yeniden (kredisiz günlük saklanır)
+      try { fs.renameSync(logYolu, path.join(logDir, `${asama}.kredisiz-${Date.now()}.log`)); } catch {}
+      const dd = durumOku(klasor); delete dd.asamalar[asama]; durumYaz(klasor, dd);
+      kuyruk.unshift({ klasor, asama, not: gecis.not });
+    } else asamaBitti(klasor, a, { kod, durduruldu, sonuc, sure });
     while (!calisan && kuyruk.length) isEkle(kuyruk.shift());
   });
 }
@@ -563,7 +629,7 @@ if (process.env.TELEGRAM_BOT_TOKEN) {
   const { telegramBaslat } = await import('./telegram.mjs');
   telegramBaslat({
     KOK, olaylar, SURE, tanim, bolumBul, eslesen, durumOku, tahminiKredi, planSayisi, bedenIpucu,
-    yeniKlasor, kaynakEkle, otomatikBaslat, onayVer, duzelt, durdur, durumListesi, ogrenme,
+    yeniKlasor, ayarDegistir, krediliyeGec, takilmaErtele, kaynakEkle, otomatikBaslat, onayVer, duzelt, durdur, durumListesi, ogrenme,
     mesgul: () => !!calisan
   });
 }

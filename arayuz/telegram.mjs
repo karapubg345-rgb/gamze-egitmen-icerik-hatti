@@ -33,7 +33,10 @@ Bedende gösterim: tarif bir bedende gösterilecekse isteğe yazın: "çocuk eli
 
 Süre 10-60 sn (30 sn üstü iki parçada üretilip birleştirilir). Varsayılan: 25 sn, kredisiz (TopView Sınırsız, 0 kredi). "kredili" yazarsanız tarayıcı açılmadan hızlı üretilir.
 Tam otomatik: Claude her aşamayı kendi denetler, sorunluysa kendisi yeniden yapar; size yalnız bitmiş video gelir. Küçük kusurlar için tekrar tekrar üretmez (kredi payı): isteğe %70 ve üstü uyuyorsa videoyu gönderir, eksikleri yazar; "Eksikleri düzelt" derseniz düzeltir. Kendi notunuzla da düzelttirebilirsiniz, Claude hangi aşamadan başlayacağına kendisi karar verir.
-"onaylı" yazarsanız o video kareler ve teslimde sizi bekler.`;
+"onaylı" yazarsanız o video kareler ve teslimde sizi bekler.
+
+Ayar kartı: ne gönderirseniz gönderin (sesli mesaj, link, video, /egitim, /yeni) önce bir kart gelir: Kredisiz / Kredili, süre (15-60 sn), sesli mesaj ve linkte "Metni düzelt" (yanlış duyulan yeri yazarsınız), "Başlat" ve "İptal". 3 dk dokunmazsanız seçili ayarlarla kendiliğinden başlar.
+Takılma: kredisiz modda bir aşama uzun süre biterse (Sınırsız kuyruk takılırsa) size "Kredili devam edilsin mi?" diye sorulur; hazır kısımlar korunur, kalanı kredili üretilir.`;
 
 async function tg(yontem, govde) {
   const r = await fetch(`${API}/${yontem}`, govde instanceof FormData ? { method: 'POST', body: govde }
@@ -124,8 +127,9 @@ function baslatildiMetni(hat, klasor) {
   return `Başladı: ${d.konu}\n${b.ad} · ${d.sure} sn · ${kredi}\n${sonra}`;
 }
 
-function dugmeler(klasor, tur, onay) {
-  if (tur === 'hata') return [[{ text: 'Tekrar dene', callback_data: `t|${klasor}` }, { text: 'İptal', callback_data: `i|${klasor}` }]];
+function dugmeler(klasor, tur, onay, kredisiz) {
+  if (tur === 'hata') return [[{ text: 'Tekrar dene', callback_data: `t|${klasor}` }, { text: 'İptal', callback_data: `i|${klasor}` }],
+    ...(kredisiz ? [[{ text: 'Kredili devam et', callback_data: `kg|${klasor}` }]] : [])];
   return [[{ text: tur === 'sorun' ? 'Yine de devam' : onay?.devam || 'Devam', callback_data: `d|${klasor}` }, { text: 'Düzelt', callback_data: `z|${klasor}` }],
     [{ text: 'İptal', callback_data: `i|${klasor}` }]];
 }
@@ -165,8 +169,19 @@ export function telegramBaslat(hat) {
     for (const chat of IZINLI) {
       if (o.tur === 'onay') await dosyalariGonder(hat, chat, o.klasor, o.onay.gonder);
       await yaz(chat, `${baslik}\n${kisa(o.ozet)}${kredi}\n\n${o.tur === 'onay' ? o.onay.soru + sonraki : 'Ne yapalım?'}`,
-        { reply_markup: { inline_keyboard: dugmeler(o.klasor, o.tur, o.onay) } });
+        { reply_markup: { inline_keyboard: dugmeler(o.klasor, o.tur, o.onay, d.mod !== 'kredili') } });
     }
+  });
+
+  // Kredisizde takılan aşama (sunucu bekçisi): kredili devam edilsin mi?
+  hat.olaylar.on('takildi', o => {
+    const neden = o.neden === 'sessiz' ? `${o.sessiz} dakikadır hiç ilerleme yok` : `${o.dk} dakikadır bitmedi`;
+    herkese(`Takıldı gibi: ${o.konu} · "${o.ad}" aşaması kredisiz modda ${neden} (TopView Sınırsız kuyruğu bekletiyor olabilir).\n\n` +
+      `Kredili devam edilsin mi? Hazır olan kısımlar korunur; kalan aşamalar kredili üretilir (en fazla ≈ ${o.kredi} kredi).`,
+    { reply_markup: { inline_keyboard: [
+      [{ text: `Kredili devam (≈ ${o.kredi} kredi)`, callback_data: `kg|${o.klasor}` }],
+      [{ text: 'Kredisiz beklemeye devam', callback_data: `kw|${o.klasor}` }, { text: 'Durdur', callback_data: `kd|${o.klasor}` }]
+    ] } });
   });
 
   hat.olaylar.on('surduruluyor', o => herkese(`Stüdyo yeniden açıldı; ${o.konu} işi ${o.ad ? `"${o.ad}" aşamasından` : 'kaldığı yerden'} sürüyor. Hazır olan kısımlar yeniden üretilmeyecek.`));
@@ -186,6 +201,136 @@ export function telegramBaslat(hat) {
     }
   });
 
+  // --- Ayar kartı: gelen her iş (sesli mesaj, link, çekim, /egitim, /yeni) önce düğmeli kartla gösterilir:
+  // kredisiz/kredili, süre, (metin varsa) metni düzelt, başlat, iptal. TASLAK_DK dakika dokunulmazsa kendiliğinden başlar;
+  // "Metni düzelt" beklerken sayaç durur. Kart bellektedir; Stüdyo yeniden açılırsa düğmeler yine çalışır ama sayaç çalışmaz.
+  const TASLAK_DK = 3;
+  const taslaklar = new Map();    // klasor → { chat, mid, ust, metin: { dosya, kelime } | null, duzeltme, zaman }
+  const metinBekleyen = new Map(); // chat → klasor ("Metni düzelt"ten sonra gelen yazı)
+
+  function taslakKlavye(klasor) {
+    const d = hat.durumOku(klasor), t = taslaklar.get(klasor);
+    const sec = (b, s) => (b ? '✓ ' : '') + s;
+    const kredili = d.mod === 'kredili';
+    const sureDugme = n => ({ text: sec(d.sure === n, `${n} sn`), callback_data: `ks|${klasor}|${n}` });
+    const satirlar = [
+      [{ text: sec(!kredili, 'Kredisiz (0 kredi)'), callback_data: `km|${klasor}|0` },
+        { text: sec(kredili, `Kredili (≈${hat.tahminiKredi(d.bolum, d.sure, 'kredili')} kredi)`), callback_data: `km|${klasor}|1` }],
+      [15, 20, 25].map(sureDugme), [30, 45, 60].map(sureDugme)
+    ];
+    if (t?.metin) satirlar.push([{ text: 'Metni düzelt', callback_data: `kx|${klasor}` }]);
+    satirlar.push([{ text: 'Başlat', callback_data: `kb|${klasor}` }, { text: 'İptal', callback_data: `kv|${klasor}` }]);
+    return satirlar;
+  }
+
+  function taslakMetni(klasor) {
+    const d = hat.durumOku(klasor), t = taslaklar.get(klasor), b = hat.bolumBul(d.bolum);
+    const kredi = d.mod === 'kredili' ? `Kredili (bütçe ${d.butce} kredi)` : 'Kredisiz (0 kredi)';
+    const sonra = d.onaylar === 'iki' ? 'Onaylı: kareler ve teslimde size soracağım.' : 'Başlayınca bitmiş videoyu göndereceğim; arada bir şey sormayacağım.';
+    const duzeltme = t.duzeltme ? `\n\nDüzelttiğiniz metin kaydedildi (${t.duzeltme}); senaryo onu esas alacak.` : '';
+    return `${t.ust ? t.ust + duzeltme + '\n\n' : ''}Hazır: ${d.konu}\n${b.ad} · ${d.sure} sn · ${kredi}\n${sonra}\n\n` +
+      `Değiştirmek istediğinizi aşağıdan seçip "Başlat"a basın. ${TASLAK_DK} dk dokunmazsanız bu ayarlarla kendiliğinden başlar.` +
+      (hat.mesgul() ? '\n(Şu an başka bir iş çalışıyor; başlatınca sıraya girer.)' : '');
+  }
+
+  async function taslakGoster(chat, klasor, ust, metin = null) {
+    const eski = taslaklar.get(klasor);
+    if (eski?.mid) await tg('editMessageReplyMarkup', { chat_id: eski.chat, message_id: eski.mid, reply_markup: { inline_keyboard: [] } }).catch(() => {});
+    taslaklar.set(klasor, { ...eski, chat, ust, metin, mid: null });
+    const m = await yaz(chat, taslakMetni(klasor), { reply_markup: { inline_keyboard: taslakKlavye(klasor) } });
+    taslaklar.get(klasor).mid = m?.message_id;
+    taslakZamanla(klasor);
+  }
+
+  function taslakZamanla(klasor, dur = false) {
+    const t = taslaklar.get(klasor);
+    if (!t) return;
+    clearTimeout(t.zaman);
+    if (!dur) t.zaman = setTimeout(() => taslakBaslat(klasor, true).catch(e => console.log('Ayar kartı:', e.message)), TASLAK_DK * 60e3);
+  }
+
+  async function taslakGuncelle(klasor) {
+    const t = taslaklar.get(klasor);
+    if (!t?.mid) return;
+    await tg('editMessageText', { chat_id: t.chat, message_id: t.mid, text: taslakMetni(klasor).slice(0, 4000), reply_markup: { inline_keyboard: taslakKlavye(klasor) } })
+      .catch(e => { if (!/not modified/i.test(e.message)) console.log('Telegram:', e.message); });
+  }
+
+  function taslakKapat(klasor) {
+    const t = taslaklar.get(klasor);
+    if (!t) return null;
+    clearTimeout(t.zaman);
+    taslaklar.delete(klasor);
+    for (const [c, k] of metinBekleyen) if (k === klasor) metinBekleyen.delete(c);
+    if (t.mid) tg('editMessageReplyMarkup', { chat_id: t.chat, message_id: t.mid, reply_markup: { inline_keyboard: [] } }).catch(() => {});
+    return t;
+  }
+
+  async function taslakBaslat(klasor, kendiliginden = false) {
+    const t = taslakKapat(klasor);
+    if (!t) return;
+    try {
+      const sirada = hat.mesgul();
+      hat.otomatikBaslat(klasor);
+      return yaz(t.chat, (kendiliginden ? `${TASLAK_DK} dk içinde değişiklik gelmedi, bu ayarlarla başlattım.\n` : '') +
+        baslatildiMetni(hat, klasor) + (sirada ? '\n(Önceki iş bitince başlayacak.)' : ''));
+    } catch (e) { return yaz(t.chat, 'Başlatılamadı: ' + e.message); }
+  }
+
+  // Stüdyo yeniden açıldıysa kart bellekte yoktur: klasör hiç başlamadıysa karttan yeniden kurulur.
+  function taslakBul(klasor, chat, mid) {
+    if (taslaklar.has(klasor)) return taslaklar.get(klasor);
+    const d = hat.durumOku(klasor);
+    if (!d.bolum || d.otomatik || Object.keys(d.asamalar || {}).length) return null;
+    const tt = Object.values(TURLER).find(x => fs.existsSync(path.join(hat.KOK, klasor, x.dosya)));
+    taslaklar.set(klasor, { chat, mid, ust: '', metin: tt ? { dosya: tt.dosya, kelime: 0 } : null });
+    return taslaklar.get(klasor);
+  }
+
+  async function taslakDugme(q, chat, tur, klasor, deger) {
+    const cevap = text => tg('answerCallbackQuery', { callback_query_id: q.id, ...(text ? { text } : {}) }).catch(() => {});
+    const t = taslakBul(klasor, chat, q.message.message_id);
+    if (!t) {
+      await cevap('Bu kart artık geçerli değil: video başladı ya da iptal edildi.');
+      return tg('editMessageReplyMarkup', { chat_id: chat, message_id: q.message.message_id, reply_markup: { inline_keyboard: [] } }).catch(() => {});
+    }
+    try {
+      if (tur === 'km' || tur === 'ks') {
+        hat.ayarDegistir(klasor, tur === 'km' ? { mod: deger === '1' ? 'kredili' : 'kredisiz' } : { sure: Number(deger) });
+        await cevap();
+        taslakZamanla(klasor);
+        return taslakGuncelle(klasor);
+      }
+      await cevap();
+      if (tur === 'kb') return taslakBaslat(klasor);
+      if (tur === 'kv') { taslakKapat(klasor); return yaz(chat, `İptal edildi: ${hat.durumOku(klasor).konu}. Video başlatılmadı.`); }
+      if (tur === 'kx') {
+        metinBekleyen.set(chat, klasor);
+        taslakZamanla(klasor, true);
+        return yaz(chat, 'Doğru metni yazıp gönderin. İki yol var:\n' +
+          '1) Yukarıdaki metni kopyalayın, yanlış yerleri düzeltip tamamını gönderin.\n' +
+          '2) Yalnız yanlış yeri yazın (ör. "odak değil odaklanma", "üç yaprak değil beş yaprak").\n' +
+          'Siz yazana kadar video başlamaz.');
+      }
+    } catch (e) { return yaz(chat, e.message); }
+  }
+
+  // "Metni düzelt"ten sonra gelen yazı: metin dosyasının sonuna eklenir; senaryo aşaması bu bölümü esas alır.
+  async function metinDuzelt(chat, klasor, yeni) {
+    metinBekleyen.delete(chat);
+    const t = taslaklar.get(klasor);
+    if (!t) return yaz(chat, 'Bu video başladı; değişikliği iş bitince "Düzelt" ile yazabilirsiniz.');
+    if (!t.metin) { const tt = Object.values(TURLER).find(x => fs.existsSync(path.join(hat.KOK, klasor, x.dosya))); if (tt) t.metin = { dosya: tt.dosya, kelime: 0 }; }
+    if (!t.metin) return yaz(chat, 'Bu videoda düzeltilecek bir metin yok (sesli mesaj ya da linkten gelmedi).');
+    const kelime = yeni.split(/\s+/).filter(Boolean).length;
+    const tam = kelime >= Math.max(8, t.metin.kelime * 0.5);
+    fs.appendFileSync(path.join(hat.KOK, klasor, t.metin.dosya), tam
+      ? `\n## Gamze Hoca'nın düzelttiği metin (esas alınır)\n\nGamze Hoca otomatik deşifreyi kendisi düzeltti; aşağıdaki metin yukarıdaki deşifrenin YERİNE geçer (birden fazla düzeltme varsa en sondaki).\n\n${yeni}\n`
+      : `\n## Gamze Hoca'nın düzeltmesi (esas alınır)\n\nOtomatik deşifrede şu yer(ler) yanlış duyulmuş; metni buna göre düzelt:\n\n${yeni}\n`);
+    t.duzeltme = tam ? 'tam metin' : 'düzeltme notu';
+    return taslakGoster(chat, klasor, `Düzeltme alındı:\n"${kisa(yeni, 1200)}"`, t.metin);
+  }
+
   async function mesaj(m) {
     const chat = String(m.chat.id);
     const metin = (m.text || m.caption || '').trim();
@@ -197,6 +342,7 @@ export function telegramBaslat(hat) {
     if (video) return cekimAl(chat, m, video, metin);
     const ses = m.voice || m.audio || (m.document?.mime_type?.startsWith('audio/') ? m.document : null);
     if (ses) return sesliAl(chat, ses, metin);
+    if (metinBekleyen.has(chat) && metin && !metin.startsWith('/')) return metinDuzelt(chat, metinBekleyen.get(chat), metin);
     if (notBekleyen.has(chat) && !metin.startsWith('/')) {
       const { klasor, son } = notBekleyen.get(chat); notBekleyen.delete(chat);
       try { const s = son ? hat.duzelt({ klasor, not: metin }) : hat.onayVer({ klasor, karar: 'duzelt', not: metin }); if (s !== 'hata') return yaz(chat, s === 'kuyruk' ? 'Not alındı, sıraya girdi.' : 'Not alındı, yeniden çalışıyor.'); }
@@ -224,10 +370,8 @@ export function telegramBaslat(hat) {
         const p = ayristir(arg, hat.SURE);
         if (!p.konu) return yaz(chat, bolum === 'tarif' ? 'Konu yazın: /yeni bal zencefil 20sn' : 'Konu yazın: /egitim reyhan 30sn');
         try {
-          const sirada = hat.mesgul();
           const klasor = hat.yeniKlasor({ bolum, ...p });
-          hat.otomatikBaslat(klasor);
-          return yaz(chat, baslatildiMetni(hat, klasor) + (sirada ? '\n(Önceki iş bitince başlayacak.)' : ''));
+          return taslakGoster(chat, klasor, '');
         } catch (e) { return yaz(chat, 'Başlatılamadı: ' + e.message); }
       }
       case '/guncelle': return guncelle(chat);
@@ -245,8 +389,7 @@ export function telegramBaslat(hat) {
       const r = await fetch(`${DOSYA}/${f.file_path}`);
       const uzanti = path.extname(video.file_name || f.file_path).toLowerCase();
       await hat.kaynakEkle(klasor, klasor + (/^\.(mp4|mov|m4v|webm)$/.test(uzanti) ? uzanti : '.mp4'), Readable.fromWeb(r.body));
-      hat.otomatikBaslat(klasor);
-      return yaz(chat, baslatildiMetni(hat, klasor));
+      return taslakGoster(chat, klasor, 'Çekim alındı; eller ve ortam bizimkilerle değiştirilecek.');
     } catch (e) { return yaz(chat, 'Çekim alınamadı: ' + e.message); }
   }
 
@@ -261,12 +404,11 @@ export function telegramBaslat(hat) {
       await yaz(chat, 'Link alındı, video indiriliyor…');
       const { dosya } = await linkIndir(link, gecici);
       const p = ayristir(metin, hat.SURE);
-      const sirada = hat.mesgul();
       const klasor = hat.yeniKlasor({ bolum: 'cekim', ...p, konu: p.konu || 'çekim' });
       await hat.kaynakEkle(klasor, klasor + path.extname(dosya).toLowerCase(), fs.createReadStream(dosya));
       fs.writeFileSync(path.join(hat.KOK, klasor, 'KAYNAK-LINK.txt'), `${link}\n${new Date().toISOString()}\n`);
-      hat.otomatikBaslat(klasor);
-      return yaz(chat, baslatildiMetni(hat, klasor) + (sirada ? '\n(Önceki iş bitince başlayacak.)' : ''));
+      return taslakGoster(chat, klasor, 'Video indirildi; eller ve ortam bizimkilerle değiştirilecek, üstündeki yazı ve logolar kaldırılacak.\n' +
+        'Tarif ya da anlatım olarak istiyorsanız linki yanına "tarif" ya da "eğitim" yazarak yeniden gönderin.');
     } catch (e) { return yaz(chat, 'Linkteki video alınamadı: ' + e.message + '\nVideoyu dosya olarak da gönderebilirsiniz.'); }
     finally { fs.rmSync(gecici, { recursive: true, force: true }); }
   }
@@ -344,7 +486,6 @@ export function telegramBaslat(hat) {
 
       const p = ayristir(metin, hat.SURE);
       const konu = p.konu || await konuBul([anlatim, aciklama].filter(Boolean).join('\n'), tur);
-      const sirada = hat.mesgul();
       const klasor = hat.yeniKlasor({ bolum: tur, ...p, konu, ipucu: metin });
       const hedef = path.join(hat.KOK, klasor, t.klasor);
       fs.mkdirSync(hedef, { recursive: true });
@@ -357,10 +498,9 @@ export function telegramBaslat(hat) {
         `Cümleler kelimesi kelimesine kopyalanmaz, Gamze Hoca'nın üslubuyla (uslup/GAMZE-USLUP.md) yeniden yazılır. Videonun görüntüsü kullanılmaz.\n` +
         `Not: konuşma otomatik deşifredir; yanlış duyulmuş kelimeler olabilir. Konuşma ile açıklama çelişirse ölçüde açıklamadaki yazılı değer esas alınır.\n\n` +
         `## Videodaki konuşma\n\n${konusma ? anlatim : '(konuşma yok ya da anlaşılmadı)'}\n\n## Gönderi açıklaması\n\n${yazili ? aciklama.trim() : '(açıklama yok)'}\n`);
-      hat.otomatikBaslat(klasor);
       const ozet = konusma ? `Videoda duyduğum:\n"${kisa(anlatim, 900)}"` : `Videoda konuşma yok; ${t.neyi} gönderi açıklamasından aldım.`;
-      return yaz(chat, `${ozet}\n\n` + baslatildiMetni(hat, klasor) + (sirada ? '\n(Önceki iş bitince başlayacak.)' : '') +
-        `\n\nYalnız ${t.ne} alındı; videonun görüntüsü kullanılmayacak, sıfırdan ${t.mekan} üretilecek.`);
+      return taslakGoster(chat, klasor, `${ozet}\n\nYalnız ${t.ne} alındı; videonun görüntüsü kullanılmayacak, sıfırdan ${t.mekan} üretilecek.`,
+        { dosya: t.dosya, kelime: [anlatim, aciklama].join(' ').split(/\s+/).filter(Boolean).length });
     } catch (e) { return yaz(chat, `Linkten ${t.ne} alınamadı: ` + e.message + '\nSesli mesajla da anlatabilirsiniz.'); }
     finally { fs.rmSync(gecici, { recursive: true, force: true }); }
   }
@@ -384,7 +524,6 @@ export function telegramBaslat(hat) {
 
       const p = ayristir(kalan, hat.SURE); // açıklama yalnız seçenekler için (süre, kredili, onaylı); konu da yazılabilir
       const konu = p.konu || await konuBul(anlatim, tur);
-      const sirada = hat.mesgul();
       const klasor = hat.yeniKlasor({ bolum: tur, ...p, konu, ipucu: kalan });
       const hedef = path.join(hat.KOK, klasor, t.klasor);
       fs.mkdirSync(hedef, { recursive: true });
@@ -393,10 +532,10 @@ export function telegramBaslat(hat) {
       fs.writeFileSync(path.join(hat.KOK, klasor, t.dosya),
         `# ${t.baslik}\n\nKaynak: Telegram sesli mesajı (${new Date().toLocaleString('tr-TR')}) · kayıt ve zamanlı deşifre: ${t.klasor}/\n` +
         `Not: otomatik deşifredir; yanlış duyulmuş kelimeler olabilir (şüpheliler: ${t.klasor}/supheli.txt).\n\n## Anlatım\n\n${anlatim}\n`);
-      hat.otomatikBaslat(klasor);
-      return yaz(chat, `Anladığım ${t.ne}:\n"${kisa(anlatim, 1200)}"\n\n` + baslatildiMetni(hat, klasor) + (sirada ? '\n(Önceki iş bitince başlayacak.)' : '') +
-        (etiket ? '' : '\n\nEğitmen videosu olarak hazırlıyorum. Tarif videosu isterseniz kaydın açıklamasına "tarif" yazın.') +
-        '\n\nYanlış duyduğum bir yer varsa iş bitince "Düzelt" ile yazabilirsiniz ya da /dur deyip kaydı yeniden gönderin.');
+      return taslakGoster(chat, klasor, `Anladığım ${t.ne}:\n"${kisa(anlatim, 1200)}"` +
+        (etiket ? '' : '\n\nEğitmen videosu olarak hazırlanacak. Tarif videosu isterseniz kaydın açıklamasına "tarif" yazıp yeniden gönderin.') +
+        '\n\nYanlış duyduğum bir yer varsa "Metni düzelt"e basın.',
+        { dosya: t.dosya, kelime: anlatim.split(/\s+/).filter(Boolean).length });
     } catch (e) { return yaz(chat, 'Ses kaydı işlenemedi: ' + e.message); }
     finally { fs.rmSync(gecici, { recursive: true, force: true }); }
   }
@@ -441,10 +580,18 @@ export function telegramBaslat(hat) {
   async function geriCagri(q) {
     const chat = String(q.message.chat.id);
     if (!IZINLI.has(chat)) return;
-    const [tur, klasor] = q.data.split('|');
+    const [tur, klasor, deger] = q.data.split('|');
+    if (/^k[msbvx]$/.test(tur)) return taslakDugme(q, chat, tur, klasor, deger);
     await tg('answerCallbackQuery', { callback_query_id: q.id }).catch(() => {});
     await tg('editMessageReplyMarkup', { chat_id: chat, message_id: q.message.message_id, reply_markup: { inline_keyboard: [] } }).catch(() => {});
     try {
+      if (tur === 'kg') {
+        const s = hat.krediliyeGec(klasor), d = hat.durumOku(klasor);
+        return yaz(chat, `Tamam, ${d.konu} kredili devam ediyor (bütçe ${d.butce} kredi). Hazır kısımlar korunuyor` +
+          (s === 'kuyruk' ? '; önceki iş bitince başlayacak.' : s === 'hata' ? '' : '.'));
+      }
+      if (tur === 'kw') return yaz(chat, hat.takilmaErtele(klasor, 60) ? 'Tamam, kredisiz beklemeye devam. 1 saat sonra hâlâ bitmemişse yeniden sorarım.' : 'Bu aşama zaten bitmiş ya da durmuş.');
+      if (tur === 'kd') { hat.durdur(); return yaz(chat, 'Durduruldu. İsterseniz Stüdyo\'dan kaldığı yerden sürdürebilirsiniz.'); }
       if (tur === 'z' || tur === 'n') { notBekleyen.set(chat, { klasor, son: tur === 'n' }); return yaz(chat, 'Neyi düzelteyim? Kısaca yazın (ör. "kavanoz daha küçük olsun", "altyazı büyüsün").'); }
       if (tur === 'u') {
         const liste = hat.durumOku(klasor).uyarilar || [];
