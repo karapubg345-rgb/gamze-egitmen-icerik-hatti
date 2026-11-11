@@ -55,6 +55,7 @@ Kullanıcıya hiçbir kare/video denetimden geçmeden gösterilmez. Her video kl
 ## Ortak geliştirme
 - Kod **geliştirme bilgisayarında** değişir ve GitHub'a gönderilir; Gamze Hoca'nın bilgisayarı yalnız üretim yapar ve `/guncelle` (git pull) ile güncellenir. Onun bilgisayarında repo dosyalarını düzenleme — yerel değişiklik `git pull --ff-only`'yi bozar.
 - Makineye özel her şey `.env`'de (token'lar, sohbet kimliği) ve git dışında; video çıktıları da `.gitignore`'da.
+- **Ortak ayarlar** (şimdilik `ELEVENLABS_VOICE_ID`; liste `arayuz/sunucu.mjs` → `ORTAK_AYARLAR`): `.env.example`'da değiştir ve gönder; üretim bilgisayarında `/guncelle` sonrası Stüdyo açılırken `.env`'e kendiliğinden yazılır. Token buraya eklenmez.
 
 ## Skill'ler (`.claude/skills/`)
 `topview-uretim` (görsel + video, arayüz tuzakları), `elevenlabs-ses` (anlatım).

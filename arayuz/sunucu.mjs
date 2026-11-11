@@ -21,6 +21,29 @@ const KREDILI_MCP = ['topview_generate_image', 'topview_generate_video', 'topvie
   'topview_product_avatar', 'topview_remove_background', 'submit_topview_canvas_generation_task'].map(a => 'mcp__claude_ai_topview__' + a);
 export const SURE = { en: 10, cok: 60, varsayilan: 25, parca: 30 }; // Seedance tek üretimde en fazla 30 sn; üstü parçalı
 
+// Ortak ayarlar: geliştirme bilgisayarında .env.example'da değişir, /guncelle sonrası açılışta üretim
+// bilgisayarının .env'ine yazılır (.env git dışında olduğu için başka türlü ulaşmaz). Token'lar buraya GİRMEZ.
+const ORTAK_AYARLAR = ['ELEVENLABS_VOICE_ID'];
+try {
+  const oku = d => {
+    const o = {};
+    for (const s of d.split(/\r?\n/)) { const m = s.match(/^\s*([A-Z0-9_]+)\s*=\s*([^\s#]*)/); if (m) o[m[1]] = m[2]; }
+    return o;
+  };
+  const ornek = oku(fs.readFileSync(path.join(KOK, '.env.example'), 'utf8'));
+  const envYol = path.join(KOK, '.env');
+  let env = fs.existsSync(envYol) ? fs.readFileSync(envYol, 'utf8') : '';
+  const mevcut = oku(env);
+  const degisen = [];
+  for (const k of ORTAK_AYARLAR) {
+    if (!ornek[k] || mevcut[k] === ornek[k]) continue;
+    const satir = new RegExp(`^(\\s*${k}\\s*=).*$`, 'm');
+    env = satir.test(env) ? env.replace(satir, `$1${ornek[k]}`) : env.replace(/\s*$/, '') + `\n${k}=${ornek[k]}\n`;
+    degisen.push(`${k}: ${mevcut[k] || '(yok)'} → ${ornek[k]}`);
+  }
+  if (degisen.length) { fs.writeFileSync(envYol, env); console.log('Ortak ayarlar .env\'e yazıldı:\n  ' + degisen.join('\n  ')); }
+} catch (e) { console.log('Ortak ayar eşitlemesi yapılamadı:', e.message); }
+
 // .env → process.env (alt süreçteki claude, .mcp.json'daki token'ı ortamdan okur).
 try {
   for (const s of fs.readFileSync(path.join(KOK, '.env'), 'utf8').split(/\r?\n/)) {
