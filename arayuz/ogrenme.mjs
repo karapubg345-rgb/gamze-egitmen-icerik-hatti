@@ -54,7 +54,7 @@ export function ogrenmeKur({ KOK, olaylar }) {
     const istem = `Gamze Eğitmen içerik hattı — ÖĞRENME görevi (video üretme, başka dosyaya dokunma, soru sorma).
 Oku: ogrenilen/geri-bildirim.jsonl (Gamze Hoca'nın tepkileri, eskiden yeniye), varsa ogrenilen/TERCIHLER.md, ve CLAUDE.md'nin "Değişmez kurallar" bölümü.
 Görev: ogrenilen/TERCIHLER.md'yi güncelle.
-Kayıt türleri: teslim (video bitti: uyarilar = listelenen eksikler, uyumlar = aşama uyum puanları), duzelt (hocanın kendi notu), eksik-duzelt (listelenen eksiklerin düzeltilmesini istedi), onay-duzelt / onay-devam (onaylı akışta kararı), iptal, unut (hoca bu kuralı sildi).
+Kayıt türleri: teslim (video bitti: uyarilar = listelenen eksikler, uyumlar = aşama uyum puanları), duzelt (hocanın kendi notu), eksik-duzelt (listelenen eksiklerin düzeltilmesini istedi), onay-duzelt / onay-devam (onaylı akışta kararı), ozel-istek (eğitmen videosu başlamadan verdiği özel istek: ton, el hareketleri, masadakiler; süre/kredi gibi ayarlar kural OLMAZ), iptal, unut (hoca bu kuralı sildi).
 Kurallar:
 - Yalnız gelecekteki videolara uygulanabilir, genellenebilir tercih kural olur. Tek videoya özgü düzeltme ("bu videoda 3. kare") kural olmaz.
 - Aynı yönde en az 2 AYRI videoda tepki → kural. Notta "hep / her zaman / bundan sonra / hiçbir zaman" gibi açık genel ifade varsa tek seferde kural.

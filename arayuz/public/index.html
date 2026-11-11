@@ -818,6 +818,7 @@
     
     <label for="konuGiris" id="konuEtiket" style="font-size:12.5px;color:var(--soluk);display:block;margin-bottom:6px">Konu / Başlık</label>
     <input type="text" id="konuGiris" class="giris-kutu" placeholder="ör. Zencefilli bal macunu · çimdik testi erkek kolu" title="Tarif bedende gösterilecekse yazın: çocuk eli, erkek kolu, ön kol, ayak, sırt — senaryoya gösterim bedeni ipucu olarak geçer.">
+    <textarea id="ozelGiris" class="giris-kutu" rows="3" style="margin-top:8px;resize:vertical;font-size:12.5px" placeholder="Özel istek (isteğe bağlı) · ör. Eller konuşmaya çok uyumlu olsun, hiç durmasın. Masada yeşil taze reyhan da olsun. Ses kendinden emin, samimi, güven veren bir eğitmen tonunda."></textarea>
 
     <div class="mod-secici" id="modSecici"></div>
     <div class="sure-satiri">
@@ -955,6 +956,7 @@ function sekmeler() {
   const b = bolumT();
   $('#bolumAciklama').innerHTML = `<strong>${kacis(b.ad)}:</strong> ${kacis(b.aciklama)}`;
   $('#konuEtiket').textContent = ({ egitim: 'Bitki / Konu', tarif: 'Tarif / Konu' })[bolum] || 'Uygulama / Konu';
+  $('#ozelGiris').style.display = bolum === 'egitim' ? '' : 'none';
   $('#konuGiris').placeholder = ({ egitim: 'ör. Reyhan · çörek otu yağı', tarif: 'ör. Zencefilli bal macunu · çimdik testi erkek kolu' })[bolum] || 'ör. Sırta hacamat uygulaması';
   modSeciciCiz();
 }
@@ -1407,10 +1409,10 @@ $('#olusturBtn').onclick = async () => {
 
   try {
     const butce = $('#butceGiris') ? Number($('#butceGiris').value) : 0;
-    const r = await api('/api/videolar', { bolum, konu, mod: yeniMod, sure: Number($('#sureGiris').value), butce, onaylar: $('#onayGiris').value });
+    const r = await api('/api/videolar', { bolum, konu, mod: yeniMod, sure: Number($('#sureGiris').value), butce, onaylar: $('#onayGiris').value, ozelIstek: bolum === 'egitim' ? $('#ozelGiris').value.trim() : '' });
     // Çekim bölümünde önce video yüklenmeli; otomatik akış yükleme sonrası "Tümünü çalıştır" ile başlar.
     if ($('#otoGiris').checked && bolum !== 'cekim') await api('/api/otomatik', { klasor: r.klasor });
-    $('#konuGiris').value = '';
+    $('#konuGiris').value = ''; $('#ozelGiris').value = '';
     secili = r.klasor;
     seciliAsama = null;
     sonImza = '';

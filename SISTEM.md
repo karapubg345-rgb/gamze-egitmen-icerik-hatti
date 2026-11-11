@@ -13,6 +13,8 @@ Gamze konuyu/tarifi verir → hat 10-60 sn'lik yüzsüz Reel çıkarır (30 sn �
 ## Bölüm 0 — Eğitmen anlatımı (arayüzde 1. sekme · öncelikli)
 Gamze Hoca tarif değil, **bilgi veren eğitmen** olarak görünmek istiyor (11 Kas 2026): ofisinde, masada konu nesnesi (ör. taze + kuru reyhan), göğüs ortasından aşağısı görünür, elleri konuşmaya uyar, yüz yok.
 Giriş: Telegram sesli mesajı (açıklamasız → bu bölüm) → whisper → `SESLI-ANLATIM.md`; ya da `/egitim <konu>`, Stüdyo, link + "eğitim".
+**Beğenilen biçim:** `ornekler/egitim-begenilen/BEGENILEN.md` + kareler (reyhan · odaklanma, 11 Kas 2026). Kadraj, masa düzeni, jest dili ve kurgu görünümü bu örnekten alınır; konu nesnesi ve metin değişir.
+**Özel istek** (yalnız bu bölüm): Telegram ayar kartında "Özel istek ekle" (yazı ya da sesli) ya da Stüdyo'daki özel istek kutusu → `OZEL-ISTEK.md`. İçindeki kredili/kredisiz, süre ("51 saniye") ve "onaylı" ifadeleri ayara uygulanır, metnin tamamı her aşama istemine eklenir (ton, el hareketleri, masadakiler…). Değişmez kurallarla çelişen kısım uygulanmaz, EKSIK olarak yazılır.
 1. **SENARYO.md** — `uslup/GAMZE-USLUP.md` kalıplarıyla: "Hocam …" kancası → "Nedir bu? <cevap>" → gelenek → geleneksel kullanım (sağlık dili filtresi) → "-ebilirsiniz" listesi → tavsiye + açıklama çağrısı. `## Anlatım` (son metin), `## Konu nesnesi`, `## Planlar` (cümle · GENİŞ/YAKIN · jest), `## Açıklama` + uyarı, `## Kanca yazısı`.
 2. **gercek-referans** — konu nesnesinin gerçek görünümü (taze/kuru, saksı/demet/kâse).
 3. **Ses ÖNCE** (bu bölümün farkı) — ElevenLabs seçili ses, akıcı ve sıcak (~150 kelime/dk) → `ses/anlatim.mp3` → whisper kelime zamanları → **`JEST.md`**: plan sınırları cümle sınırında, her planın vurgu kelimesi ve saniyesi, o saniyede zirve yapan jest.

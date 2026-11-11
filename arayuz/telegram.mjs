@@ -36,6 +36,7 @@ Tam otomatik: Claude her aşamayı kendi denetler, sorunluysa kendisi yeniden ya
 "onaylı" yazarsanız o video kareler ve teslimde sizi bekler.
 
 Ayar kartı: ne gönderirseniz gönderin (sesli mesaj, link, video, /egitim, /yeni) önce bir kart gelir: Kredisiz / Kredili, süre (15-60 sn), sesli mesaj ve linkte "Metni düzelt" (yanlış duyulan yeri yazarsınız), "Başlat" ve "İptal". 3 dk dokunmazsanız seçili ayarlarla kendiliğinden başlar.
+Özel istek (yalnız eğitmen anlatımı): ayar kartında "Özel istek ekle"ye basın, isteğinizi yazın ya da sesli söyleyin (ör. "Kredili 51 saniye olacak. Eller konuşmaya çok uyumlu olsun, hiç durmasın. Masada yeşil taze reyhan da olsun. Ses kendinden emin, samimi, güven veren bir eğitmen tonunda olsun."). Kredili/kredisiz, süre ve "onaylı" kendiliğinden ayarlanır; kalanı senaryo, ses, kareler, video ve kurguda uygulanır. Aynı isteği birkaç videoda tekrarlarsanız kalıcı tercih olur.
 Takılma: kredisiz modda bir aşama uzun süre biterse (Sınırsız kuyruk takılırsa) size "Kredili devam edilsin mi?" diye sorulur; hazır kısımlar korunur, kalanı kredili üretilir.`;
 
 async function tg(yontem, govde) {
@@ -116,6 +117,25 @@ function ayristir(metin, SURE) {
   s = s.replace(/\s(kredisiz|ücretsiz|ucretsiz)(?=\s)/i, () => { mod = 'kredisiz'; return ' '; });
   s = s.replace(/\s(onaylı|onayli|onayla)(?=\s)/i, () => { onaylar = 'iki'; return ' '; });
   return { konu: s.trim().replace(/\s+/g, ' '), sure: sure || SURE.varsayilan, mod, butce, onaylar };
+}
+
+// Serbest özel istekten ayarlar ("Kredili 51 saniye olacak! … onaylı") → { mod, sure, onaylar }. Metin olduğu gibi kalır (istek dosyasına tamamı yazılır).
+// Noktalama ve büyük harf önemsiz; whisper sayıyı yazıyla da yazabilir ("elli bir saniye", "bir dakika").
+const ONLAR = { on: 10, yirmi: 20, otuz: 30, kırk: 40, kirk: 40, elli: 50, altmış: 60, altmis: 60 };
+const BIRLER = { bir: 1, iki: 2, üç: 3, uc: 3, dört: 4, dort: 4, beş: 5, bes: 5, altı: 6, alti: 6, yedi: 7, sekiz: 8, dokuz: 9 };
+function istekAyarlari(metin) {
+  const s = ' ' + (metin || '').toLocaleLowerCase('tr').replace(/[^\p{L}\p{N}]+/gu, ' ') + ' ';
+  const o = {};
+  if (/\skredili\s/.test(s)) o.mod = 'kredili';
+  else if (/\s(kredisiz|ücretsiz|ucretsiz)\s/.test(s)) o.mod = 'kredisiz';
+  let m = s.match(/\s(\d{1,3})\s*(sn|saniye\p{L}*|saniyelik)\s/u);
+  if (m) o.sure = Number(m[1]);
+  else if ((m = s.match(new RegExp(`\\s(${Object.keys(ONLAR).join('|')})\\s*(${Object.keys(BIRLER).join('|')})?\\s*(sn|saniye\\p{L}*)\\s`, 'u')))) o.sure = ONLAR[m[1]] + (BIRLER[m[2]] || 0);
+  else if (/\s(bir|1)\s*dakika\p{L}*\s/u.test(s)) o.sure = 60;
+  else if (/\syarım\s*dakika\p{L}*\s/u.test(s)) o.sure = 30;
+  if (/\s(onaylı|onayli)\s/.test(s)) o.onaylar = 'iki';
+  else if (/\stam\s*otomatik\s/.test(s)) o.onaylar = 'yok';
+  return o;
 }
 
 function baslatildiMetni(hat, klasor) {
@@ -207,6 +227,7 @@ export function telegramBaslat(hat) {
   const TASLAK_DK = 3;
   const taslaklar = new Map();    // klasor → { chat, mid, ust, metin: { dosya, kelime } | null, duzeltme, zaman }
   const metinBekleyen = new Map(); // chat → klasor ("Metni düzelt"ten sonra gelen yazı)
+  const ozelBekleyen = new Map();  // chat → klasor ("Özel istek ekle"den sonra gelen yazı ya da sesli mesaj; yalnız eğitmen anlatımı)
 
   function taslakKlavye(klasor) {
     const d = hat.durumOku(klasor), t = taslaklar.get(klasor);
@@ -219,6 +240,8 @@ export function telegramBaslat(hat) {
       [15, 20, 25].map(sureDugme), [30, 45, 60].map(sureDugme)
     ];
     if (t?.metin) satirlar.push([{ text: 'Metni düzelt', callback_data: `kx|${klasor}` }]);
+    if (hat.OZEL_BOLUMLER.includes(d.bolum)) satirlar.push([{ text: 'Özel istek ekle', callback_data: `ko|${klasor}` },
+      ...(hat.ozelIstekOku(klasor).length ? [{ text: 'Özel isteği sil', callback_data: `kq|${klasor}` }] : [])]);
     satirlar.push([{ text: 'Başlat', callback_data: `kb|${klasor}` }, { text: 'İptal', callback_data: `kv|${klasor}` }]);
     return satirlar;
   }
@@ -228,7 +251,10 @@ export function telegramBaslat(hat) {
     const kredi = d.mod === 'kredili' ? `Kredili (bütçe ${d.butce} kredi)` : 'Kredisiz (0 kredi)';
     const sonra = d.onaylar === 'iki' ? 'Onaylı: kareler ve teslimde size soracağım.' : 'Başlayınca bitmiş videoyu göndereceğim; arada bir şey sormayacağım.';
     const duzeltme = t.duzeltme ? `\n\nDüzelttiğiniz metin kaydedildi (${t.duzeltme}); senaryo onu esas alacak.` : '';
-    return `${t.ust ? t.ust + duzeltme + '\n\n' : ''}Hazır: ${d.konu}\n${b.ad} · ${d.sure} sn · ${kredi}\n${sonra}\n\n` +
+    const istekler = hat.OZEL_BOLUMLER.includes(d.bolum) ? hat.ozelIstekOku(klasor) : [];
+    const istek = istekler.length ? `\n\nÖzel isteğiniz (her aşamada uygulanacak):\n${istekler.map(s => '- ' + kisa(s, 500)).join('\n')}`
+      : hat.OZEL_BOLUMLER.includes(d.bolum) ? '\n\nÖzel bir isteğiniz varsa (ses tonu, el hareketleri, masadakiler, süre…) "Özel istek ekle"ye basıp yazın ya da sesli söyleyin.' : '';
+    return `${t.ust ? t.ust + duzeltme + '\n\n' : ''}Hazır: ${d.konu}\n${b.ad} · ${d.sure} sn · ${kredi}\n${sonra}${istek}\n\n` +
       `Değiştirmek istediğinizi aşağıdan seçip "Başlat"a basın. ${TASLAK_DK} dk dokunmazsanız bu ayarlarla kendiliğinden başlar.` +
       (hat.mesgul() ? '\n(Şu an başka bir iş çalışıyor; başlatınca sıraya girer.)' : '');
   }
@@ -262,6 +288,7 @@ export function telegramBaslat(hat) {
     clearTimeout(t.zaman);
     taslaklar.delete(klasor);
     for (const [c, k] of metinBekleyen) if (k === klasor) metinBekleyen.delete(c);
+    for (const [c, k] of ozelBekleyen) if (k === klasor) ozelBekleyen.delete(c);
     if (t.mid) tg('editMessageReplyMarkup', { chat_id: t.chat, message_id: t.mid, reply_markup: { inline_keyboard: [] } }).catch(() => {});
     return t;
   }
@@ -305,6 +332,7 @@ export function telegramBaslat(hat) {
       if (tur === 'kb') return taslakBaslat(klasor);
       if (tur === 'kv') { taslakKapat(klasor); return yaz(chat, `İptal edildi: ${hat.durumOku(klasor).konu}. Video başlatılmadı.`); }
       if (tur === 'kx') {
+        ozelBekleyen.delete(chat);
         metinBekleyen.set(chat, klasor);
         taslakZamanla(klasor, true);
         return yaz(chat, 'Doğru metni yazıp gönderin. İki yol var:\n' +
@@ -312,7 +340,55 @@ export function telegramBaslat(hat) {
           '2) Yalnız yanlış yeri yazın (ör. "odak değil odaklanma", "üç yaprak değil beş yaprak").\n' +
           'Siz yazana kadar video başlamaz.');
       }
+      if (tur === 'ko') {
+        metinBekleyen.delete(chat);
+        ozelBekleyen.set(chat, klasor);
+        taslakZamanla(klasor, true);
+        return yaz(chat, 'Özel isteğinizi yazın ya da sesli mesajla söyleyin. Örnek:\n' +
+          '"Kredili 51 saniye olacak. Ses ile el hareketleri çok uyumlu olsun, eller hiç durmasın. Masada yeşil taze reyhan da olsun. ' +
+          'Ses kendinden emin, bilgili, tecrübeli, samimi ve güven veren bir eğitmen tonunda konuşsun."\n\n' +
+          'İçinde "kredili/kredisiz", süre (ör. "51 saniye") ya da "onaylı" geçerse ayarlar kendiliğinden değişir. Siz gönderene kadar video başlamaz.');
+      }
+      if (tur === 'kq') {
+        hat.ozelIstekSil(klasor);
+        taslakZamanla(klasor);
+        return taslakGuncelle(klasor);
+      }
     } catch (e) { return yaz(chat, e.message); }
+  }
+
+  // "Özel istek ekle"den sonra gelen yazı (ya da deşifre edilmiş sesli mesaj): ayarları uygular, metnin tamamını OZEL-ISTEK.md'ye ekler.
+  async function ozelIstekAl(chat, klasor, metin, kaynak = 'yazı') {
+    ozelBekleyen.delete(chat);
+    const t = taslaklar.get(klasor) || taslakBul(klasor, chat, null);
+    if (!t) return yaz(chat, 'Bu video başladı; isteğinizi iş bitince "Düzelt" ile yazabilirsiniz.');
+    try {
+      const ayar = istekAyarlari(metin);
+      if (Object.keys(ayar).length) hat.ayarDegistir(klasor, ayar);
+      hat.ozelIstekEkle(klasor, metin, kaynak);
+      const d = hat.durumOku(klasor);
+      const uygulanan = [ayar.mod && (d.mod === 'kredili' ? `kredili (bütçe ${d.butce} kredi)` : 'kredisiz'), ayar.sure && `${d.sure} sn`,
+        ayar.onaylar && (d.onaylar === 'iki' ? 'onaylı' : 'tam otomatik')].filter(Boolean);
+      const sinir = ayar.sure && ayar.sure !== d.sure ? ` (süre ${hat.SURE.en}-${hat.SURE.cok} sn arası olabilir)` : '';
+      return taslakGoster(chat, klasor, `Özel isteğiniz kaydedildi${kaynak === 'sesli' ? ` (sesinizden anladığım):\n"${kisa(metin, 1200)}"` : '.'}` +
+        (uygulanan.length ? `\nAyar olarak uyguladım: ${uygulanan.join(', ')}${sinir}.` : ''), t.metin);
+    } catch (e) { return yaz(chat, 'Özel istek kaydedilemedi: ' + e.message); }
+  }
+
+  // Özel istek sesli geldiyse: indir → whisper → ozelIstekAl.
+  async function ozelIstekSesli(chat, klasor, ses) {
+    if (ses.file_size > 20e6) return yaz(chat, 'Ses kaydı 20 MB\'den büyük; daha kısa bir kayıt gönderin.');
+    const gecici = fs.mkdtempSync(path.join(os.tmpdir(), 'ozel-istek-'));
+    try {
+      await yaz(chat, 'İsteğinizi dinliyorum… (1-2 dk)');
+      const f = await tg('getFile', { file_id: ses.file_id });
+      const kayit = path.join(gecici, 'istek' + (path.extname(ses.file_name || f.file_path).toLowerCase() || '.ogg'));
+      fs.writeFileSync(kayit, Buffer.from(await (await fetch(`${DOSYA}/${f.file_path}`)).arrayBuffer()));
+      const { anlatim } = await desifreEt(kayit, gecici);
+      if (anlatim.split(/\s+/).filter(Boolean).length < 2) { ozelBekleyen.set(chat, klasor); return yaz(chat, 'Kayıtta anlaşılır bir konuşma duyamadım; yeniden söyler ya da yazar mısınız?'); }
+      return ozelIstekAl(chat, klasor, anlatim, 'sesli');
+    } catch (e) { ozelBekleyen.set(chat, klasor); return yaz(chat, 'Sesli istek işlenemedi: ' + e.message + '\nYazarak da gönderebilirsiniz.'); }
+    finally { fs.rmSync(gecici, { recursive: true, force: true }); }
   }
 
   // "Metni düzelt"ten sonra gelen yazı: metin dosyasının sonuna eklenir; senaryo aşaması bu bölümü esas alır.
@@ -339,8 +415,11 @@ export function telegramBaslat(hat) {
       return; // yabancılara cevap yok
     }
     const video = m.video || (m.document?.mime_type?.startsWith('video/') ? m.document : null);
-    if (video) return cekimAl(chat, m, video, metin);
     const ses = m.voice || m.audio || (m.document?.mime_type?.startsWith('audio/') ? m.document : null);
+    // "Özel istek ekle"ye basıldıysa gelen ilk yazı ya da sesli mesaj o videonun isteğidir (yeni video sayılmaz).
+    if (ozelBekleyen.has(chat) && !video && (ses || (metin && !metin.startsWith('/'))))
+      return ses ? ozelIstekSesli(chat, ozelBekleyen.get(chat), ses) : ozelIstekAl(chat, ozelBekleyen.get(chat), metin);
+    if (video) return cekimAl(chat, m, video, metin);
     if (ses) return sesliAl(chat, ses, metin);
     if (metinBekleyen.has(chat) && metin && !metin.startsWith('/')) return metinDuzelt(chat, metinBekleyen.get(chat), metin);
     if (notBekleyen.has(chat) && !metin.startsWith('/')) {
@@ -581,7 +660,7 @@ export function telegramBaslat(hat) {
     const chat = String(q.message.chat.id);
     if (!IZINLI.has(chat)) return;
     const [tur, klasor, deger] = q.data.split('|');
-    if (/^k[msbvx]$/.test(tur)) return taslakDugme(q, chat, tur, klasor, deger);
+    if (/^k[msbvxoq]$/.test(tur)) return taslakDugme(q, chat, tur, klasor, deger);
     await tg('answerCallbackQuery', { callback_query_id: q.id }).catch(() => {});
     await tg('editMessageReplyMarkup', { chat_id: chat, message_id: q.message.message_id, reply_markup: { inline_keyboard: [] } }).catch(() => {});
     try {

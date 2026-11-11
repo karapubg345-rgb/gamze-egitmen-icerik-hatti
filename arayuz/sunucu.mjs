@@ -210,7 +210,33 @@ function bedenIpucu(...metinler) {
 
 // onaylar: 'yok' = tam otomatik (Claude denetime göre karar verir, yalnız bitmiş video gelir) | 'iki' = kareler/kesitler + teslimde onay.
 // Varsayılanlar .env'den: VARSAYILAN_MOD, VARSAYILAN_ONAY.
-function yeniKlasor({ bolum, konu, mod, sure, butce, onaylar, ipucu }) {
+// Özel istek (yalnız eğitmen anlatımı): Gamze Hoca'nın bu videoya özel serbest isteği ("eller hiç durmasın", "masada yeşil reyhan da olsun",
+// "ses kendinden emin, güven veren olsun"). {klasor}/OZEL-ISTEK.md'ye eklenir, eğitim bölümünün her aşama istemine girer, öğrenmeye kaydedilir.
+const OZEL_ISTEK = 'OZEL-ISTEK.md';
+const OZEL_BOLUMLER = ['egitim'];
+const ozelIstekYolu = klasor => path.join(guvenliYol(klasor), OZEL_ISTEK);
+function ozelIstekOku(klasor) {
+  try { return fs.readFileSync(ozelIstekYolu(klasor), 'utf8').split(/^## /m).slice(1).map(s => s.replace(/^[^\n]*\n/, '').trim()).filter(Boolean); }
+  catch { return []; }
+}
+function ozelIstekEkle(klasor, metin, kaynak = 'yazı') {
+  const d = durumOku(klasor);
+  if (!OZEL_BOLUMLER.includes(d.bolum)) throw new Error('Özel istek yalnız eğitmen anlatımı videolarında kullanılır.');
+  metin = (metin || '').trim();
+  if (!metin) throw new Error('Özel istek boş.');
+  const yol = ozelIstekYolu(klasor);
+  if (!fs.existsSync(yol)) fs.writeFileSync(yol, `# Gamze Hoca'nın özel isteği — ${d.konu}\n\nBu videoya özel. Değişmez kurallarla (CLAUDE.md) çelişmedikçe her aşama kendi işine düşeni uygular.\n`);
+  fs.appendFileSync(yol, `\n## ${new Date().toLocaleString('tr-TR')} · ${kaynak}\n\n${metin}\n`);
+  ogrenme.kaydet({ tur: 'ozel-istek', klasor, konu: d.konu, bolum: d.bolum, not: metin });
+  return ozelIstekOku(klasor);
+}
+function ozelIstekSil(klasor) {
+  const d = durumOku(klasor);
+  if (d.otomatik || Object.keys(d.asamalar || {}).length) throw new Error('Bu video başladı; özel istek artık "Düzelt" ile verilir.');
+  fs.rmSync(ozelIstekYolu(klasor), { force: true });
+}
+
+function yeniKlasor({ bolum, konu, mod, sure, butce, onaylar, ipucu, ozelIstek }) {
   if (!bolumBul(bolum) || !konu?.trim()) throw new Error('bölüm ve konu gerekli');
   mod = (mod || process.env.VARSAYILAN_MOD) === 'kredili' ? 'kredili' : 'kredisiz';
   onaylar = (onaylar || process.env.VARSAYILAN_ONAY) === 'iki' ? 'iki' : 'yok';
@@ -221,15 +247,17 @@ function yeniKlasor({ bolum, konu, mod, sure, butce, onaylar, ipucu }) {
   butce = mod === 'kredili' ? (Number(butce) > 0 ? Number(butce) : tahminiKredi(bolum, sure, mod)) : 0;
   const beden = bedenIpucu(konu, ipucu);
   durumYaz(ad, { bolum, konu: konu.trim(), mod, sure, butce, onaylar, ...(beden ? { beden } : {}), harcanan: 0, olusturma: new Date().toISOString(), kaynaklar: [], asamalar: {} });
+  if (ozelIstek?.trim() && OZEL_BOLUMLER.includes(bolum)) ozelIstekEkle(ad, ozelIstek, 'Stüdyo');
   return ad;
 }
 
-// Henüz başlamamış videonun modunu/süresini değiştirir (Telegram ayar kartı). Bütçe yeniden hesaplanır.
-function ayarDegistir(klasor, { mod, sure }) {
+// Henüz başlamamış videonun modunu/süresini/onay biçimini değiştirir (Telegram ayar kartı, özel istek). Bütçe yeniden hesaplanır.
+function ayarDegistir(klasor, { mod, sure, onaylar }) {
   const d = durumOku(klasor);
   if (d.otomatik || Object.keys(d.asamalar || {}).length) throw new Error('Bu video başladı; ayarı artık değişmez.');
   if (mod) d.mod = mod === 'kredili' ? 'kredili' : 'kredisiz';
   if (sure) d.sure = Math.min(SURE.cok, Math.max(SURE.en, Math.round(Number(sure))));
+  if (onaylar) d.onaylar = onaylar === 'iki' ? 'iki' : 'yok';
   d.butce = d.mod === 'kredili' ? tahminiKredi(d.bolum, d.sure, d.mod) : 0;
   durumYaz(klasor, d);
   return d;
@@ -317,6 +345,18 @@ function bekleyenGorevler(klasor, asama) {
   } catch { return []; }
 }
 
+// Eğitmen anlatımı aşamalarına eklenen özel istek bloğu (diğer bölümlerde boş).
+function ozelIstekBlogu(klasor, d) {
+  if (!OZEL_BOLUMLER.includes(d.bolum)) return '';
+  const istekler = ozelIstekOku(klasor);
+  if (!istekler.length) return '';
+  return `\n\nGAMZE HOCA'NIN BU VİDEOYA ÖZEL İSTEĞİ (${klasor}/${OZEL_ISTEK}; sesli/yazılı, otomatik deşifre olabilir; birden fazlaysa hepsi geçerli, çelişirse en sondaki): `
+    + 'her aşama kendi işine düşeni harfiyen uygular (senaryo: metin, konu nesnesi, süre · ses: ton, duygu etiketleri, hız · kareler: masa/nesne · video: el hareketleri, jest yoğunluğu · kurgu: görsel). '
+    + `Süre ve kredili/kredisiz ayarı sunucuda zaten uygulandı (${d.sure} sn, mod yukarıda); onları yeniden yorumlama. CLAUDE.md değişmez kurallarıyla çelişen kısım (yüz, takı, sağlık iddiası…) UYGULANMAZ, raporda EKSIK olarak nedeniyle yazılır. `
+    + 'Denetimde ve UYUM puanında bu isteğe uyum da ölçülür.\n'
+    + istekler.map(s => '> ' + s.replace(/\n/g, '\n> ')).join('\n');
+}
+
 function calistir({ klasor, asama, not, krediOnay, krediLimit, otoDeneme, surdur }) {
   if (calisan) throw new Error(`Şu an çalışan bir iş var: ${calisan.klasor} · ${calisan.asama}`);
   const d = durumOku(klasor);
@@ -361,6 +401,7 @@ function calistir({ klasor, asama, not, krediOnay, krediLimit, otoDeneme, surdur
     + '\n\nRAPOR SONU (sunucu okur, bu sırayla): denetimde bulduğun her eksik için bir `EKSIK: <kısa, kullanıcının anlayacağı dille>` satırı (en fazla 6); '
     + '`UYUM: <0-100>` — çıktının isteğe (senaryo, CLAUDE.md kuralları, kullanıcı notu) genel uyum yüzdesi, denetçi raporlarına dayanarak dürüstçe; '
     + '`SONUC: TAMAM` ya da `SONUC: SORUN` (denetimden geçmeyen kare/video, bütçe ya da Sınırsız mod nedeniyle yapılamayan gönderim, eksik çıktı varsa SORUN); gerekiyorsa `GERI: <aşama-id>`; en son `HARCANAN_KREDI: <sayı>`.'
+    + ozelIstekBlogu(klasor, d)
     + '\nKREDİ PAYI: kredili üretimi (video, Video Edit, ücretli görsel) bu aşama içinde kendiliğinden YENİDEN GÖNDERME — denetim kötüyse düşük UYUM ve EKSIK yaz, yeniden üretme kararı hattındır. Kredisiz işlerde (Sınırsız kareler) en fazla 1 düzeltme turu yap.';
 
   const log = fs.createWriteStream(logYolu);
@@ -629,7 +670,7 @@ if (process.env.TELEGRAM_BOT_TOKEN) {
   const { telegramBaslat } = await import('./telegram.mjs');
   telegramBaslat({
     KOK, olaylar, SURE, tanim, bolumBul, eslesen, durumOku, tahminiKredi, planSayisi, bedenIpucu,
-    yeniKlasor, ayarDegistir, krediliyeGec, takilmaErtele, kaynakEkle, otomatikBaslat, onayVer, duzelt, durdur, durumListesi, ogrenme,
+    yeniKlasor, ayarDegistir, ozelIstekEkle, ozelIstekOku, ozelIstekSil, OZEL_BOLUMLER, krediliyeGec, takilmaErtele, kaynakEkle, otomatikBaslat, onayVer, duzelt, durdur, durumListesi, ogrenme,
     mesgul: () => !!calisan
   });
 }
