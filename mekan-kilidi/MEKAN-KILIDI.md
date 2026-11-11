@@ -37,7 +37,11 @@ Kaynak fotoğraf: `ELLER-referans.jpg` (Gamze Hoca'nın gönderdiği; ışık hu
 |---|---|
 | E0-ofis.png | ANA referans (boş masa, insan yok) |
 
-**İlk kullanımda bir kez üretilir** (eğitmen bölümünün "Kilitler ve kareler" aşaması): `E0-ofis.png` yoksa M0 Image1 olarak verilip (ışık ve renk dili aynı kalsın diye) aşağıdaki kalıpla üretilir, `sahne-denetci` ile denetlenir, sonucu bu dosyanın sonuna `E0: GEÇTİ (<tarih>)` diye yazılır. Varsa yeniden üretilmez; videolar arasında ortaktır.
+**HER ZAMAN AYNI MASA, AYNI YER** (Gamze Hoca, 11 Kas 2026: "anlatacağım şeyler her zaman aynı masa, aynı yer olsun"). Beğenilen reyhan videosundaki ofis (`ornekler/egitim-begenilen/kare-02.jpg`) kalıcı mekândır:
+- `E0-ofis.png` varsa ASLA yeniden üretilmez, değiştirilmez; her eğitmen videosu onu kullanır (videolar arasında ortak).
+- Yoksa (yeni bilgisayar, silinmiş) uydurulmaz: Image1 = `ornekler/egitim-begenilen/kare-02.jpg` verilip "same room, same desk, same camera position and height; remove the person, the hands and the basil/bowl; keep the books, cup and brass bell exactly where they are" ile boşaltılır, `sahne-denetci` beğenilen karelerle karşılaştırır. M0'dan ya da metinden yeni ofis üretilmez.
+- Sabit masa düzeni (her videoda aynı yerde): solda üst üste keten ciltli kitaplar, sağda krem kupa ve küçük pirinç zil, ortası konu nesnesine ayrılmış; arkada pencere + mor (mürdüm) perde, kavanozlu raflar. Kamera yüksekliği ve açısı kare-02 ile aynı.
+- Değişen yalnız konu nesnesidir (ortadaki demet/kâse). E0 dosyası git'e EKLENMEZ (üretim bilgisayarında yaşar; eklenirse `/guncelle` bozulur).
 
 **E0 kalıbı:**
 > A warm, bright, tidy herbal educator's office in the same style, light and colour palette as Image1. Front view at seated chest height across a light oak writing desk: the desk top is clear in the centre (space for the topic object) with a small stack of linen-bound herb books, a ceramic cup and a small brass bell at the sides; behind the desk, softly out of focus, open wooden shelves with glass jars of dried herbs and botanical books, a potted green plant, a framed botanical print, a dusty plum (mürdüm) linen curtain at a window with soft daylight from the left. Calm, trustworthy, clean, not clinical. Photorealistic, vertical 9:16, no people, no text, no logos.
