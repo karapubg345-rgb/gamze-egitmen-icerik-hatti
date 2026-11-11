@@ -15,6 +15,108 @@
   },
   "bolumler": [
     {
+      "id": "egitim",
+      "ad": "Eğitmen anlatımı",
+      "aciklama": "Gamze Hoca ofisinde, masasında konu nesnesiyle (ör. taze ve kuru reyhan) bir bitkinin/konunun faydasını anlatır; yüz yok, elleri konuşmaya uyar. Önce ses (Hoca'nın tarzında), sonra sese uyan video.",
+      "sistem": "SISTEM.md Bölüm 0",
+      "asamalar": [
+        {
+          "id": "senaryo",
+          "surdur": "SENARYO.md ve gercek-referans/REFERANS-KARTI.md varsa ve kullanıcı notu senaryoyu değiştirmeyi istemiyorsa yeniden yazma; gercek-referans/ altında indirilmiş fotoğraflar varsa aramayı baştan yapma.",
+          "ad": "Anlatım metni ve gerçek referans",
+          "aciklama": "Hoca'nın üslubuyla kanca + anlatım, plan ve jest listesi, açıklama ve uyarı; konu nesnesinin gerçek görünümü.",
+          "talimat": "SISTEM.md Bölüm 0 adım 1-2. KAYNAK: {klasor}/SESLI-ANLATIM.md varsa bu video Gamze Hoca'nın kendi sesli anlatımıdır ve TEK kaynaktır — anlattığı faydalar, kullanım biçimleri, sıra ve örnekler oradan alınır; kendinden bilgi ekleme. Otomatik deşifredir: bağlamdan açıkça anlaşılan yanlış duyulmuş kelimeyi düzelt, anlaşılmayanı uydurma, EKSIK olarak yaz. Başlığı 'Linkten alınan anlatım' ise bilgi oradan alınır ama cümleler kopyalanmaz, kaynak hesabın adı/markası/çağrıları alınmaz. SESLI-ANLATIM.md yoksa konu '{konu}' için kısa, doğrulanabilir geleneksel kullanım bilgisi yaz (iddia yok). ÜSLUP: uslup/GAMZE-USLUP.md'yi oku ve harfiyen uygula — 'Hocam …' şikâyet kancası, 'arkadaşlar' hitabı, 'Nedir bu? <tek kelime>' soru-cevabı, gelenek bağı, '-ebilirsiniz' kullanım listesi, 'kesinlikle tavsiye ediyorum… açıklamayı okumayı unutmayın' kapanışı; tarif anlatma (konu gerektirmedikçe). SAĞLIK DİLİ üsluptan önce gelir: 'arttırır, geçirir, iyileştirir, etkisini görürsünüz' YOK → 'geleneksel olarak … için kullanılır / koklanır', 'kokusuyla bilinir'. SÜRE: {sure} sn; Hoca dakikada ~150 kelime konuşur → metin en fazla {sure} × 2,3 kelime (kanca dâhil). {klasor}/SENARYO.md yaz: '## Kaynak' (SESLI-ANLATIM.md'den özet ya da 'konu'), '## Anlatım' (düz metin, son hâli; ses aşaması bunu okur), '## Konu nesnesi' (masada ne var: ör. saksıda ya da demet hâlinde taze reyhan + küçük kâsede kuru reyhan; Hoca'nın söylediği nesneler esas), '## Planlar' tablosu: | Plan | Cümle | Kadraj (GENİŞ: göğüs ortasından masaya, gövde + eller + nesne · YAKIN: yalnız eller + nesne) | Jest (uslup kartındaki jest dili) | — 5-8 plan, her cümle bir plan, kanca planı GENİŞ; '## Açıklama' (Instagram açıklaması: konu, kullanım önerileri, CLAUDE.md uyarı satırı 'Geleneksel bir tariftir, tedavi amacı taşımaz; sağlık sorununuz varsa hekiminize danışın.'; bal geçiyorsa '1 yaş altı bebeklere bal verilmez'), '## Kanca yazısı' (ekranda ilk 2 sn, en fazla 6 kelime). Sonra gercek-referans ajanını konu nesnesi için çağır ({klasor}/gercek-referans/REFERANS-KARTI.md: taze ve kuru hâlinin gerçek görünümü, saksı/demet/kâse) ve gerekirse '## Konu nesnesi'ni gerçeğe göre düzelt.",
+          "kredili": false,
+          "ciktilar": [
+            "SENARYO.md",
+            "gercek-referans/REFERANS-KARTI.md",
+            "SESLI-ANLATIM.md"
+          ]
+        },
+        {
+          "id": "ses",
+          "surdur": "ses/anlatim.mp3 whisper doğrulamasından geçmişse ve SENARYO.md → '## Anlatım' değişmediyse ElevenLabs'ta yeniden üretme; JEST.md yoksa yalnız onu çıkar.",
+          "ad": "Anlatım sesi ve jest çizelgesi",
+          "aciklama": "Önce ses: ElevenLabs seçili ses, Hoca'nın tempo ve tonunda; whisper kelime zamanlarından jest çizelgesi (video buna göre üretilir).",
+          "talimat": "SISTEM.md Bölüm 0 adım 3. elevenlabs-ses skill'iyle SENARYO.md → '## Anlatım' metnini seslendir: ses ELEVENLABS_VOICE_ID (klon yok; seçili ses), uslup/GAMZE-USLUP.md → 'Ölçülen konuşma': akıcı, sıcak, hızlı ([warmly], kancada şikâyetler arasında [short pause], 'Nedir bu?' sonrası [short pause], [slowly] YOK). Çıktı {klasor}/ses/anlatim.mp3; süresi {sure} sn'yi en fazla 1 sn aşabilir — aşarsa metni kısalt, yeniden üret (1 kez). whisper ile doğrula ({klasor}/ses/desifre/; desifre.json kelime zamanları). Sonra {klasor}/JEST.md yaz: ses süresi (ffprobe, ondalıklı), video süresi = sesin süresinin yukarı yuvarlanmışı (≤ 30 sn tek parça; üstü {parcalar}), ve tablo | Plan | Başlangıç sn | Bitiş sn | Söz | Vurgu kelimesi @ sn | Jest | Kadraj | — plan sınırları cümle sınırlarıdır (desifre.json'dan), jest vurgu kelimesinin saniyesinde zirve yapar (ör. 'Reyhan' @ 6,8 sn → demet kaldırılır). Plan kesmesi her zaman bir cümle arasına düşer. SENARYO.md → '## Planlar' tablosuna aynı zamanları ekle.",
+          "kredili": false,
+          "tahmin": {
+            "kredisiz": "ElevenLabs karakteri (30 sn ≈ 450)",
+            "kredili": "ElevenLabs karakteri (30 sn ≈ 450)"
+          },
+          "ciktilar": [
+            "ses/*.mp3",
+            "JEST.md"
+          ]
+        },
+        {
+          "id": "kareler",
+          "surdur": "mekan-kilidi/E0-ofis.png varsa ve MEKAN-KILIDI.md 'E0: GEÇTİ' diyorsa yeniden üretme (videolar arasında ortak). nesne-kilidi/ ve kareler/ içinde DENETIM.md'de GEÇTİ yazan dosyalar yeniden üretilmez; yalnız eksik, DÜZELT ya da denetlenmemiş kareler.",
+          "ad": "Ofis, nesne kilidi ve kareler",
+          "aciklama": "GPT Image 2 · 9:16 · 1K: ofis (ilk kullanımda bir kez), konu nesnesi bir kez, sonra her planın açılış karesi; sahne-denetci (eller, tırnak, yüz yok).",
+          "talimat": "SISTEM.md Bölüm 0 adım 4-5, topview-uretim skill'i, mekan-kilidi/MEKAN-KILIDI.md (Eller, Eğitmen ofisi, Eğitmen kadrajı kalıpları). 1) E0: mekan-kilidi/E0-ofis.png yoksa ilk kullanımdır — MEKAN-KILIDI.md'deki E0 kalıbıyla (Image1 = M0, ışık/renk dili için) bir kez üret, sahne-denetci ile denetle; geçerse aşama raporuna 'E0: GEÇTİ' yaz (MEKAN-KILIDI.md'yi DÜZENLEME — üretim bilgisayarında repo dosyası değişmez; dosyanın varlığı yeterli). 2) Nesne kilidi: SENARYO.md → '## Konu nesnesi'ni REFERANS-KARTI.md'deki gerçek görünüme göre E0 masasının üstünde, insan olmadan bir kez üret → {klasor}/nesne-kilidi/P1-*.png (Image1 = E0, Image2 = seçilen gerçek fotoğraf). 3) Kareler: JEST.md'deki her planın AÇILIŞ karesi ({klasor}/kareler/kare-NN.png): Image1 = E0, Image2 = P1, Image3 = mekan-kilidi/ELLER-kilidi.png (eller: kol, başparmak deliği, tırnak). GENİŞ planda Eğitmen kalıbı (göğüs ortasından masaya, baş/yüz/boyun/saç kadraj DIŞINDA, düz siyah elbise), YAKIN planda yalnız eller + nesne. Her karede eller kalıbı aynen; jestin başlangıç pozu (ör. avuçlar açık, demet elde). 4) sahne-denetci ile denetle ({klasor}/DENETIM.md) — özellikle: yüz/çene/boyun/saç görünüyor = HATA; kol siyah değil, manşet/desen var, bilek çıplak = HATA; tırnak uzun/kirli/ojeli/kırık = HATA; parmak sayısı; nesne P1 ile aynı mı. DÜZELT olanları düzelt (en fazla 1 tur). Kredilide bütçeyi aşacak gönderim yapma.",
+          "kredili": true,
+          "tahmin": {
+            "kredisiz": "0 kredi",
+            "kredili": "≈ 0,2 kredi / kare (8 kare + ilk kullanımda ofis ≈ 2)"
+          },
+          "kartBasina": 0.2,
+          "ciktilar": [
+            "nesne-kilidi/*.png",
+            "kareler/*.png",
+            "DENETIM.md"
+          ],
+          "onay": {
+            "baslik": "Kareler hazır",
+            "soru": "Videoya geçilsin mi?",
+            "gonder": [
+              "kareler/*.png"
+            ],
+            "devam": "Videoya geç"
+          }
+        },
+        {
+          "id": "video",
+          "surdur": "klipler/ altında JEST.md'deki video süresine (±1 sn; ffprobe) uyan video varsa YENİDEN ÜRETME, doğrudan video-denetci'den devam et. Parçalı üretimde inmiş parçalar korunur. topview-dosyalar.json'da 'gonderildi' durumunda video görevi varsa yeni görev açma: o görevi sorgula.",
+          "ad": "Sese uyan video",
+          "aciklama": "Seedance 2.5 Omni Reference: kareler + eller referansı + (destekleniyorsa) anlatım sesi; zaman damgalı jest promptu; video-denetci jest-ses uyumu.",
+          "talimat": "SISTEM.md Bölüm 0 adım 6-7. Seedance 2.5 Omni Reference, 720p, 9:16, süre = JEST.md'deki video süresi ({parcalar}). Referanslar: kareler sırayla Image1..N, son olarak mekan-kilidi/ELLER-kilidi.png. SES REFERANSI: Omni Reference'ta ses (audio) girdisi varsa (kredisizde arayüzde ses yükleme alanı / 'Audio' sekmesi; kredilide araç şemasında inputAudios benzeri alan — şemadan bak, tahmin etme) {klasor}/ses/anlatim.mp3'ü ver ve promptta 'the hand gestures follow the rhythm and emphasis of the narration audio; no lip sync, no face' yaz; yoksa yalnız zaman damgalı prompt. Raporda 'SES_REFERANSI: VAR|YOK (neden)' satırı yaz. PROMPT: JEST.md'nin her planı zaman damgasıyla ('0.0-2.6s: start exactly from @Image1: … the left palm opens upward …; at 2.1s the right index finger rises'), jestin zirvesi vurgu kelimesinin saniyesinde; her planda o plandaki nesne hâli (demet elde mi, masada mı) gerçeğe göre; o planda olmayan nesne adı geçmez. Ortak başlık her planda aynı: eller kalıbı (MEKAN-KILIDI.md → Eller), 'head, face, neck and hair always outside the frame', 'same office, same desk, same object', 'natural speaking-hand gestures, relaxed and fluid, not robotic; no speech audio, no voice, no music, no text'. Kesmeler JEST.md'deki plan sınırlarında sert kesme. Videoyu {klasor}/klipler/ altına indir; video-denetci ile {klasor}/VIDEO-DENETIM.md yaz — ek madde: JEST.md'deki her vurgu saniyesinde jest görülüyor mu (±0,4 sn), eller konuşma boyunca doğal hareketli mi (donuk el = KIRP/YENİDEN ÜRET), yüz/çene hiç görünüyor mu, kol/tırnak kuralı.",
+          "kredili": true,
+          "tahmin": {
+            "kredisiz": "0 kredi (Sınırsız kuyruk)",
+            "kredili": "≈ 1,2 kredi / sn (25 sn ≈ 30)"
+          },
+          "saniyeBasina": 1.2,
+          "ciktilar": [
+            "klipler/*.mp4",
+            "VIDEO-DENETIM.md"
+          ]
+        },
+        {
+          "id": "kurgu",
+          "surdur": "teslim/ altında hazır teslim videosu ve ACIKLAMA.txt varsa ve kullanıcı notu kurgunun değişmesini istemiyorsa yeniden render alma; yalnız kontrolleri yap.",
+          "ad": "Kurgu ve teslim",
+          "aciklama": "Anlatım sesi videoya oturtulur, kanca yazısı, kelime senkron altyazı; −14 LUFS teslim.",
+          "talimat": "kurgu-ajani talimatlarıyla {klasor}/kurgu/ kur: ses {klasor}/ses/anlatim.mp3 tam seviyede, video ortam sesi kısık (ya da kapalı); video ile ses 0. saniyeden hizalı (JEST.md zamanları sese göredir — video-denetci kayma bulduysa en fazla ±0,3 sn kaydır). Dijital kamera: GENİŞ planlarda hafif push-in, nesne gösterilen vurgu anında yakınlaştırma (yüz kadraja asla girmez — kırpma yukarı kaymaz). Kanca yazısı SENARYO.md → '## Kanca yazısı'; altyazı kelime senkron (ses/desifre/desifre.json). Render al, araclar/teslim.sh ile {klasor}/teslim/ altına teslim et, altyazı bandını kontrol et. {klasor}/teslim/ACIKLAMA.txt (SENARYO.md → '## Açıklama' + uyarı satırı) yaz.",
+          "kredili": false,
+          "ciktilar": [
+            "teslim/*.mp4",
+            "teslim/ACIKLAMA.txt",
+            "kurgu/out/kontrol/altyazi-bandi.jpg"
+          ],
+          "onay": {
+            "baslik": "Video teslime hazır",
+            "soru": "Onaylıyor musunuz?",
+            "gonder": [
+              "teslim/*.mp4",
+              "teslim/ACIKLAMA.txt"
+            ],
+            "devam": "Tamam"
+          }
+        }
+      ]
+    },
+    {
       "id": "tarif",
       "ad": "Tarif videoları",
       "aciklama": "Sıfırdan yapay zekâ: mekân kilidi + nesne kilidi + kareler + Seedance videosu. Çekimi olmayan tarif ve konular için.",
@@ -25,21 +127,39 @@
           "surdur": "SENARYO.md ve gercek-referans/REFERANS-KARTI.md varsa ve kullanıcı notu senaryoyu değiştirmeyi istemiyorsa yeniden yazma; gercek-referans/ altında indirilmiş fotoğraflar varsa aramayı baştan yapma, yalnız eksik kalan kartı tamamla.",
           "ad": "Senaryo ve gerçek referans",
           "aciklama": "Kanca, kısa planlar, taslak anlatım, açıklama ve uyarı satırı; tarifin gerçek fotoğraflarla doğrulanması.",
-          "talimat": "SISTEM.md Bölüm 1 adım 1-2: {klasor}/SENARYO.md yaz (kanca yazısı, {sure} sn'ye uyan taslak anlatım, {planSayisi} kısa plan — her biri 2-3 sn, toplam {sure} sn —, açıklama metni, uyarı satırı; sağlık iddiası filtresi). Sonra gercek-referans ajanını çağır ({klasor}/gercek-referans/REFERANS-KARTI.md) ve gerekiyorsa senaryoyu gerçeğe göre düzelt. SESLİ TARİF: {klasor}/SESLI-TARIF.md varsa bu video Gamze Hoca'nın kendi sesli anlattığı tariftir ve senaryonun TEK kaynağıdır — malzemeler, ölçüler, sıra, süreler ve püf noktaları ondan birebir alınır; kendinden malzeme/adım ekleme, sırayı değiştirme. Metin otomatik deşifredir: bağlamdan açıkça anlaşılan yanlış duyulmuş kelimeleri düzelt (ör. 'tarçım' → tarçın), anlaşılmayanı uydurma, raporda EKSIK olarak yaz. Gerçek referans yalnız GÖRÜNÜMÜ doğrular (kıvam, renk, kap); Gamze'nin tarifiyle çelişirse tarif onunki kalır, görünüm gerçeğe göre kurulur. Anlatımdaki sağlık iddialarını CLAUDE.md sağlık diline çevir ('geleneksel olarak kullanılır'). Anlatım tarifin tamamını {sure} sn'ye sığdıramıyorsa en görsel adımları seç, atılanları raporda belirt. SENARYO.md'nin başına '## Kaynak: SESLI-TARIF.md' bölümüyle tarifi (malzeme + adım listesi) yaz. LİNKTEN TARİF: SESLI-TARIF.md başlığı 'Linkten alınan tarif' ise kaynak başka bir hesabın videosudur — tarifin kendisi (malzeme, ölçü, sıra) yine oradan alınır, 'Videodaki konuşma' ile 'Gönderi açıklaması' birlikte okunur (ölçüde yazılı açıklama esas); ama kanca ve anlatım cümleleri kopyalanmaz, Gamze Hoca'nın üslubuyla yeniden yazılır; kaynak hesabın adı, markası, ürün tanıtımı ve çağrıları (takip et, link bio vb.) alınmaz. GÖSTERİM BEDENİ (CLAUDE.md istisnası, beden-kilidi/BEDEN-KILIDI.md): tarif bedende bir gösterim gerektiriyorsa (deri çimdik testi, el üstüne / ön kola / ayağa / sırta uygulama, çocuğun eline sürme vb.) 'bunu gösteremiyoruz' deyip yalnız yazıya bırakma; o planı gösterim bedeniyle kur. SENARYO.md'ye '## Gösterim bedeni' tablosu yaz: | Plan | Beden kilidi (B1 çocuk eli · B2 yetişkin erkek ön kol · B3 yetişkin ayak · B4 yetişkin sırt) | Sunucu eli bu planda (VAR/YOK) | Ne gösteriliyor |. Plan listesinde de her planın yanına beden kodunu ve 'sunucu eli VAR/YOK' yaz. Sunucu eli aynı karedeyse eldiven + mürdüm kol kuralı ona aynen geçerli. Çocuk bedeni yalnız el (B1) ya da ayak olabilir; yüz/kafa/kıyafet hiçbir planda yok; hiçbir B kilidine uymayan bölge gerekiyorsa en yakın kilidi seç ve raporda EKSIK olarak yaz. Gösterim gerekmiyorsa tabloyu 'Gösterim bedeni: yok' tek satırıyla yaz. İSTEKTEN GELEN BEDEN İPUCU: {beden} — ipucu varsa ilgili planlarda o kilidi kullan (tarif gerektirmiyorsa zorlama, raporda belirt).",
+          "talimat": "SISTEM.md Bölüm 1 adım 1-2: {klasor}/SENARYO.md yaz (kanca yazısı, {sure} sn'ye uyan taslak anlatım, {planSayisi} kısa plan — her biri 2-3 sn, toplam {sure} sn —, açıklama metni, uyarı satırı; sağlık iddiası filtresi). Sonra gercek-referans ajanını çağır ({klasor}/gercek-referans/REFERANS-KARTI.md) ve gerekiyorsa senaryoyu gerçeğe göre düzelt. SESLİ TARİF: {klasor}/SESLI-TARIF.md varsa bu video Gamze Hoca'nın kendi sesli anlattığı tariftir ve senaryonun TEK kaynağıdır — malzemeler, ölçüler, sıra, süreler ve püf noktaları ondan birebir alınır; kendinden malzeme/adım ekleme, sırayı değiştirme. Metin otomatik deşifredir: bağlamdan açıkça anlaşılan yanlış duyulmuş kelimeleri düzelt (ör. 'tarçım' → tarçın), anlaşılmayanı uydurma, raporda EKSIK olarak yaz. Gerçek referans yalnız GÖRÜNÜMÜ doğrular (kıvam, renk, kap); Gamze'nin tarifiyle çelişirse tarif onunki kalır, görünüm gerçeğe göre kurulur. Anlatımdaki sağlık iddialarını CLAUDE.md sağlık diline çevir ('geleneksel olarak kullanılır'). Anlatım tarifin tamamını {sure} sn'ye sığdıramıyorsa en görsel adımları seç, atılanları raporda belirt. SENARYO.md'nin başına '## Kaynak: SESLI-TARIF.md' bölümüyle tarifi (malzeme + adım listesi) yaz. LİNKTEN TARİF: SESLI-TARIF.md başlığı 'Linkten alınan tarif' ise kaynak başka bir hesabın videosudur — tarifin kendisi (malzeme, ölçü, sıra) yine oradan alınır, 'Videodaki konuşma' ile 'Gönderi açıklaması' birlikte okunur (ölçüde yazılı açıklama esas); ama kanca ve anlatım cümleleri kopyalanmaz, Gamze Hoca'nın üslubuyla yeniden yazılır; kaynak hesabın adı, markası, ürün tanıtımı ve çağrıları (takip et, link bio vb.) alınmaz. GÖSTERİM BEDENİ (CLAUDE.md istisnası, beden-kilidi/BEDEN-KILIDI.md): tarif bedende bir gösterim gerektiriyorsa (deri çimdik testi, el üstüne / ön kola / ayağa / sırta uygulama, çocuğun eline sürme vb.) 'bunu gösteremiyoruz' deyip yalnız yazıya bırakma; o planı gösterim bedeniyle kur. SENARYO.md'ye '## Gösterim bedeni' tablosu yaz: | Plan | Beden kilidi (B1 çocuk eli · B2 yetişkin erkek ön kol · B3 yetişkin ayak · B4 yetişkin sırt) | Sunucu eli bu planda (VAR/YOK) | Ne gösteriliyor |. Plan listesinde de her planın yanına beden kodunu ve 'sunucu eli VAR/YOK' yaz. Sunucu eli aynı karedeyse siyah başparmak delikli kol + bakımlı tırnak kuralı ona aynen geçerli (mekan-kilidi/MEKAN-KILIDI.md → Eller). Çocuk bedeni yalnız el (B1) ya da ayak olabilir; yüz/kafa/kıyafet hiçbir planda yok; hiçbir B kilidine uymayan bölge gerekiyorsa en yakın kilidi seç ve raporda EKSIK olarak yaz. Gösterim gerekmiyorsa tabloyu 'Gösterim bedeni: yok' tek satırıyla yaz. İSTEKTEN GELEN BEDEN İPUCU: {beden} — ipucu varsa ilgili planlarda o kilidi kullan (tarif gerektirmiyorsa zorlama, raporda belirt).",
           "kredili": false,
-          "ciktilar": ["SENARYO.md", "gercek-referans/REFERANS-KARTI.md", "SESLI-TARIF.md"]
+          "ciktilar": [
+            "SENARYO.md",
+            "gercek-referans/REFERANS-KARTI.md",
+            "SESLI-TARIF.md"
+          ]
         },
         {
           "id": "kareler",
           "surdur": "nesne-kilidi/ ve kareler/ içindeki, DENETIM.md'de GEÇTİ (KULLAN/geçti) yazan dosyalar yeniden üretilmez; yalnız eksik kareler, DENETIM.md'de DÜZELT yazanlar ya da hiç denetlenmemiş kareler üretilir/denetlenir. Nesne kilidi (P1) varsa ve geçtiyse yeniden üretme — sonraki kareler onu referans alır. Beden kilidi (beden-kilidi/B?-*.png) videolar arasında ORTAKTIR: dosya varsa ve beden-kilidi/B?-*/KART.md 'SONUÇ: GEÇTİ' diyorsa yeniden üretme, doğrudan kullan.",
           "ad": "Nesne kilidi ve kareler",
           "aciklama": "GPT Image 2 · 9:16 · 1K: ana nesne bir kez, sonra her plan karesi; sahne-denetci süreklilik denetimi.",
-          "talimat": "SISTEM.md Bölüm 1 adım 3-5 ve topview-uretim skill'i: nesne kilidi ({klasor}/nesne-kilidi/P1-*.png), sonra plan kareleri ({klasor}/kareler/), hepsi GPT Image 2 · 9:16 · 1K (moda göre: kredisizde Sınırsız tarayıcı, kredilide MCP). sahne-denetci ajanıyla denetle ({klasor}/DENETIM.md); DÜZELT olanları düzelt ve yeniden denetle (en fazla 1 tur; kalan küçük kusurları EKSIK olarak yaz). GÖSTERİM BEDENİ: SENARYO.md'de '## Gösterim bedeni' tablosunda B kodu varsa, kareleri üretmeden ÖNCE o kilit beden-kilidi/ altında hazır mı bak (BEDEN-KILIDI.md → Üretim). Yoksa ilk kullanım budur: gercek-referans ajanını 'beden kilidi kipi'nde çağır (beden-kilidi/B?-*/KART.md + secilen/), kilidi BİR kez üret (kredisizde Sınırsız tarayıcı, 0 kredi; kredilide MCP, ≈ 0,2 kredi, kalan bütçeyi aşacaksa gönderme), sahne-denetci ile denetle, sonucu KART.md'ye yaz. Sonra gösterim bedeninin göründüğü her karede beden kilidini ek Image referansı olarak ver (Image1 = M0, Image2 = P1, Image3 = B?); sunucu eli o planda VAR ise eller kalıbı aynen, YOK ise promptta 'no gloved hands in this frame' yaz. Raporda kullanılan kilidi, hazır mı bulunduğunu ya da yeni mi üretildiğini ve kredilide `BEDEN_KILIDI_KREDI: <sayı>` satırını yaz. SENARYO.md'de gösterim bedeni yoksa bu adımı atla (eski videolar eskisi gibi).",
+          "talimat": "SISTEM.md Bölüm 1 adım 3-5 ve topview-uretim skill'i: nesne kilidi ({klasor}/nesne-kilidi/P1-*.png), sonra plan kareleri ({klasor}/kareler/), hepsi GPT Image 2 · 9:16 · 1K (moda göre: kredisizde Sınırsız tarayıcı, kredilide MCP). sahne-denetci ajanıyla denetle ({klasor}/DENETIM.md); DÜZELT olanları düzelt ve yeniden denetle (en fazla 1 tur; kalan küçük kusurları EKSIK olarak yaz). GÖSTERİM BEDENİ: SENARYO.md'de '## Gösterim bedeni' tablosunda B kodu varsa, kareleri üretmeden ÖNCE o kilit beden-kilidi/ altında hazır mı bak (BEDEN-KILIDI.md → Üretim). Yoksa ilk kullanım budur: gercek-referans ajanını 'beden kilidi kipi'nde çağır (beden-kilidi/B?-*/KART.md + secilen/), kilidi BİR kez üret (kredisizde Sınırsız tarayıcı, 0 kredi; kredilide MCP, ≈ 0,2 kredi, kalan bütçeyi aşacaksa gönderme), sahne-denetci ile denetle, sonucu KART.md'ye yaz. Sonra gösterim bedeninin göründüğü her karede beden kilidini ek Image referansı olarak ver (Image1 = M0, Image2 = P1, Image3 = B?); sunucu eli o planda VAR ise eller kalıbı aynen, YOK ise promptta 'no presenter hands and no black sleeves in this frame' yaz. Raporda kullanılan kilidi, hazır mı bulunduğunu ya da yeni mi üretildiğini ve kredilide `BEDEN_KILIDI_KREDI: <sayı>` satırını yaz. SENARYO.md'de gösterim bedeni yoksa bu adımı atla (eski videolar eskisi gibi).",
           "kredili": true,
-          "tahmin": { "kredisiz": "0 kredi", "kredili": "≈ 0,2 kredi / kare (10 kare ≈ 2)" },
+          "tahmin": {
+            "kredisiz": "0 kredi",
+            "kredili": "≈ 0,2 kredi / kare (10 kare ≈ 2)"
+          },
           "kartBasina": 0.2,
-          "ciktilar": ["nesne-kilidi/*.png", "kareler/*.png", "DENETIM.md"],
-          "onay": { "baslik": "Kareler hazır", "soru": "Videoya geçilsin mi?", "gonder": ["kareler/*.png"], "devam": "Videoya geç" }
+          "ciktilar": [
+            "nesne-kilidi/*.png",
+            "kareler/*.png",
+            "DENETIM.md"
+          ],
+          "onay": {
+            "baslik": "Kareler hazır",
+            "soru": "Videoya geçilsin mi?",
+            "gonder": [
+              "kareler/*.png"
+            ],
+            "devam": "Videoya geç"
+          }
         },
         {
           "id": "video",
@@ -48,19 +168,31 @@
           "aciklama": "Seedance 2.5 Omni Reference: tüm kareler + zaman damgalı tek prompt; video-denetci kontrolü.",
           "talimat": "SISTEM.md Bölüm 1 adım 6-7: kareleri Image1..N olarak verip Seedance 2.5 Omni Reference ile zaman damgalı prompt (planın gerçek eylemi, kamera hareketi), toplam {sure} sn, 720p, 9:16. Üretim: {parcalar}. Tek parçadan fazlaysa topview-uretim skill'inin '60 sn'ye kadar (parçalı üretim)' bölümünü uygula: parça sınırı bir plan kesmesine denk gelir, her parça kendi planlarının kareleriyle + aynı mekân/nesne/eller referanslarıyla + önceki parçanın son karesiyle üretilir, ortak başlık (eller, mekân, nesne tarifi) her parçada birebir aynıdır; parçaları ffmpeg ile birleştirip {klasor}/klipler/tam.mp4 yap ve dikiş noktasını video-denetci'ye ayrıca denetlet. Videoyu {klasor}/klipler/ altına indir, video-denetci ajanıyla {klasor}/VIDEO-DENETIM.md yaz. SENARYO.md'de gösterim bedeni varsa kullanılan beden kilidini (beden-kilidi/B?-*.png) de @Image olarak ver; zaman damgalı promptta gösterim bedeninin göründüğü planları ve o planda sunucu elinin olup olmadığını açıkça yaz, görünmediği planlarda 'bu planda gösterim bedeni YOK' de.",
           "kredili": true,
-          "tahmin": { "kredisiz": "0 kredi (Sınırsız kuyruk)", "kredili": "≈ 1,2 kredi / sn (25 sn ≈ 30)" },
+          "tahmin": {
+            "kredisiz": "0 kredi (Sınırsız kuyruk)",
+            "kredili": "≈ 1,2 kredi / sn (25 sn ≈ 30)"
+          },
           "saniyeBasina": 1.2,
-          "ciktilar": ["klipler/*.mp4", "VIDEO-DENETIM.md"]
+          "ciktilar": [
+            "klipler/*.mp4",
+            "VIDEO-DENETIM.md"
+          ]
         },
         {
           "id": "ses",
           "surdur": "ses/ altında whisper doğrulamasından geçmiş (metinle uyuşan) ses dosyası varsa ve anlatım metni değişmediyse ElevenLabs'ta yeniden üretme; yalnız doğrulanmamışsa doğrula, eksikse üret.",
           "ad": "Anlatım sesi",
           "aciklama": "Anlatım metni videodaki gerçek sahne zamanlarına göre yazılır; ElevenLabs Gamze sesi; whisper doğrulaması.",
-          "talimat": "SISTEM.md Bölüm 1 adım 8: anlatım metnini VIDEO-DENETIM.md'deki gerçek sahne zamanlarına ve videoda görünen hareketlere göre kesinleştir ({sure} sn'yi aşmasın; SENARYO.md'ye yaz), elevenlabs-ses skill'iyle Gamze sesinde üret ({klasor}/ses/), whisper ile doğrula. {klasor}/SESLI-TARIF.md varsa anlatımda Gamze Hoca'nın kendi ifadelerini ve hitap biçimini mümkün olduğunca koru (sağlık dili kuralı yine geçerli); başlığı 'Linkten alınan tarif' ise oradaki cümleleri kopyalama, Gamze Hoca'nın üslubuyla yeniden yaz.",
+          "talimat": "SISTEM.md Bölüm 1 adım 8: anlatım metnini VIDEO-DENETIM.md'deki gerçek sahne zamanlarına ve videoda görünen hareketlere göre kesinleştir ({sure} sn'yi aşmasın; SENARYO.md'ye yaz), elevenlabs-ses skill'iyle Gamze sesinde üret ({klasor}/ses/), whisper ile doğrula. Anlatımı uslup/GAMZE-USLUP.md kalıplarıyla yaz (hitap, tempo, duygu etiketleri). {klasor}/SESLI-TARIF.md varsa anlatımda Gamze Hoca'nın kendi ifadelerini ve hitap biçimini mümkün olduğunca koru (sağlık dili kuralı yine geçerli); başlığı 'Linkten alınan tarif' ise oradaki cümleleri kopyalama, Gamze Hoca'nın üslubuyla yeniden yaz.",
           "kredili": false,
-          "tahmin": { "kredisiz": "ElevenLabs karakteri (30 sn ≈ 450)", "kredili": "ElevenLabs karakteri (30 sn ≈ 450)" },
-          "ciktilar": ["ses/*.mp3", "SENARYO.md"]
+          "tahmin": {
+            "kredisiz": "ElevenLabs karakteri (30 sn ≈ 450)",
+            "kredili": "ElevenLabs karakteri (30 sn ≈ 450)"
+          },
+          "ciktilar": [
+            "ses/*.mp3",
+            "SENARYO.md"
+          ]
         },
         {
           "id": "kurgu",
@@ -69,15 +201,27 @@
           "aciklama": "Dijital kamera planları, altyazı, kanca, ortam sesi; −14 LUFS teslim dosyası ve altyazı bandı kontrolü.",
           "talimat": "kurgu-ajani talimatlarıyla {klasor}/kurgu/ kur, render al, araclar/teslim.sh ile {klasor}/teslim/ altına teslim et, altyazı bandını kontrol et. {klasor}/teslim/ACIKLAMA.txt (açıklama + uyarı satırı) yaz.",
           "kredili": false,
-          "ciktilar": ["teslim/*.mp4", "teslim/ACIKLAMA.txt", "kurgu/out/kontrol/altyazi-bandi.jpg"],
-          "onay": { "baslik": "Video teslime hazır", "soru": "Onaylıyor musunuz?", "gonder": ["teslim/*.mp4", "teslim/ACIKLAMA.txt"], "devam": "Tamam" }
+          "ciktilar": [
+            "teslim/*.mp4",
+            "teslim/ACIKLAMA.txt",
+            "kurgu/out/kontrol/altyazi-bandi.jpg"
+          ],
+          "onay": {
+            "baslik": "Video teslime hazır",
+            "soru": "Onaylıyor musunuz?",
+            "gonder": [
+              "teslim/*.mp4",
+              "teslim/ACIKLAMA.txt"
+            ],
+            "devam": "Tamam"
+          }
         }
       ]
     },
     {
       "id": "cekim",
       "ad": "Referans video (Video Edit)",
-      "aciklama": "Gamze'nin kendi çekimi: hareketler çekimden, eller (siyah eldiven + mürdüm kol, bileziksiz) ve ortam bizden. Uygulama videoları için önceliklidir.",
+      "aciklama": "Gamze'nin kendi çekimi: hareketler çekimden, eller (siyah başparmak delikli kol, bakımlı tırnak; kan temasında siyah nitril eldiven) ve ortam bizden. Uygulama videoları için önceliklidir.",
       "sistem": "SISTEM.md Bölüm 2",
       "asamalar": [
         {
@@ -87,8 +231,20 @@
           "aciklama": "Yüklenen çekimden hedef süreye kesit kurgusu; her planda gerçekte ne olduğu ve hastanın göründüğü saniyeler.",
           "talimat": "cekim-donusturucu ajanının 1. adımı: kaynak çekimler: {kaynaklar}. Kesitleri seç, ≤ {sure} sn TEK kaynak video {klasor}/kaynak/kurgu30.mp4 yap (ad tarihsel; 30 sn'den uzun olabilir — dönüşüm {parcalar} olarak yapılacak, parça sınırlarını bir plan kesmesine koy ve NOTLAR.md'ye yaz), kontak şeridini {klasor}/kaynak/sheet.jpg olarak kaydet, {klasor}/NOTLAR.md'ye her planın gerçek içeriğini (hangi el ne tutuyor, hangi planda hangi nesne YOK) ve hastanın kafa/kıyafetinin göründüğü saniyeleri yaz, {klasor}/SENARYO.md'ye kesit tablosunu yaz.",
           "kredili": false,
-          "ciktilar": ["NOTLAR.md", "SENARYO.md", "kaynak/sheet.jpg", "kaynak/kurgu30.mp4"],
-          "onay": { "baslik": "Kesitler hazır", "soru": "Video Edit dönüşümüne geçilsin mi?", "gonder": ["kaynak/sheet.jpg"], "devam": "Dönüştür" }
+          "ciktilar": [
+            "NOTLAR.md",
+            "SENARYO.md",
+            "kaynak/sheet.jpg",
+            "kaynak/kurgu30.mp4"
+          ],
+          "onay": {
+            "baslik": "Kesitler hazır",
+            "soru": "Video Edit dönüşümüne geçilsin mi?",
+            "gonder": [
+              "kaynak/sheet.jpg"
+            ],
+            "devam": "Dönüştür"
+          }
         },
         {
           "id": "donustur",
@@ -97,19 +253,33 @@
           "aciklama": "Seedance 2.5 Video Edit: plan plan yazılmış prompt, gönderim kontrol listesi, kaynakla kare kare karşılaştırma.",
           "talimat": "cekim-donusturucu ajanının 2-4. adımları: dönüşüm {parcalar}; birden fazla parçada kaynak NOTLAR.md'deki plan kesmelerinden ffmpeg ile bölünür (kaynak/parca-1.mp4 …), her parça aynı referanslar ve aynı el/mekân tarifiyle ayrı Video Edit görevi olur, sonra birleştirilir ({klasor}/klipler/edit-tam.mp4) ve dikiş denetlenir. {klasor}/prompt.js (plan rehberli, ortak prompt yok; parça başına bir prompt; her promptta yazı/logo temizliği: 'Remove all on-screen text, captions, stickers, usernames, logos and watermarks; no text, no logo, no watermark' — kaynakta yazı/kesme olması için uyarı verilmez). Kredisiz modda sayfayı yeniden yükleyip araclar/topview/video-edit-gonder.js ile gönder (inputVideos = 1, duration = -1 kontrolü); kredili modda aynı promptu topview_generate_video ile gönder (omni_reference, omniReferenceTaskType=edit, duration=-1, kaynak inputVideos'ta, referanslar inputImages'ta). Çıktıyı {klasor}/klipler/ altına indir, kaynakla karşılaştır ({klasor}/klipler/karsilastir-*.mp4), video-denetci ajanının Video Edit maddeleriyle {klasor}/VIDEO-DENETIM.md yaz.",
           "kredili": true,
-          "tahmin": { "kredisiz": "0 kredi (Sınırsız kuyruk)", "kredili": "≈ 1,4 kredi / sn (30 sn ≈ 43)" },
+          "tahmin": {
+            "kredisiz": "0 kredi (Sınırsız kuyruk)",
+            "kredili": "≈ 1,4 kredi / sn (30 sn ≈ 43)"
+          },
           "saniyeBasina": 1.45,
-          "ciktilar": ["prompt.js", "klipler/edit-*.mp4", "klipler/karsilastir-*.mp4", "VIDEO-DENETIM.md"]
+          "ciktilar": [
+            "prompt.js",
+            "klipler/edit-*.mp4",
+            "klipler/karsilastir-*.mp4",
+            "VIDEO-DENETIM.md"
+          ]
         },
         {
           "id": "ses",
           "surdur": "ses/ altında whisper doğrulamasından geçmiş ses dosyası varsa ve anlatım metni değişmediyse yeniden üretme.",
           "ad": "Anlatım sesi",
           "aciklama": "Gamze'nin canlı eğitmen dili; aynı kesit sırası önceden seslendirildiyse o ses yeniden kullanılır.",
-          "talimat": "Anlatımı videodaki gerçek planlara göre Gamze'nin canlı eğitmen diliyle yaz ('şimdi kupamızı alıyoruz… bakın…'; sağlık iddiası yok; {sure} sn'yi aşmasın), {klasor}/SENARYO.md'ye ekle. Aynı kesit sırası daha önce bir video klasöründe seslendirildiyse o sesi kullan; değilse elevenlabs-ses skill'iyle Gamze sesinde üret ({klasor}/ses/), whisper ile doğrula.",
+          "talimat": "Anlatımı videodaki gerçek planlara göre Gamze'nin canlı eğitmen diliyle, uslup/GAMZE-USLUP.md kalıplarıyla yaz ('şimdi kupamızı alıyoruz… bakın…'; sağlık iddiası yok; {sure} sn'yi aşmasın), {klasor}/SENARYO.md'ye ekle. Aynı kesit sırası daha önce bir video klasöründe seslendirildiyse o sesi kullan; değilse elevenlabs-ses skill'iyle Gamze sesinde üret ({klasor}/ses/), whisper ile doğrula.",
           "kredili": false,
-          "tahmin": { "kredisiz": "ElevenLabs karakteri (yeniden kullanımda 0)", "kredili": "ElevenLabs karakteri (yeniden kullanımda 0)" },
-          "ciktilar": ["ses/*.mp3", "SENARYO.md"]
+          "tahmin": {
+            "kredisiz": "ElevenLabs karakteri (yeniden kullanımda 0)",
+            "kredili": "ElevenLabs karakteri (yeniden kullanımda 0)"
+          },
+          "ciktilar": [
+            "ses/*.mp3",
+            "SENARYO.md"
+          ]
         },
         {
           "id": "kurgu",
@@ -118,8 +288,20 @@
           "aciklama": "Hasta gizlenir (geniş planlar kırpılır), altyazı, kanca; −14 LUFS teslim dosyası.",
           "talimat": "kurgu-ajani talimatlarıyla (Bölüm 2 maddeleri: hasta görünen saniyelerde kırpma/kesme, gerekirse minterpolate ağır çekim) {klasor}/kurgu/ kur, render al, araclar/teslim.sh ile {klasor}/teslim/ altına teslim et; kırpılan planlardan büyük kare alıp hastanın görünmediğini doğrula. {klasor}/teslim/ACIKLAMA.txt yaz.",
           "kredili": false,
-          "ciktilar": ["teslim/*.mp4", "teslim/ACIKLAMA.txt", "kurgu/out/kontrol/altyazi-bandi.jpg"],
-          "onay": { "baslik": "Video teslime hazır", "soru": "Onaylıyor musunuz?", "gonder": ["teslim/*.mp4", "teslim/ACIKLAMA.txt"], "devam": "Tamam" }
+          "ciktilar": [
+            "teslim/*.mp4",
+            "teslim/ACIKLAMA.txt",
+            "kurgu/out/kontrol/altyazi-bandi.jpg"
+          ],
+          "onay": {
+            "baslik": "Video teslime hazır",
+            "soru": "Onaylıyor musunuz?",
+            "gonder": [
+              "teslim/*.mp4",
+              "teslim/ACIKLAMA.txt"
+            ],
+            "devam": "Tamam"
+          }
         }
       ]
     }

@@ -880,7 +880,7 @@ const AJAN_MASALARI = {
     ajan: 'sahne-denetci',
     avatar: '🎨',
     renk: 'var(--leylak)',
-    rol: 'M0 mekân kilidi, siyah nitril eldiven, mürdüm kol (bileziksiz) süreklilik denetimi.'
+    rol: 'Mekân kilidi (M0 mutfak / E0 ofis), siyah başparmak delikli kol, bakımlı tırnak, yüz yok süreklilik denetimi.'
   },
   video: {
     isim: 'Video Laboratuvarı & Denetim',
@@ -894,7 +894,7 @@ const AJAN_MASALARI = {
     ajan: 'elevenlabs-ses',
     avatar: '🎙️',
     renk: 'var(--yesil)',
-    rol: 'Videodaki gerçek plan zamanlarına göre Gamze seslendirmesi ve whisper teyidi.'
+    rol: 'Gamze Hoca üslubunda seslendirme (eğitmen anlatımında videodan önce, jest çizelgesiyle) ve whisper teyidi.'
   },
   kurgu: {
     isim: 'Kurgu & Son Teslim Masası',
@@ -921,10 +921,10 @@ const AJAN_MASALARI = {
   }
 };
 
-let TANIM, VERI, bolum = 'tarif', secili = null, seciliAsama = null, acikLoglar = new Set();
+let TANIM, VERI, bolum = 'egitim', secili = null, seciliAsama = null, acikLoglar = new Set();
 let gorunumModu = 'ofis'; // 'ofis' veya 'liste'
 let yeniMod = 'kredisiz';
-try { bolum = localStorage.getItem('bolum') || 'tarif'; yeniMod = localStorage.getItem('mod') || 'kredisiz'; } catch {}
+try { bolum = localStorage.getItem('bolum') || 'egitim'; yeniMod = localStorage.getItem('mod') || 'kredisiz'; } catch {}
 
 const api = async (yol, govde) => {
   const r = await fetch(yol, govde ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(govde) } : undefined);
@@ -939,7 +939,7 @@ const bolumT = () => TANIM.bolumler.find(b => b.id === bolum);
 function sekmeler() {
   $('#sekmeler').innerHTML = TANIM.bolumler.map((b, i) =>
     `<button class="sekme-btn ${b.id === bolum ? 'secili' : ''}" data-b="${b.id}">
-      <span>${i === 0 ? '🌿' : '📹'}</span> ${i + 1} · ${kacis(b.ad)}
+      <span>${({ egitim: '🎓', tarif: '🌿', cekim: '📹' })[b.id] || '•'}</span> ${i + 1} · ${kacis(b.ad)}
     </button>`).join('');
     
   document.querySelectorAll('.sekme-btn').forEach(btn => {
@@ -954,8 +954,8 @@ function sekmeler() {
 
   const b = bolumT();
   $('#bolumAciklama').innerHTML = `<strong>${kacis(b.ad)}:</strong> ${kacis(b.aciklama)}`;
-  $('#konuEtiket').textContent = bolum === 'tarif' ? 'Tarif / Konu' : 'Uygulama / Konu';
-  $('#konuGiris').placeholder = bolum === 'tarif' ? 'ör. Zencefilli bal macunu · çimdik testi erkek kolu' : 'ör. Sırta hacamat uygulaması';
+  $('#konuEtiket').textContent = ({ egitim: 'Bitki / Konu', tarif: 'Tarif / Konu' })[bolum] || 'Uygulama / Konu';
+  $('#konuGiris').placeholder = ({ egitim: 'ör. Reyhan · çörek otu yağı', tarif: 'ör. Zencefilli bal macunu · çimdik testi erkek kolu' })[bolum] || 'ör. Sırta hacamat uygulaması';
   modSeciciCiz();
 }
 
@@ -975,7 +975,7 @@ async function tahminGuncelle() {
   const sira = ++tahminSira;
   const t = await api(`/api/tahmin?bolum=${bolum}&sure=${sure}&mod=${yeniMod}`);
   if (sira !== tahminSira) return;
-  const plan = bolum === 'tarif' ? `${t.plan} plan · ` : '';
+  const plan = bolum === 'tarif' ? `${t.plan} plan · ` : bolum === 'egitim' ? '5-8 plan · ' : '';
   $('#tahminNotu').innerHTML = yeniMod === 'kredili'
     ? `${plan}Tahmini ≈ ${t.kredi} TopView kredisi. Bütçe: <input type="number" id="butceGiris" min="1" value="${t.kredi}"> kredi (aşılırsa hat durur).`
     : `${plan}0 TopView kredisi. Video Sınırsız kuyrukta bekler, kredili moddan yavaştır.`;
@@ -1409,7 +1409,7 @@ $('#olusturBtn').onclick = async () => {
     const butce = $('#butceGiris') ? Number($('#butceGiris').value) : 0;
     const r = await api('/api/videolar', { bolum, konu, mod: yeniMod, sure: Number($('#sureGiris').value), butce, onaylar: $('#onayGiris').value });
     // Çekim bölümünde önce video yüklenmeli; otomatik akış yükleme sonrası "Tümünü çalıştır" ile başlar.
-    if ($('#otoGiris').checked && bolum === 'tarif') await api('/api/otomatik', { klasor: r.klasor });
+    if ($('#otoGiris').checked && bolum !== 'cekim') await api('/api/otomatik', { klasor: r.klasor });
     $('#konuGiris').value = '';
     secili = r.klasor;
     seciliAsama = null;

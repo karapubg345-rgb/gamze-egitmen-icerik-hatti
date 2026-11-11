@@ -6,7 +6,10 @@ description: Reel anlatımını ElevenLabs (Eleven v4, duygu etiketli) ile üret
 # ElevenLabs seslendirme
 
 ## 1. Metin
-- SENARYO.md'deki anlatım. Duygu etiketleri cümle başında: `[calmly]`, `[short pause]`, `[matter-of-fact]`, `[cheerfully]`, `[excited]`, `[whispers]`, `[slowly]`.
+- SENARYO.md'deki anlatım, `uslup/GAMZE-USLUP.md` kalıplarıyla (Hoca'nın hitabı, tekrar vurguları, kanca/kapanış). Ses klonu YOK: Hoca'ya benzerlik metnin üslubundan ve etiketlerden gelir.
+- Tempo Hoca'nınki gibi akıcı ve hızlı (~150 kelime/dk); `[slowly]` kullanma. Ton sıcak: `[warmly]`; merak/heyecan anında `[excited]`. Kancadaki "Hocam …" cümleleri arasına ve "Nedir bu?" sonrasına `[short pause]`.
+- Duygu etiketleri cümle başında: `[warmly]`, `[short pause]`, `[matter-of-fact]`, `[cheerfully]`, `[excited]`, `[calmly]`.
+- Eğitmen anlatımında (Bölüm 0) ses videodan ÖNCE üretilir; çıktı `ses/anlatim.mp3`, whisper `desifre.json` kelime zamanları JEST.md için kullanılır.
 - Rakamları okunduğu gibi yaz ("1 tatlı kaşığı" → "bir tatlı kaşığı").
 - Karakter ≈ kredi. Metni ve tahmini krediyi kullanıcıya göster.
 

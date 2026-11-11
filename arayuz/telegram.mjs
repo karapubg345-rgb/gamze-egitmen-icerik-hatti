@@ -13,13 +13,17 @@ const IZINLI = new Set((process.env.TELEGRAM_CHAT_ID || '').split(',').map(s => 
 const YENIDEN_BASLAT = 75; // STUDYO-AC.bat bu çıkış koduyla sunucuyu yeniden açar
 
 const YARDIM = `Komutlar:
+Sesli anlatım (eğitmen videosu): bir bitkinin/konunun faydasını sesli mesajla kendi üslubunuzla anlatın. Ofisinizde, masada o bitkiyle (ör. taze ve kuru reyhan), elleriniz konuşmaya uyarak anlatan bir video hazırlanır; yüz görünmez. Ses dosyası gönderirseniz açıklamasına süre/mod yazabilirsiniz (ör. "30sn kredili").
+/egitim <konu> [süre] [kredili] [onaylı] — sesli mesaj olmadan eğitmen videosu
+   ör. /egitim reyhan 30sn
+Sesli tarif: sesli mesajın açıklamasına "tarif" yazın; tarif videosu (mutfakta adım adım) hazırlanır.
 /yeni <konu> [süre] [kredili] [onaylı] — tarif videosu başlatır
    ör. /yeni bal zencefil 20sn
    ör. /yeni zencefilli limon 45sn kredili
-Sesli tarif: tarifi sesli mesajla anlatın (malzemeler, ölçüler, yapılışı). Ona uygun tarif videosu hazırlanır. Ses dosyası gönderirseniz açıklamasına süre/mod yazabilirsiniz (ör. "30sn kredili").
 Çekim videosu: videoyu bu sohbete gönderin, açıklamasına konuyu yazın (ör. "hacamat 25sn").
 Video linki: Instagram/TikTok/YouTube linkini yanına konuyla yazın (ör. "https://instagram.com/reel/… hacamat 25sn"). Video indirilir, eller ve ortam bizimkilerle değiştirilir; üstündeki yazı ve logolar kaldırılır.
 Linkten yalnız tarif: linkin yanına "tarif" yazın (ör. "https://instagram.com/reel/… tarif 30sn"). Videodaki konuşma ve gönderi açıklaması okunur, tarif çıkarılır; görüntü kullanılmaz, video sıfırdan bizim mutfağımızda üretilir.
+Linkten anlatım: linkin yanına "eğitim" yazın; konuşmadaki bilgi sizin üslubunuzla yeniden yazılır, ofisinizde eğitmen videosu olur.
 Bedende gösterim: tarif bir bedende gösterilecekse isteğe yazın: "çocuk eli", "erkek kolu", "ön kol", "ayak", "sırt" (ör. "https://… tarif 25sn çocuk eli" ya da "/yeni çimdik testi erkek kolu 20sn"). Bu ipucu senaryoya geçer; o planda yüzsüz bir gösterim bedeni (el, ön kol, ayak, sırt) kullanılır.
 /durum — çalışan ve bekleyen işler
 /tercihler — sistemin sizden öğrendikleri
@@ -78,6 +82,23 @@ function telegramKopyasi(hat, klasor, kaynak) {
   const r = spawnSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', kaynak, '-vf', 'scale=-2:1280', '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '28',
     '-maxrate', '4M', '-bufsize', '8M', '-c:a', 'aac', '-b:a', '128k', '-movflags', '+faststart', hedef], { windowsHide: true });
   return r.status === 0 && fs.existsSync(hedef) && fs.statSync(hedef).size < 49e6 ? hedef : null;
+}
+
+// Sesli mesaj ve "metin linki" türleri: hangi bölüme gider, hangi dosyaya yazılır (senaryo aşaması o dosyayı okur).
+const TURLER = {
+  egitim: { ne: 'anlatım', neyi: 'anlatımı', baslik: "Gamze Hoca'nın sesli anlatımı", dosya: 'SESLI-ANLATIM.md', klasor: 'sesli-anlatim', komut: '/egitim',
+    mekan: 'ofisinizde eğitmen videosu olarak', linkNot: 'Bilgi (faydalar, kullanım biçimleri) buradan alınır.' },
+  tarif: { ne: 'tarif', neyi: 'tarifi', baslik: "Gamze Hoca'nın sesli tarifi", dosya: 'SESLI-TARIF.md', klasor: 'sesli-tarif', komut: '/yeni',
+    mekan: 'bizim mutfağımızda', linkNot: 'Tarif (malzeme, ölçü, sıra) buradan alınır.' }
+};
+
+// Mesajdaki tür etiketi: "tarif" → tarif, "eğitim/anlatım/fayda" → eğitim, yoksa null. Etiket metinden çıkarılır (konu sanılmasın).
+function turEtiketi(metin) {
+  let tur = null;
+  const kalan = ` ${metin || ''} `
+    .replace(/\s(sadece|yalnız|yalniz)?\s*(tarif|tarifi|tarifini)(?=\s)/i, () => { tur = 'tarif'; return ' '; })
+    .replace(/\s(eğitim|egitim|eğitmen|egitmen|anlatım|anlatim|fayda|faydası|faydasi)(?=\s)/i, m => { if (tur) return m; tur = 'egitim'; return ' '; });
+  return { tur, kalan: kalan.trim() };
 }
 
 const kisa = (s, n = 700) => (s || '').length > n ? s.slice(0, n) + '…' : (s || '');
@@ -175,7 +196,7 @@ export function telegramBaslat(hat) {
     const video = m.video || (m.document?.mime_type?.startsWith('video/') ? m.document : null);
     if (video) return cekimAl(chat, m, video, metin);
     const ses = m.voice || m.audio || (m.document?.mime_type?.startsWith('audio/') ? m.document : null);
-    if (ses) return sesliTarifAl(chat, ses, metin);
+    if (ses) return sesliAl(chat, ses, metin);
     if (notBekleyen.has(chat) && !metin.startsWith('/')) {
       const { klasor, son } = notBekleyen.get(chat); notBekleyen.delete(chat);
       try { const s = son ? hat.duzelt({ klasor, not: metin }) : hat.onayVer({ klasor, karar: 'duzelt', not: metin }); if (s !== 'hata') return yaz(chat, s === 'kuyruk' ? 'Not alındı, sıraya girdi.' : 'Not alındı, yeniden çalışıyor.'); }
@@ -198,12 +219,13 @@ export function telegramBaslat(hat) {
         catch (e) { return yaz(chat, e.message + ' Liste için /tercihler'); }
       }
       case '/dur': hat.durdur(); return yaz(chat, 'Durduruldu. Sıradaki işler de iptal edildi.');
-      case '/yeni': {
+      case '/yeni': case '/egitim': case '/eğitim': {
+        const bolum = /^\/yeni/i.test(komut) ? 'tarif' : 'egitim';
         const p = ayristir(arg, hat.SURE);
-        if (!p.konu) return yaz(chat, 'Konu yazın: /yeni bal zencefil 20sn');
+        if (!p.konu) return yaz(chat, bolum === 'tarif' ? 'Konu yazın: /yeni bal zencefil 20sn' : 'Konu yazın: /egitim reyhan 30sn');
         try {
           const sirada = hat.mesgul();
-          const klasor = hat.yeniKlasor({ bolum: 'tarif', ...p });
+          const klasor = hat.yeniKlasor({ bolum, ...p });
           hat.otomatikBaslat(klasor);
           return yaz(chat, baslatildiMetni(hat, klasor) + (sirada ? '\n(Önceki iş bitince başlayacak.)' : ''));
         } catch (e) { return yaz(chat, 'Başlatılamadı: ' + e.message); }
@@ -232,9 +254,8 @@ export function telegramBaslat(hat) {
   // Telegram'ın 20 MB sınırı burada yok. Videodaki yazı/logo/filigran Video Edit promptunda kaldırılır (cekim-donusturucu).
   // Linkin yanında "tarif" kelimesi varsa video kopyalanmaz: sesi deşifre edilir (+ gönderi açıklaması) → tarif videosu hattı.
   async function linkAl(chat, link, metin) {
-    let yalnizTarif = false;
-    metin = ` ${metin} `.replace(/\s(sadece|yalnız|yalniz)?\s*(tarif|tarifi|tarifini)(?=\s)/i, () => { yalnizTarif = true; return ' '; });
-    if (yalnizTarif) return linkTarifAl(chat, link, metin);
+    const { tur, kalan } = turEtiketi(metin);
+    if (tur) return linkMetinAl(chat, link, kalan, tur);
     const gecici = fs.mkdtempSync(path.join(os.tmpdir(), 'link-video-'));
     try {
       await yaz(chat, 'Link alındı, video indiriliyor…');
@@ -307,47 +328,51 @@ export function telegramBaslat(hat) {
     return { anlatim, desifre };
   }
 
-  // Linkteki videonun sesinden (+ gönderi açıklamasından) tarif çıkarır → tarif videosu hattı. Video hareketi kopyalanmaz.
-  async function linkTarifAl(chat, link, metin) {
-    const gecici = fs.mkdtempSync(path.join(os.tmpdir(), 'link-tarif-'));
+  // Linkteki videonun sesinden (+ gönderi açıklamasından) bilgi çıkarır → tarif ya da eğitmen hattı. Videonun görüntüsü kullanılmaz.
+  async function linkMetinAl(chat, link, metin, tur) {
+    const t = TURLER[tur];
+    const gecici = fs.mkdtempSync(path.join(os.tmpdir(), 'link-metin-'));
     try {
-      await yaz(chat, 'Link alındı, video indiriliyor; sonra tarifi dinleyeceğim… (2-5 dk sürebilir)');
+      await yaz(chat, `Link alındı, video indiriliyor; sonra ${t.neyi} dinleyeceğim… (2-5 dk sürebilir)`);
       const { dosya, aciklama } = await linkIndir(link, gecici);
       let anlatim = '', desifre = null;
       try { ({ anlatim, desifre } = await desifreEt(dosya, gecici)); }
       catch (e) { console.log('Link deşifresi:', e.message); } // sessiz video: ses izi yok olabilir; açıklama yetebilir
       const konusma = anlatim.split(/\s+/).filter(Boolean).length >= 5;
       const yazili = aciklama.trim().split(/\s+/).filter(Boolean).length >= 5;
-      if (!konusma && !yazili) return yaz(chat, 'Linkte konuşma bulamadım, gönderi açıklamasında da tarif yok. Tarifi sesli mesajla anlatabilir ya da /yeni ile konuyu yazabilirsiniz.');
+      if (!konusma && !yazili) return yaz(chat, `Linkte konuşma bulamadım, gönderi açıklamasında da ${t.ne} yok. Sesli mesajla anlatabilir ya da ${t.komut} ile konuyu yazabilirsiniz.`);
 
       const p = ayristir(metin, hat.SURE);
-      const konu = p.konu || await konuBul([anlatim, aciklama].filter(Boolean).join('\n'));
+      const konu = p.konu || await konuBul([anlatim, aciklama].filter(Boolean).join('\n'), tur);
       const sirada = hat.mesgul();
-      const klasor = hat.yeniKlasor({ bolum: 'tarif', ...p, konu, ipucu: metin });
-      const hedef = path.join(hat.KOK, klasor, 'sesli-tarif');
+      const klasor = hat.yeniKlasor({ bolum: tur, ...p, konu, ipucu: metin });
+      const hedef = path.join(hat.KOK, klasor, t.klasor);
       fs.mkdirSync(hedef, { recursive: true });
       fs.copyFileSync(dosya, path.join(hedef, 'kaynak' + path.extname(dosya).toLowerCase()));
       if (desifre) for (const d of fs.readdirSync(desifre)) fs.copyFileSync(path.join(desifre, d), path.join(hedef, d));
       fs.writeFileSync(path.join(hat.KOK, klasor, 'KAYNAK-LINK.txt'), `${link}\n${new Date().toISOString()}\n`);
-      fs.writeFileSync(path.join(hat.KOK, klasor, 'SESLI-TARIF.md'),
-        `# Linkten alınan tarif\n\nKaynak: ${link} (${new Date().toLocaleString('tr-TR')}) · video ve zamanlı deşifre: sesli-tarif/\n` +
-        `Not: Bu tarif Gamze Hoca'nın kendi sesi DEĞİL, başka bir hesabın videosundan alındı. Tarif (malzeme, ölçü, sıra) buradan alınır; ` +
-        `anlatım metni kelimesi kelimesine kopyalanmaz, Gamze Hoca'nın üslubuyla yeniden yazılır. Videonun görüntüsü kullanılmaz.\n` +
+      fs.writeFileSync(path.join(hat.KOK, klasor, t.dosya),
+        `# Linkten alınan ${t.ne}\n\nKaynak: ${link} (${new Date().toLocaleString('tr-TR')}) · video ve zamanlı deşifre: ${t.klasor}/\n` +
+        `Not: Bu ${t.ne} Gamze Hoca'nın kendi sesi DEĞİL, başka bir hesabın videosundan alındı. ${t.linkNot} ` +
+        `Cümleler kelimesi kelimesine kopyalanmaz, Gamze Hoca'nın üslubuyla (uslup/GAMZE-USLUP.md) yeniden yazılır. Videonun görüntüsü kullanılmaz.\n` +
         `Not: konuşma otomatik deşifredir; yanlış duyulmuş kelimeler olabilir. Konuşma ile açıklama çelişirse ölçüde açıklamadaki yazılı değer esas alınır.\n\n` +
         `## Videodaki konuşma\n\n${konusma ? anlatim : '(konuşma yok ya da anlaşılmadı)'}\n\n## Gönderi açıklaması\n\n${yazili ? aciklama.trim() : '(açıklama yok)'}\n`);
       hat.otomatikBaslat(klasor);
-      const ozet = konusma ? `Videoda duyduğum:\n"${kisa(anlatim, 900)}"` : 'Videoda konuşma yok; tarifi gönderi açıklamasından aldım.';
+      const ozet = konusma ? `Videoda duyduğum:\n"${kisa(anlatim, 900)}"` : `Videoda konuşma yok; ${t.neyi} gönderi açıklamasından aldım.`;
       return yaz(chat, `${ozet}\n\n` + baslatildiMetni(hat, klasor) + (sirada ? '\n(Önceki iş bitince başlayacak.)' : '') +
-        '\n\nYalnız tarif alındı; videonun görüntüsü kullanılmayacak, sıfırdan bizim mutfağımızda üretilecek.');
-    } catch (e) { return yaz(chat, 'Linkten tarif alınamadı: ' + e.message + '\nTarifi sesli mesajla da anlatabilirsiniz.'); }
+        `\n\nYalnız ${t.ne} alındı; videonun görüntüsü kullanılmayacak, sıfırdan ${t.mekan} üretilecek.`);
+    } catch (e) { return yaz(chat, `Linkten ${t.ne} alınamadı: ` + e.message + '\nSesli mesajla da anlatabilirsiniz.'); }
     finally { fs.rmSync(gecici, { recursive: true, force: true }); }
   }
 
-  // Sesli tarif: kaydı indir → whisper ile deşifre (yerel, 0 kredi) → konu adı → tarif videosu.
-  // Deşifre {klasor}/SESLI-TARIF.md'ye yazılır; senaryo aşaması tarifi oradan kurar (asamalar.json).
-  async function sesliTarifAl(chat, ses, metin) {
+  // Sesli mesaj: kaydı indir → whisper ile deşifre (yerel, 0 kredi) → konu adı → video.
+  // Varsayılan eğitmen anlatımı (SESLI-ANLATIM.md); açıklamada "tarif" yazıyorsa tarif videosu (SESLI-TARIF.md).
+  // Senaryo aşaması içeriği o dosyadan kurar (asamalar.json).
+  async function sesliAl(chat, ses, metin) {
     if (ses.file_size > 20e6) return yaz(chat, 'Ses kaydı 20 MB\'den büyük; Telegram botlar daha büyüğünü indiremiyor. Daha kısa bir kayıt gönderin.');
-    const gecici = fs.mkdtempSync(path.join(os.tmpdir(), 'sesli-tarif-'));
+    const { tur: etiket, kalan } = turEtiketi(metin);
+    const tur = etiket || 'egitim', t = TURLER[tur];
+    const gecici = fs.mkdtempSync(path.join(os.tmpdir(), 'sesli-'));
     try {
       await yaz(chat, 'Ses kaydı alındı, dinliyorum… (1-3 dk sürebilir)');
       const f = await tg('getFile', { file_id: ses.file_id });
@@ -355,21 +380,22 @@ export function telegramBaslat(hat) {
       const kayit = path.join(gecici, 'kayit' + uzanti);
       fs.writeFileSync(kayit, Buffer.from(await (await fetch(`${DOSYA}/${f.file_path}`)).arrayBuffer()));
       const { anlatim, desifre } = await desifreEt(kayit, gecici);
-      if (anlatim.split(/\s+/).length < 5) return yaz(chat, 'Kayıtta anlaşılır bir tarif duyamadım. Biraz daha yakından ve sessiz bir yerde tekrar gönderir misiniz?');
+      if (anlatim.split(/\s+/).length < 5) return yaz(chat, 'Kayıtta anlaşılır bir konuşma duyamadım. Biraz daha yakından ve sessiz bir yerde tekrar gönderir misiniz?');
 
-      const p = ayristir(metin, hat.SURE); // açıklama yalnız seçenekler için (süre, kredili, onaylı); konu da yazılabilir
-      const konu = p.konu || await konuBul(anlatim);
+      const p = ayristir(kalan, hat.SURE); // açıklama yalnız seçenekler için (süre, kredili, onaylı); konu da yazılabilir
+      const konu = p.konu || await konuBul(anlatim, tur);
       const sirada = hat.mesgul();
-      const klasor = hat.yeniKlasor({ bolum: 'tarif', ...p, konu, ipucu: metin });
-      const hedef = path.join(hat.KOK, klasor, 'sesli-tarif');
+      const klasor = hat.yeniKlasor({ bolum: tur, ...p, konu, ipucu: kalan });
+      const hedef = path.join(hat.KOK, klasor, t.klasor);
       fs.mkdirSync(hedef, { recursive: true });
       fs.copyFileSync(kayit, path.join(hedef, 'kayit' + uzanti));
       for (const d of fs.readdirSync(desifre)) fs.copyFileSync(path.join(desifre, d), path.join(hedef, d));
-      fs.writeFileSync(path.join(hat.KOK, klasor, 'SESLI-TARIF.md'),
-        `# Gamze Hoca'nın sesli tarifi\n\nKaynak: Telegram sesli mesajı (${new Date().toLocaleString('tr-TR')}) · kayıt ve zamanlı deşifre: sesli-tarif/\n` +
-        `Not: otomatik deşifredir; yanlış duyulmuş kelimeler olabilir (şüpheliler: sesli-tarif/supheli.txt).\n\n## Anlatım\n\n${anlatim}\n`);
+      fs.writeFileSync(path.join(hat.KOK, klasor, t.dosya),
+        `# ${t.baslik}\n\nKaynak: Telegram sesli mesajı (${new Date().toLocaleString('tr-TR')}) · kayıt ve zamanlı deşifre: ${t.klasor}/\n` +
+        `Not: otomatik deşifredir; yanlış duyulmuş kelimeler olabilir (şüpheliler: ${t.klasor}/supheli.txt).\n\n## Anlatım\n\n${anlatim}\n`);
       hat.otomatikBaslat(klasor);
-      return yaz(chat, `Anladığım tarif:\n"${kisa(anlatim, 1200)}"\n\n` + baslatildiMetni(hat, klasor) + (sirada ? '\n(Önceki iş bitince başlayacak.)' : '') +
+      return yaz(chat, `Anladığım ${t.ne}:\n"${kisa(anlatim, 1200)}"\n\n` + baslatildiMetni(hat, klasor) + (sirada ? '\n(Önceki iş bitince başlayacak.)' : '') +
+        (etiket ? '' : '\n\nEğitmen videosu olarak hazırlıyorum. Tarif videosu isterseniz kaydın açıklamasına "tarif" yazın.') +
         '\n\nYanlış duyduğum bir yer varsa iş bitince "Düzelt" ile yazabilirsiniz ya da /dur deyip kaydı yeniden gönderin.');
     } catch (e) { return yaz(chat, 'Ses kaydı işlenemedi: ' + e.message); }
     finally { fs.rmSync(gecici, { recursive: true, force: true }); }
@@ -389,14 +415,16 @@ export function telegramBaslat(hat) {
   }
 
   // Anlatımdan kısa konu adı (klasör adı ve mesajlar için). Araçsız, kısa bir claude -p; olmazsa ilk kelimeler.
-  async function konuBul(anlatim) {
+  async function konuBul(anlatim, tur = 'tarif') {
+    const istem = tur === 'egitim'
+      ? 'Aşağıdaki sesli anlatımın konusunu 1-4 kelimelik Türkçe bir adla yaz: anlatılan bitki/malzeme ve gerekirse konusu (ör. "reyhan", "reyhan ve odaklanma", "çörek otu yağı"). Yalnız adı yaz; tırnak, nokta, açıklama yok.\n\n'
+      : 'Aşağıdaki sesli tarif anlatımının konusunu 2-5 kelimelik Türkçe bir tarif adıyla yaz (ör. "bal zencefil macunu"). Yalnız adı yaz; tırnak, nokta, açıklama yok.\n\n';
     try {
-      const c = await komut('claude', ['-p', '--model', 'haiku', '--tools', '', '--strict-mcp-config'], 90e3,
-        'Aşağıdaki sesli tarif anlatımının konusunu 2-5 kelimelik Türkçe bir tarif adıyla yaz (ör. "bal zencefil macunu"). Yalnız adı yaz; tırnak, nokta, açıklama yok.\n\n' + anlatim.slice(0, 4000));
+      const c = await komut('claude', ['-p', '--model', 'haiku', '--tools', '', '--strict-mcp-config'], 90e3, istem + anlatim.slice(0, 4000));
       const ad = c.trim().split('\n').pop().replace(/["'.*]/g, '').trim();
       if (ad && ad.length <= 60) return ad;
     } catch (e) { console.log('Konu adı çıkarılamadı:', e.message); }
-    return anlatim.split(/\s+/).slice(0, 5).join(' ').replace(/[.,!?]/g, '') || 'sesli tarif';
+    return anlatim.split(/\s+/).slice(0, 5).join(' ').replace(/[.,!?]/g, '') || (tur === 'egitim' ? 'sesli anlatım' : 'sesli tarif');
   }
 
   function guncelle(chat) {
@@ -451,6 +479,7 @@ export function telegramBaslat(hat) {
   })();
   console.log(`Telegram botu açık${IZINLI.size ? '' : ' (TELEGRAM_CHAT_ID boş: bota yazınca kimliğinizi söyler)'}`);
   tg('setMyCommands', { commands: [
+    { command: 'egitim', description: 'Eğitmen anlatımı başlat: /egitim reyhan 30sn (sesli mesaj da olur)' },
     { command: 'yeni', description: 'Tarif videosu başlat: /yeni konu 20sn [kredili] (10-60 sn)' },
     { command: 'durum', description: 'Çalışan ve onay bekleyen işler' },
     { command: 'dur', description: 'Çalışan işi durdur' },

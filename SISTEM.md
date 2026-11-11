@@ -3,15 +3,28 @@
 Gamze konuyu/tarifi verir → hat 10-60 sn'lik yüzsüz Reel çıkarır (30 sn üstü video parça parça üretilir: `topview-uretim` → "60 sn'ye kadar").
 
 ## Sabitler
-- `mekan-kilidi/` — kusursuz klinik-mutfak, M0 ana referans (MEKAN-KILIDI.md).
-- Eller kuralı — sunucu eli: siyah eldiven, mürdüm kol + leylak manşet, bilezik/kelepçe yok; yüz/karakter yok; sunucu elinde çıplak ten = hata.
+- `mekan-kilidi/` — kusursuz klinik-mutfak (M0) ve eğitmen ofisi (E0, ilk eğitmen videosunda bir kez üretilir) (MEKAN-KILIDI.md).
+- Eller kuralı (11 Kas 2026) — sunucu eli: dar mat siyah uzun kol, başparmak deliği, elin sırtını örter; yalnız parmaklar açık, tırnaklar kısa/temiz/doğal nude; takı yok; yüz yok. Parmak dışında çıplak ten ya da kötü tırnak = hata. Kan temasında siyah nitril eldiven. Referans `mekan-kilidi/ELLER-kilidi.png`, İngilizce kalıp MEKAN-KILIDI.md → "Eller".
+- `uslup/GAMZE-USLUP.md` — Gamze Hoca'nın konuşma kalıpları, temposu ve jest dili; her anlatım metni buna göre yazılır.
 - `beden-kilidi/` — gösterim bedeni (B1 çocuk eli, B2 yetişkin erkek ön kol, B3 yetişkin ayak, B4 yetişkin sırt; BEDEN-KILIDI.md). Tarif bedende gösterim gerektirdiğinde o planda yüzsüz, kıyafetsiz, takısız tek bölge; ilk kullanımda gerçek fotoğrafa göre bir kez üretilir, videolar arasında ortaktır.
-- Ses — ElevenLabs sabit ses (seçilecek).
+- Ses — ElevenLabs'ta seçili ses (`ELEVENLABS_VOICE_ID`; klon yok), Hoca'nın üslubuyla.
 - Yazı stili — Remotion şablonu (kanca yazısı, logo, altyazı, "açıklamada").
+
+## Bölüm 0 — Eğitmen anlatımı (arayüzde 1. sekme · öncelikli)
+Gamze Hoca tarif değil, **bilgi veren eğitmen** olarak görünmek istiyor (11 Kas 2026): ofisinde, masada konu nesnesi (ör. taze + kuru reyhan), göğüs ortasından aşağısı görünür, elleri konuşmaya uyar, yüz yok.
+Giriş: Telegram sesli mesajı (açıklamasız → bu bölüm) → whisper → `SESLI-ANLATIM.md`; ya da `/egitim <konu>`, Stüdyo, link + "eğitim".
+1. **SENARYO.md** — `uslup/GAMZE-USLUP.md` kalıplarıyla: "Hocam …" kancası → "Nedir bu? <cevap>" → gelenek → geleneksel kullanım (sağlık dili filtresi) → "-ebilirsiniz" listesi → tavsiye + açıklama çağrısı. `## Anlatım` (son metin), `## Konu nesnesi`, `## Planlar` (cümle · GENİŞ/YAKIN · jest), `## Açıklama` + uyarı, `## Kanca yazısı`.
+2. **gercek-referans** — konu nesnesinin gerçek görünümü (taze/kuru, saksı/demet/kâse).
+3. **Ses ÖNCE** (bu bölümün farkı) — ElevenLabs seçili ses, akıcı ve sıcak (~150 kelime/dk) → `ses/anlatim.mp3` → whisper kelime zamanları → **`JEST.md`**: plan sınırları cümle sınırında, her planın vurgu kelimesi ve saniyesi, o saniyede zirve yapan jest.
+4. **Kilitler** — `mekan-kilidi/E0-ofis.png` (yoksa bir kez), konu nesnesi kilidi `nesne-kilidi/P1-*.png` (E0 masasında, insansız).
+5. **Kareler + sahne-denetci** — her planın açılış karesi: Image1 = E0, Image2 = P1, Image3 = ELLER-referans. Yüz/çene/boyun görünmesi, kol kuralı, tırnak ayrıca denetlenir.
+6. **Video** — Seedance 2.5 Omni Reference, süre = ses süresi; zaman damgalı jest promptu (JEST.md). Omni Reference ses girdisi alıyorsa `ses/anlatim.mp3` de verilir (eller sesin ritmine uyar); almıyorsa yalnız zaman damgaları. Rapor `SES_REFERANSI: VAR|YOK`.
+7. **video-denetci** — ek madde: vurgu saniyelerinde jest var mı (±0,4 sn), donuk el, yüz.
+8. **kurgu-ajani** — ses tam seviyede, video sesi kısık; 0. saniyeden hizalı; push-in/yakınlaştırma yüzü kadraja sokmaz; kanca yazısı + kelime senkron altyazı.
 
 ## Bölüm 1 — Tarif videoları (arayüz sekmesi 1 · sıfırdan yapay zekâ; çekimi olmayan konular)
 Akış (her video `video-NN-konu/` klasörü):
-0. **Sesli tarif (varsa)** — Gamze Hoca tarifi Telegram'dan sesli mesajla gönderdiyse bot onu whisper ile deşifre eder → `SESLI-TARIF.md` (+ `sesli-tarif/` kayıt ve zamanlı deşifre). Senaryonun TEK kaynağı odur: malzeme, ölçü, sıra birebir; gerçek referans yalnız görünümü doğrular; sağlık dili filtresi yine uygulanır.
+0. **Sesli tarif (varsa)** — Gamze Hoca tarifi Telegram'dan sesli mesajla, açıklamasına "tarif" yazarak gönderdiyse (açıklamasız sesli mesaj Bölüm 0'a gider) bot onu whisper ile deşifre eder → `SESLI-TARIF.md` (+ `sesli-tarif/` kayıt ve zamanlı deşifre). Senaryonun TEK kaynağı odur: malzeme, ölçü, sıra birebir; gerçek referans yalnız görünümü doğrular; sağlık dili filtresi yine uygulanır.
    **Linkten tarif:** Telegram'da linkin yanına "tarif" yazılırsa bot videoyu indirir, konuşmayı whisper ile deşifre eder, gönderi açıklamasını da ekler → aynı `SESLI-TARIF.md` (başlık "Linkten alınan tarif", `KAYNAK-LINK.txt`). Tarif oradan alınır ama anlatım kelimesi kelimesine kopyalanmaz, Gamze Hoca'nın üslubuyla yeniden yazılır; videonun görüntüsü kullanılmaz.
 1. **SENARYO.md** — kanca + 20-30 sn metin + 4-6 sahne listesi + açıklama metni + uyarı satırı. İddia filtresi: "tedavi eder/geçer" yok, "geleneksel olarak" dili.
    **Gösterim bedeni:** tarif bedende gösterim gerektiriyorsa (çimdik testi, el üstü/ön kol/ayak/sırt uygulaması) yazıya bırakılmaz; `## Gösterim bedeni` tablosu: plan · beden kilidi (B1…B4) · sunucu eli bu planda VAR/YOK · ne gösteriliyor. İstekte "çocuk eli", "erkek kolu", "ayak", "sırt", "çimdik" gibi ifade varsa (arayüz konu kutusu ya da Telegram mesajı) sunucu bunu `durum.json` → `beden` olarak saklar ve senaryoya ipucu verir.
@@ -36,6 +49,7 @@ Akış (her video `video-NN-konu/` klasörü):
 Bilinen sınır: Video Edit hastayı değiştirmiyor (vücudu koruyor) → hastanın kafa/yüz/kıyafet/takısı kurguda gizlenir; uygulama bölgesinin (sırt, kol, ayak) görünmesi kabul (CLAUDE.md → "Kişi tanınmaz"). Beden kilidi Bölüm 1 içindir; Video Edit'te gerçek bölge korunur.
 
 ## Ajanlar (`.claude/agents/`)
+Bölüm 0 (Eğitmen): gercek-referans → (ses + JEST.md) → sahne-denetci → video-denetci → kurgu-ajani.
 Bölüm 1 (Tarif): gercek-referans → referans-uyum → sahne-denetci → video-denetci → kurgu-ajani.
 Bölüm 2 (Referans video): cekim-donusturucu → video-denetci → kurgu-ajani.
 Bu klasörde açılan Claude Code oturumunda ada göre çağrılır.

@@ -20,7 +20,7 @@ Yeni bölge gerekirse aynı düzenle `B5-…` eklenir ve bu tabloya yazılır (g
 - **Çocuk bedeni yalnız el ya da ayak** olabilir. B1 dışında çocuk bölgesi üretilmez.
 - **Ten hafif ve doğal:** gerçek gözenek, ince tüy, doğal ışık; pürüzsüz plastik/stüdyo cildi değil. Yara, kızarıklık, döküntü, morluk, kan, hastalık görüntüsü yok (kan kuralı ayrıca geçerli: CLAUDE.md).
 - **Anatomi:** 5 parmak, doğru eklem; fazla/eksik parmak = HATA.
-- **Sunucu eli ayrıdır.** Gösterim bedeni ile sunucu eli aynı karedeyse sunucu eli yine siyah eldiven + mürdüm kol + leylak manşet (bilezik/kelepçe yok); çıplak ten yalnız gösterim bedeninde olabilir. Hangi elin kime ait olduğu karede tartışmasız anlaşılmalı (gösterim bedeni çıplak, sunucu eli eldivenli).
+- **Sunucu eli ayrıdır.** Gösterim bedeni ile sunucu eli aynı karedeyse sunucu eli yine `mekan-kilidi/MEKAN-KILIDI.md` → "Eller" kuralında: dar mat siyah, başparmak delikli kol; yalnız parmaklar açık, bakımlı tırnak; takı yok (kan temasında siyah nitril eldiven). Hangi elin kime ait olduğu karede tartışmasız anlaşılmalı: sunucu elinde siyah kol var, gösterim bedeninde kol/kıyafet yok; ten tonu da farklı olabilir.
 - **Mekân:** gösterim bedeni M0 mekânının içindedir (tezgâh üstünde havlu, sedye, leğen). Kilit görseli sade arka planda olabilir; kareye Image Edit ile yerleştirilir.
 
 ## Üretim (ilk kullanımda bir kez)

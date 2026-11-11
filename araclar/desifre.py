@@ -31,13 +31,16 @@ VOCAB = list(dict.fromkeys(G["vocab"] + P["vocab"]))
 PHRASES = sorted(P["phrases"] + G["phrases"], key=lambda x: -len(x[0].split()))  # uzun ifade önce
 WORDS = {**G["words"], **P["words"]}  # proje sözlüğü kazanır
 
+UYDURMA = re.compile(r"izledi[gğ]iniz i[cç]in te[sş]ekk[uü]r|abone ol|altyaz[ıi] (m\.?k|by)|bir sonraki videoda g[oö]r[uü][sş]mek", re.I)
 ham_path = os.path.join(a.out, "ham.json")
 if not a.sadece_duzelt:
     import subprocess, numpy as np
     from faster_whisper import WhisperModel
     t0 = time.time()
     # ses ffmpeg ile çözülür (16 kHz mono float): faster-whisper'ın PyAV yolu yeni av sürümleriyle kırık
-    pcm = subprocess.run(["ffmpeg", "-v", "error", "-i", a.audio, "-ac", "1", "-ar", "16000", "-f", "f32le", "-"], capture_output=True, check=True).stdout
+    # dynaudnorm: kısık telefon kaydında (Telegram sesli mesajı) medium model 25 sn'lik konuşmayı atlayıp
+    # yerine uydurma kapanış yazıyordu (11 Kas, reyhan kaydı); normalize edince tamamı çıktı. Zamanlamayı kaydırmaz.
+    pcm = subprocess.run(["ffmpeg", "-v", "error", "-i", a.audio, "-af", "dynaudnorm", "-ac", "1", "-ar", "16000", "-f", "f32le", "-"], capture_output=True, check=True).stdout
     audio = np.frombuffer(pcm, dtype=np.float32)
     m = WhisperModel(a.model, device="cpu", compute_type="int8")
     segs, info = m.transcribe(audio, language="tr", word_timestamps=True, beam_size=5,
@@ -47,6 +50,8 @@ if not a.sadece_duzelt:
     ham = []
     for s in segs:
         if s.no_speech_prob > 0.6 and s.avg_logprob < -1.0: continue  # sessizlikte uydurulan cümle
+        # whisper'ın YouTube kapanış ezberi ("İzlediğiniz için teşekkür ederim", "Abone olmayı unutmayın", "Altyazı M.K.")
+        if UYDURMA.search(s.text) and (s.no_speech_prob > 0.1 or s.avg_logprob < -0.4): continue
         ham.append({"start": round(s.start, 3), "end": round(s.end, 3), "text": s.text.strip(),
                     "words": [{"w": w.word.strip(), "s": round(w.start, 3), "e": round(w.end, 3), "p": round(w.probability, 3)} for w in s.words]})
         el = time.time() - t0

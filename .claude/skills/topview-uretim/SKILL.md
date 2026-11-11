@@ -22,12 +22,15 @@ Playwright MCP uzantı modunda kullanıcının kendi Chrome'u ve TopView oturumu
 
 ## Görsel üretimi (Image Edit)
 - Image1 = `mekan-kilidi/M0-ana-mekan.png` (ya da ilgili açı), Image2 = `nesne-kilidi/P1-*.png`.
-- Gösterim bedeni olan planda Image3 = `beden-kilidi/B?-*.png` (beden kilidi; `beden-kilidi/BEDEN-KILIDI.md`). Promptta: "the <region> is exactly the same as Image3 (same skin tone, proportions, nails); only that region visible, no face, no clothing, no jewelry". Sunucu eli o planda yoksa "no gloved hands in this frame". Kilit yoksa önce kilit bir kez üretilir (aynı model/ayar; kredisizde Sınırsız).
+- Gösterim bedeni olan planda Image3 = `beden-kilidi/B?-*.png` (beden kilidi; `beden-kilidi/BEDEN-KILIDI.md`). Promptta: "the <region> is exactly the same as Image3 (same skin tone, proportions, nails); only that region visible, no face, no clothing, no jewelry". Sunucu eli o planda yoksa "no presenter hands and no black sleeves in this frame".
+- **Eller (her bölümde, 11 Kas 2026):** `mekan-kilidi/ELLER-kilidi.png` ek Image referansı olarak verilir (son sırada) ve MEKAN-KILIDI.md → "Eller kalıbı" promptta aynen geçer: siyah başparmak delikli kol, açık parmaklar, kısa temiz nude tırnak. Promptta "use Image<N> only for the sleeves, hands and nails". Kan temasında nitril eldiven kalıbı.
+- **Eğitmen anlatımı (Bölüm 0):** Image1 = `mekan-kilidi/E0-ofis.png` (yoksa önce E0 kalıbıyla bir kez üretilir; Image1 = M0), Image2 = konu nesnesi kilidi, Image3 = ELLER-referans. Kadraj göğüs ortasından masaya; "head, face, neck and hair completely outside the frame" her promptta. Kilit yoksa önce kilit bir kez üretilir (aynı model/ayar; kredisizde Sınırsız).
 - Kalıplar `mekan-kilidi/MEKAN-KILIDI.md` içinde (açı kalıbı, eller kalıbı). Mekânı metinle baştan tarif ETME.
 
 ## Video (Seedance 2.5 Omni Reference)
 - Video → Omni Reference → model Seedance 2.5 → kareleri sırayla sürükle (@Image1…N) → tek prompt, zaman damgalı: `0-4s: start exactly from @Image1: … 4-9s: cut to @Image2: …` + "same jar/hands/room in every shot, clean hard cuts, no face, no text, no music, no voice".
 - 25 sn 720p ≈ 30 kredi (kredi modu). Süre menüsünden seç. Omni'de Native Audio düğmesi yok; ortam sesi gelir, kurguda kullanılır.
+- **Ses referansı (eğitmen anlatımı):** Omni Reference'ın ses (audio) girdisi alıp almadığı henüz doğrulanmadı (11 Kas 2026: MCP `topview_get_generation_config` çıktısında ses alanı görünmüyor). Arayüzde yükleme alanı ses dosyası kabul ediyorsa `ses/anlatim.mp3` verilir; etmiyorsa yalnız JEST.md'den zaman damgalı jest promptu. Sonuç (VAR/YOK, hangi yoldan) aşama raporuna yazılır; doğrulanınca bu satır geliştirme bilgisayarında güncellenir.
 - Yeni kural: 8-10 kısa plan (2-3 sn), makro yakın planlar, promptta kamera hareketi (slow push-in, slight orbit, rack focus), doğal hız; "slow" yalnız akışkanlarda.
 - Hacamat gibi sahnelerde ERKEK hasta (kadın sırtı GPT Image'da "sexual" reddi); "dome, bare, skin drawn up" kelimelerinden kaçın.
 
@@ -59,7 +62,7 @@ Videonun `durum.json`'unda `mod: kredili` ise (Stüdyo/Telegram "kredili") Chrom
 ## 60 sn'ye kadar (parçalı üretim)
 Seedance 2.5 tek görevde en fazla **30 sn** üretir (Omni Reference ve Video Edit). 31-60 sn'lik video **parça parça** üretilir; sunucu istemde parça sayısını verir ("2 parça (~30 + ~30 sn)").
 1. **Dikiş = plan kesmesi.** Parça sınırını iki plan arasındaki sert kesmeye koy (planlar zaten sert kesmeyle bağlanır). Kesintisiz hareket dikişten geçmez; böylece dikiş görünmez, yalnız nesne/el/mekân sürekliliği gerekir.
-2. **Kilitler her parçada aynı:** Image1 = mekân (`M0`), Image2 = nesne kilidi, (gösterim bedeni varsa beden kilidi de her parçada aynı), ardından yalnız O parçanın plan kareleri. Promptun başlık bloğu (eller: siyah pamuk eldiven + mürdüm kol + leylak manşet, bilezik/kelepçe YOK — promptta "no bracelet, no copper cuff"; mekân; nesne tarifi; "no face, no text, no music") parçalar arasında **birebir aynı** metin.
+2. **Kilitler her parçada aynı:** Image1 = mekân (`M0`), Image2 = nesne kilidi, (gösterim bedeni varsa beden kilidi de her parçada aynı), ardından yalnız O parçanın plan kareleri. Promptun başlık bloğu (eller: MEKAN-KILIDI.md → "Eller kalıbı" — siyah başparmak delikli kol, açık parmaklar, bakımlı nude tırnak, takı yok; mekân; nesne tarifi; "no face, no text, no music") parçalar arasında **birebir aynı** metin.
 3. **2. parça 1. parçaya bağlanır:** 1. parça inince son karesini al (`ffmpeg -sseof -0.1 -i klipler/parca-1.mp4 -frames:v 1 klipler/parca-1-son.png`), 2. parçada Image3 olarak ver ve promptta "lighting, color grade, jar fill level and hand positions continue exactly from <<<Image3>>> / @Image3" yaz. Malzeme miktarı (kavanoz doluluğu, kesilmiş dilimler) 1. parçanın sonundaki hâlinden devam eder.
 4. **Zaman damgaları parçanın kendi saatiyle** (her parça 0 sn'den başlar); kurguda birleştirilir.
 5. **Birleştir:** `ffmpeg -f concat` (aynı codec/çözünürlük; değilse önce aynı ayarla yeniden kodla) → `klipler/tam.mp4` (Video Edit'te `klipler/edit-tam.mp4`). video-denetci dikiş karesini ayrıca kontrol eder (renk sıçraması, nesne değişimi, el/kol rengi).

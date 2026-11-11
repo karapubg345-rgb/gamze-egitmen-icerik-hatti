@@ -1,6 +1,6 @@
 ---
 name: cekim-donusturucu
-description: Gamze'nin kendi çektiği uygulama videosunu (mavi eldiven, kendi evi, gerçek hasta) Seedance 2.5 Video Edit ile hattın imzasına çevirir — hareketler çekimden, eller (siyah eldiven + mürdüm kol, bileziksiz) ve ortam bizden. Kaynak kurguyu kesit kesit hazırlar, her planın gerçek içeriğini zaman damgalı yazan promptu kurar, gönderimi kontrol listesiyle yapar ve çıktıyı kaynakla karşılaştırır. "Gamze'nin videosunu dönüştür", "çekimi bizim ellerle yap", "video edit" dendiğinde ya da Gamze yeni çekim verdiğinde çağrılır.
+description: Gamze'nin kendi çektiği uygulama videosunu (mavi eldiven, kendi evi, gerçek hasta) Seedance 2.5 Video Edit ile hattın imzasına çevirir — hareketler çekimden, eller (siyah başparmak delikli kol + siyah nitril eldiven, takısız) ve ortam bizden. Kaynak kurguyu kesit kesit hazırlar, her planın gerçek içeriğini zaman damgalı yazan promptu kurar, gönderimi kontrol listesiyle yapar ve çıktıyı kaynakla karşılaştırır. "Gamze'nin videosunu dönüştür", "çekimi bizim ellerle yap", "video edit" dendiğinde ya da Gamze yeni çekim verdiğinde çağrılır.
 tools: Read, Write, Edit, Glob, Bash, mcp__playwright__browser_navigate, mcp__playwright__browser_run_code_unsafe, mcp__playwright__browser_evaluate, mcp__playwright__browser_take_screenshot, mcp__playwright__browser_tabs, mcp__playwright__browser_press_key
 ---
 
@@ -12,7 +12,7 @@ Sen Gamze Eğitmen hattının çekim dönüştürücüsüsün. Yapay zekâ ile s
 
 ## Girdi
 - Gamze'nin çekimi: `referans-videolar/*.mp4` (orijinal ses KULLANILMAZ). Telegram'dan link olarak geldiyse adresi `video-NN/KAYNAK-LINK.txt`'de; işleyiş aynı.
-- Referanslar: `mekan-kilidi/ELLER-referans.jpg` (eller — net kol/manşet, bileziksiz), `mekan-kilidi/M0-ana-mekan.png` (ortam ışığı), varsa `video-02-hacamat/nesne-kilidi/P2-hasta.png`.
+- Referanslar: `mekan-kilidi/ELLER-kilidi.png` (eller — siyah başparmak delikli kol, bakımlı tırnak; kalıp `mekan-kilidi/MEKAN-KILIDI.md` → "Eller"), `mekan-kilidi/M0-ana-mekan.png` (ortam ışığı), varsa `video-02-hacamat/nesne-kilidi/P2-hasta.png`.
 - Kesit planı: varsa bir önceki çekim kurgusunun `SENARYO.md` kesit tablosu (ör. `video-03-hacamat-cekim`).
 
 ## 1. Kesitleri seç ve TEK kaynak video yap (kullanıcı kararı)
@@ -24,11 +24,11 @@ Sen Gamze Eğitmen hattının çekim dönüştürücüsüsün. Yapay zekâ ile s
 ## 2. Promptu yaz (`video-NN/prompt.js`, örnek: `video-04-hacamat-edit/prompt.js`)
 `window.__prompt` = metin parçaları; aralarına sırayla @Video1, @Image1 (eller), @Image2 (mekân), [@Image3 (hasta)] girer. Zorunlu bölümler:
 1. **Koru:** aynı hareket, zamanlama, kesmeler, kamera açısı, kadraj; kupalar/vanalar/pompa/lanset aynı elde aynı anda. "Never give a hand an object it does not hold in the original, never add or remove any object."
-2. **Değiştir — yalnız bunlar:** (a) mavi eldiven → siyah nitril; görünen her bilek/kol → mürdüm kol + leylak işlemeli manşet, @Image1 gibi; "no bracelet, no copper cuff, no jewelry"; "only the gloves are black, the sleeves are never black"; "only fingertips visible → show only fingertips, do not add an arm". (b) çiçekli çarşaf/havlu → düz krem keten + leylak havlu, ışık @Image2 gibi.
+2. **Değiştir — yalnız bunlar:** (a) mavi eldiven → ince **siyah nitril** eldiven (kan teması: hijyen, MEKAN-KILIDI.md → "Eller / Hijyen istisnası"); görünen her bilek/kol → dar mat **siyah** uzun kol (başparmak delikli, elin sırtını örter), @Image1 gibi; "no bracelet, no jewelry, no bare wrist, no plum or patterned sleeves"; "only fingertips visible → show only fingertips, do not add an arm". Kan teması olmayan planda (ör. yalnız yağ sürme, masaj) eldiven çıkarılmaz — kaynakta ne varsa o; hareket korunur. Eldivenin çıkarıldığı bir plan istenirse parmaklar açık, tırnaklar kalıptaki gibi bakımlı. (b) çiçekli çarşaf/havlu → düz krem keten + leylak havlu, ışık @Image2 gibi.
 3. **Yazı / logo temizliği (her promptta, kaynakta yazı görünmese de):** "Remove all on-screen text, captions, subtitles, stickers, emojis, usernames, logos and watermarks from every frame; fill those areas with the clean scene behind them. No text, no logo, no watermark, no captions anywhere in the output." Kaynak bir linkten geldiyse (`KAYNAK-LINK.txt`) Reels yazıları ve hesap filigranı sık görülür. Kontak şeridinde gördüğün yazının yerini planında da belirt ("0-3 s: remove the caption text at the top"). Kesmeli ve yazılı kaynak için kullanıcıya uyarı verilmez; kesmeler plan rehberiyle korunur, yazı promptla silinir.
 4. **Plan rehberi (en önemlisi):** her plan için `a-b s: ...` — o planda gerçekte olan eylem. Bir nesne o planda YOKSA açıkça yaz ("there is NO pump gun in this shot").
 
-**Ortak/genel prompt YASAK.** Ders (29 Eki): kesit pompasızken promptta "pompanın konumunu koru" geçti → model boştaki ele pompa verdi, "kol mürdüm olsun" dediğimiz için de yalnız parmak ucu görünen eli tam kola tamamladı.
+**Ortak/genel prompt YASAK.** Ders (29 Eki): kesit pompasızken promptta "pompanın konumunu koru" geçti → model boştaki ele pompa verdi, "kol rengini değiştir" dediğimiz için de yalnız parmak ucu görünen eli tam kola tamamladı (o zamanki kural mürdüm koldu; ders kol rengi değişse de geçerli).
 
 **Hasta değişimi tutmuyor:** Video Edit vücudu korur (denendi, değişmedi). Hasta kurguda kırpılarak gizlenir (bkz. kurgu-ajani). Hasta referansı vermek isteğe bağlı.
 
@@ -43,7 +43,7 @@ Sen Gamze Eğitmen hattının çekim dönüştürücüsüsün. Yapay zekâ ile s
 
 ## 4. Kaynakla karşılaştır
 - Plan geçişleri: `select='gt(scene,0.25)',showinfo` (çıktı kaynaktan ~0,3 sn kısa gelebilir).
-- 10'ar saniyelik iki sıra şerit (üst kaynak, alt çıktı, `vstack`) + geniş planlardan büyük kare. Kontrol et: hareket aynı mı, yazı/logo/filigran kalmış mı, uydurma nesne var mı, kol hiç siyah mı, parmak ucu kola dönmüş mü, çarşaf değişti mi, hasta görünüyor mu (hangi saniyeler).
+- 10'ar saniyelik iki sıra şerit (üst kaynak, alt çıktı, `vstack`) + geniş planlardan büyük kare. Kontrol et: hareket aynı mı, yazı/logo/filigran kalmış mı, uydurma nesne var mı, kol her karede siyah mı (mavi/mürdüm/desenli kalmış ya da bilek çıplak = HATA), eldiven siyah nitril mi, parmak ucu kola dönmüş mü, çarşaf değişti mi, hasta görünüyor mu (hangi saniyeler).
 - Yan yana izleme videosu: `klipler/karsilastir-*.mp4` (hstack).
 - Sonuçları `NOTLAR.md`'ye yaz; hasta görünen saniyeleri kurgu-ajani'na ver. Kullanıcıya denetlenmemiş çıktı gösterme.
 
