@@ -26,7 +26,7 @@ Video linki: Instagram/TikTok/YouTube linkini yanına konuyla yazın (ör. "http
 Linkten yalnız tarif: linkin yanına "tarif" yazın (ör. "https://instagram.com/reel/… tarif 30sn"). Videodaki konuşma ve gönderi açıklaması okunur, tarif çıkarılır; görüntü kullanılmaz, video sıfırdan bizim mutfağımızda üretilir.
 Linkten anlatım: linkin yanına "eğitim" yazın; konuşmadaki bilgi sizin üslubunuzla yeniden yazılır, ofisinizde eğitmen videosu olur.
 Bedende gösterim: tarif bir bedende gösterilecekse isteğe yazın: "çocuk eli", "erkek kolu", "ön kol", "ayak", "sırt" (ör. "https://… tarif 25sn çocuk eli" ya da "/yeni çimdik testi erkek kolu 20sn"). Bu ipucu senaryoya geçer; o planda yüzsüz bir gösterim bedeni (el, ön kol, ayak, sırt) kullanılır.
-/hocasesi [no] — son videoyu sizin kendi ses kaydınızla, sesiniz hiç değiştirilmeden yeniden hazırlar (ör. /hocasesi ya da /hocasesi 05). Altyazı sizin sözlerinizden kurulur; eski video da kalır.
+/hocasesi [no] — sesli mesajınızdan çıkan son videoyu sizin kelimelerinizle ve ses tonunuzla (ElevenLabs) yeniden hazırlar; her cümle anlattığı plana oturur (ör. /hocasesi ya da /hocasesi 05). Eski video da kalır.
 /durum — çalışan ve bekleyen işler
 /tercihler — sistemin sizden öğrendikleri
 /unut <no> — yanlış öğrenilen bir tercihi siler
@@ -648,28 +648,39 @@ export function telegramBaslat(hat) {
     return anlatim.split(/\s+/).slice(0, 5).join(' ').replace(/[.,!?]/g, '') || (tur === 'egitim' ? 'sesli anlatım' : 'sesli tarif');
   }
 
-  // Bitmiş videoyu Hoca'nın kendi kaydıyla (değiştirilmeden) yeniden render eder: araclar/hoca-sesi.mjs. Yerel, 0 kredi.
+  // Bitmiş videoyu Hoca'nın SÖZLERİYLE yeniden kurgular: Claude videoyu ve kaydı analiz eder, ElevenLabs Voice Changer ile
+  // (kelime ve duygu Hoca'nın) ses üretir, cümleleri planlara yerleştirir (araclar/hoca-sesi.mjs). İstem: arayuz/hoca-sesi-istem.md.
   let hocaSesiCalisiyor = false;
   async function hocaSesi(chat, arg) {
-    if (hocaSesiCalisiyor) return yaz(chat, 'Sizin sesinizle bir video zaten hazırlanıyor; bitince gönderirim.');
-    const { videoSec, uygunVideolar } = await import(pathToFileURL(path.join(hat.KOK, 'araclar', 'hoca-sesi.mjs')).href);
+    if (hocaSesiCalisiyor) return yaz(chat, 'Sizin sözlerinizle bir video zaten hazırlanıyor; bitince gönderirim.');
+    if (hat.mesgul()) return yaz(chat, 'Şu an başka bir video üretiliyor (tarayıcı kullanılıyor). Bitince /hocasesi yazın.');
+    const { videoSec, uygunVideolar, kayitBul } = await import(pathToFileURL(path.join(hat.KOK, 'araclar', 'hoca-sesi.mjs')).href + '?t=' + Date.now());
     const klasor = videoSec(arg);
     if (!klasor) {
       const u = uygunVideolar();
       return yaz(chat, u.length ? `Bu numarada sizin ses kaydınızla hazırlanmış bir video yok. Olanlar: ${u.join(', ')}`
         : 'Sizin sesli mesajınızdan hazırlanmış bitmiş bir video bulamadım. Sesli mesajla bir video başlatın; bittikten sonra /hocasesi yazın.');
     }
+    const k = kayitBul(klasor), rel = f => path.relative(hat.KOK, f).split(path.sep).join('/');
+    const istem = fs.readFileSync(path.join(hat.KOK, 'arayuz', 'hoca-sesi-istem.md'), 'utf8')
+      .replaceAll('{klasor}', klasor).replaceAll('{kayit}', rel(k.kayit)).replaceAll('{desifre}', rel(k.desifre));
     hocaSesiCalisiyor = true;
     try {
-      await yaz(chat, `${klasor}: video sizin kendi ses kaydınızla hazırlanıyor. Sesiniz kesilmeden, değiştirilmeden kullanılacak (2-5 dk)…`);
-      const c = await komut('node', [path.join(hat.KOK, 'araclar', 'hoca-sesi.mjs'), klasor], 30 * 60e3);
-      const cikti = c.match(/ÇIKTI: (.+)/)?.[1]?.trim();
-      if (!cikti || !fs.existsSync(cikti)) throw new Error('çıktı dosyası bulunamadı');
+      await yaz(chat, `${klasor}: videoyu ve kaydınızı inceliyorum. Sizin kelimeleriniz ve ses tonunuzla ElevenLabs sesi üretip her cümleyi anlattığı plana oturtacağım (10-30 dk)…`);
+      const log = path.join(hat.KOK, klasor, '.arayuz');
+      fs.mkdirSync(log, { recursive: true });
+      const c = await komut('claude', ['-p', '--permission-mode', 'acceptEdits', '--allowedTools',
+        'Bash,Read,Write,Edit,Glob,Grep,Skill,ToolSearch,mcp__elevenlabs,mcp__playwright'], 90 * 60e3, istem);
+      fs.writeFileSync(path.join(log, 'hoca-sesi.log'), c);
+      const cikti = c.match(/CIKTI:\s*(.+)\s*$/m)?.[1]?.trim();
+      const rapor = c.replace(/\n*CIKTI:.*$/m, '').trim();
+      if (!cikti || cikti === 'yok' || !fs.existsSync(cikti)) return yaz(chat, 'Sizin sözlerinizle hazırlanamadı.\n\n' + kisa(rapor, 1500));
       const gonderilecek = fs.statSync(cikti).size > 49e6 ? telegramKopyasi(hat, klasor, cikti) : cikti;
-      if (!gonderilecek) return yaz(chat, `Hazır, ama Telegram'a sığmıyor (50 MB). Bilgisayarda: ${path.relative(hat.KOK, cikti)}`);
-      await tg('sendVideo', dosyaForm(chat, 'video', gonderilecek, { supports_streaming: 'true',
-        caption: `Sizin sesinizle: ${klasor}. Eski video da duruyor; bu ayrı dosya: teslim/${path.basename(cikti)}` })).catch(e => yaz(chat, 'Video gönderilemedi: ' + e.message));
-    } catch (e) { return yaz(chat, 'Sizin sesinizle hazırlanamadı: ' + e.message); }
+      if (gonderilecek) await tg('sendVideo', dosyaForm(chat, 'video', gonderilecek, { supports_streaming: 'true', caption: `Sizin sözlerinizle: ${klasor}` }))
+        .catch(e => yaz(chat, 'Video gönderilemedi: ' + e.message));
+      else await yaz(chat, `Hazır, ama Telegram'a sığmıyor (50 MB). Bilgisayarda: ${path.relative(hat.KOK, cikti)}`);
+      return yaz(chat, kisa(rapor, 1500));
+    } catch (e) { return yaz(chat, 'Sizin sözlerinizle hazırlanamadı: ' + e.message); }
     finally { hocaSesiCalisiyor = false; }
   }
 
@@ -735,7 +746,7 @@ export function telegramBaslat(hat) {
   tg('setMyCommands', { commands: [
     { command: 'egitim', description: 'Eğitmen anlatımı başlat: /egitim reyhan 30sn (sesli mesaj da olur)' },
     { command: 'yeni', description: 'Tarif videosu başlat: /yeni konu 20sn [kredili] (10-60 sn)' },
-    { command: 'hocasesi', description: 'Son videoyu kendi ses kaydımla hazırla: /hocasesi [no]' },
+    { command: 'hocasesi', description: 'Son videoyu kendi sözlerimle ve tonumla hazırla: /hocasesi [no]' },
     { command: 'durum', description: 'Çalışan ve onay bekleyen işler' },
     { command: 'dur', description: 'Çalışan işi durdur' },
     { command: 'tercihler', description: 'Sistemin sizden öğrendikleri' },
