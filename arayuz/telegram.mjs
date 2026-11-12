@@ -6,6 +6,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { spawn, spawnSync } from 'node:child_process';
 import { Readable } from 'node:stream';
+import { pathToFileURL } from 'node:url';
 
 const API = `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}`;
 const DOSYA = `https://api.telegram.org/file/bot${process.env.TELEGRAM_BOT_TOKEN}`;
@@ -25,6 +26,7 @@ Video linki: Instagram/TikTok/YouTube linkini yanına konuyla yazın (ör. "http
 Linkten yalnız tarif: linkin yanına "tarif" yazın (ör. "https://instagram.com/reel/… tarif 30sn"). Videodaki konuşma ve gönderi açıklaması okunur, tarif çıkarılır; görüntü kullanılmaz, video sıfırdan bizim mutfağımızda üretilir.
 Linkten anlatım: linkin yanına "eğitim" yazın; konuşmadaki bilgi sizin üslubunuzla yeniden yazılır, ofisinizde eğitmen videosu olur.
 Bedende gösterim: tarif bir bedende gösterilecekse isteğe yazın: "çocuk eli", "erkek kolu", "ön kol", "ayak", "sırt" (ör. "https://… tarif 25sn çocuk eli" ya da "/yeni çimdik testi erkek kolu 20sn"). Bu ipucu senaryoya geçer; o planda yüzsüz bir gösterim bedeni (el, ön kol, ayak, sırt) kullanılır.
+/hocasesi [no] — son videoyu sizin kendi ses kaydınızla, sesiniz hiç değiştirilmeden yeniden hazırlar (ör. /hocasesi ya da /hocasesi 05). Altyazı sizin sözlerinizden kurulur; eski video da kalır.
 /durum — çalışan ve bekleyen işler
 /tercihler — sistemin sizden öğrendikleri
 /unut <no> — yanlış öğrenilen bir tercihi siler
@@ -454,6 +456,7 @@ export function telegramBaslat(hat) {
         } catch (e) { return yaz(chat, 'Başlatılamadı: ' + e.message); }
       }
       case '/guncelle': return guncelle(chat);
+      case '/hocasesi': case '/kendisesim': return hocaSesi(chat, arg.trim());
       default: return yaz(chat, 'Anlamadım.\n\n' + YARDIM);
     }
   }
@@ -645,6 +648,31 @@ export function telegramBaslat(hat) {
     return anlatim.split(/\s+/).slice(0, 5).join(' ').replace(/[.,!?]/g, '') || (tur === 'egitim' ? 'sesli anlatım' : 'sesli tarif');
   }
 
+  // Bitmiş videoyu Hoca'nın kendi kaydıyla (değiştirilmeden) yeniden render eder: araclar/hoca-sesi.mjs. Yerel, 0 kredi.
+  let hocaSesiCalisiyor = false;
+  async function hocaSesi(chat, arg) {
+    if (hocaSesiCalisiyor) return yaz(chat, 'Sizin sesinizle bir video zaten hazırlanıyor; bitince gönderirim.');
+    const { videoSec, uygunVideolar } = await import(pathToFileURL(path.join(hat.KOK, 'araclar', 'hoca-sesi.mjs')).href);
+    const klasor = videoSec(arg);
+    if (!klasor) {
+      const u = uygunVideolar();
+      return yaz(chat, u.length ? `Bu numarada sizin ses kaydınızla hazırlanmış bir video yok. Olanlar: ${u.join(', ')}`
+        : 'Sizin sesli mesajınızdan hazırlanmış bitmiş bir video bulamadım. Sesli mesajla bir video başlatın; bittikten sonra /hocasesi yazın.');
+    }
+    hocaSesiCalisiyor = true;
+    try {
+      await yaz(chat, `${klasor}: video sizin kendi ses kaydınızla hazırlanıyor. Sesiniz kesilmeden, değiştirilmeden kullanılacak (2-5 dk)…`);
+      const c = await komut('node', [path.join(hat.KOK, 'araclar', 'hoca-sesi.mjs'), klasor], 30 * 60e3);
+      const cikti = c.match(/ÇIKTI: (.+)/)?.[1]?.trim();
+      if (!cikti || !fs.existsSync(cikti)) throw new Error('çıktı dosyası bulunamadı');
+      const gonderilecek = fs.statSync(cikti).size > 49e6 ? telegramKopyasi(hat, klasor, cikti) : cikti;
+      if (!gonderilecek) return yaz(chat, `Hazır, ama Telegram'a sığmıyor (50 MB). Bilgisayarda: ${path.relative(hat.KOK, cikti)}`);
+      await tg('sendVideo', dosyaForm(chat, 'video', gonderilecek, { supports_streaming: 'true',
+        caption: `Sizin sesinizle: ${klasor}. Eski video da duruyor; bu ayrı dosya: teslim/${path.basename(cikti)}` })).catch(e => yaz(chat, 'Video gönderilemedi: ' + e.message));
+    } catch (e) { return yaz(chat, 'Sizin sesinizle hazırlanamadı: ' + e.message); }
+    finally { hocaSesiCalisiyor = false; }
+  }
+
   function guncelle(chat) {
     if (hat.mesgul()) return yaz(chat, 'Şu an çalışan bir iş var; bitince /guncelle yazın.');
     const p = spawn('git', ['pull', '--ff-only'], { cwd: hat.KOK, shell: true, windowsHide: true });
@@ -707,6 +735,7 @@ export function telegramBaslat(hat) {
   tg('setMyCommands', { commands: [
     { command: 'egitim', description: 'Eğitmen anlatımı başlat: /egitim reyhan 30sn (sesli mesaj da olur)' },
     { command: 'yeni', description: 'Tarif videosu başlat: /yeni konu 20sn [kredili] (10-60 sn)' },
+    { command: 'hocasesi', description: 'Son videoyu kendi ses kaydımla hazırla: /hocasesi [no]' },
     { command: 'durum', description: 'Çalışan ve onay bekleyen işler' },
     { command: 'dur', description: 'Çalışan işi durdur' },
     { command: 'tercihler', description: 'Sistemin sizden öğrendikleri' },

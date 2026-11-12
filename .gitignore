@@ -46,3 +46,6 @@ ogrenilen/
 # Beden kilidi görselleri ve gerçek referans fotoğrafları (üretim bilgisayarında ilk kullanımda oluşur; kurallar BEDEN-KILIDI.md git'te)
 beden-kilidi/*
 !beden-kilidi/BEDEN-KILIDI.md
+
+# Hoca sesiyle yeniden kurgu (araclar/hoca-sesi.mjs) — kurgu kopyası ve büyük medya yerelde kalır
+video-*/kurgu-hoca-sesi/
