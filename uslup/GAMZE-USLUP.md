@@ -28,7 +28,7 @@ Kullanım: her bölümde anlatım metni (özellikle **Bölüm 0 · Eğitmen anla
 - Tarif vermez, "tüpte pişir yap et" anlatmaz: **bilgi veren eğitmen** (Hoca'nın kendi ifadesi). Tarif ancak konu gerektirirse tek cümle.
 
 ## Jest dili (Hoca: "konuşurken ellerimi çok kullanırım")
-Eğitmen videosunda her cümleye bir jest; jest konuşmanın vurgulu kelimesine denk gelir.
+Eğitmen videosunda her cümleye bir jest; jest konuşmanın vurgulu kelimesine denk gelir. Aşağıdaki tablo reyhan videosundan **örnektir, şablon değildir**: her yeni seste jestler o sesin anlattığı işten ve konudan çıkarılır, çeşitli olur, robot gibi aynı hareketler tekrarlanmaz (Hoca'nın isteği, 13 Kas 2026; kural `uslup/EGITMEN-CEKIM.md` → "Jest çeşitliliği").
 | Söz | Jest |
 |---|---|
 | "Hocam …" şikâyetleri | avuçlar yukarı, çaresizlik anlatır gibi masanın üstünde açılır; eller kadrajın üst kenarına (yüze) doğru gitmez |

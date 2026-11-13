@@ -30,6 +30,17 @@ Doğal jestin kuralları:
 - **Hız konuşmanın hızı:** hızlı sayılan şikâyetlerde kısa, çabuk dokunuşlar; yavaş, sıcak cümlede yavaş jest.
 - Nesne tutarlılığı: demet elde kaldıysa sonraki planda da eldedir ya da masaya bırakıldığı yazılır.
 
+### Jest çeşitliliği — robot gibi aynı hareketler yok (Hoca'nın isteği, 13 Kas 2026)
+Hoca: "Devamlı robot gibi aynı hareketleri yapma. Her seste anlatılana uygun, rahat uzman eğitmen gibi, tarife uygun hareketler, anlatımlar yapmaya çalış." Çeşitlilik doğallığı bozmaz: cümle başına tek ana jest, aralarda dinlenme kuralı aynen sürer; çeşitlilik jestin SAYISINDA değil TÜRÜNDE.
+- **Jest her sesin kendi içeriğinden çıkar, kalıptan değil.** `uslup/GAMZE-USLUP.md` → "Jest dili" tablosu reyhan videosundan örnektir, şablon değildir; yeni videoda o tablo sırayla kopyalanmaz. Önce sor: bu cümlede Hoca neyi anlatıyor, bir uzman bunu masada elleriyle nasıl gösterirdi?
+- **Tarife/konuya uygun eylem jesti önce gelir.** Söz bir işi anlatıyorsa el o işi küçükçe canlandırır: "çiğneyin / ezin" → parmak uçlarında ufalama; "karıştırın" → bilekten küçük dairesel hareket; "bir kaşık / bir tutam" → başparmak-işaret parmağıyla tutam ölçüsü; "dökün / ekleyin" → avucu hafif eğip dökme; "sabah aç karna" → masaya hafif dokunup sıralama; "kurutulmuş / taze" → iki nesneyi ayrı ayrı göstermek ya da birinden ötekine el geçirmek; "sıcak / ılık" → avucu nesnenin üstünde tutup ısısını hisseder gibi. Masada konu nesnesi varsa onunla etkileşim (dokunma, çevirme, yaklaştırma, bir parça alma) soyut el işaretinden daha doğaldır.
+- **Repertuvar geniş tutulur.** Kullanılabilecek türler: nesneyle etkileşim (dokunma, kaldırma, çevirme, iki nesne arasında gösterme), eylem canlandırma (yukarıdaki), ölçü/boyut (parmaklar arası aralık, avuç büyüklüğü), sayma (parmak ya da masaya dokunarak), sıralama/zaman (masada soldan sağa noktalar), karşılaştırma (iki el iki yanı tutar — biri hareket eder, biri durur), açıklama/ikna (avuç yukarı, yana açma), kararlılık (masada küçük vuruş, parmak ucuyla tek dokunuş), düşünme/geçiş (parmaklar birbirine değer, el nesnenin yanında durur), gösterme (işaret parmağı nesneye ya da aşağıya). Avuç göğse konmaz (yukarıdaki tek yasak).
+- **Sayı kuralı:** bir videoda en az 4 farklı jest türü kullanılır (8 sn'den kısa videoda 3); aynı tür art arda iki planda olmaz; hiçbir tür videonun ana jestlerinin üçte birinden fazlası olmaz. Baskın el en az bir kez değişir.
+- **Aynı türün içinde de çeşit:** aynı tür ikinci kez geliyorsa biçimi değişir (ilk sayma parmakla, ikincisi masaya dokunarak; ilk avuç açma tek el, ikincisi küçük ve bilekten).
+- **Videolar arası tekrar yok:** JEST.md yazılmadan önce son eğitmen videosunun `JEST.md`'sine bakılır (en yüksek numaralı, `bolum: egitim` olan önceki klasör); aynı jest sırası (ör. avuç açma → işaret parmağı → nesne kaldırma) yeni videoda baştan aynen tekrarlanmaz. Özellikle kanca jesti her videoda aynı olmaz.
+- **Doğallık sınırı:** çeşitlilik için yapmacık, tiyatro gibi ya da büyük hareket eklenmez; uzman bir eğitmenin rahat, ölçülü hareketi. Emin değilsen sakin bir nesne etkileşimi ya da dinlenme pozu, yapay bir "farklı" jestten iyidir.
+- JEST.md tablosunun altına `Jest türleri: <tür> ×<sayı>, …` satırı yazılır (denetim buradan sayar).
+
 `JEST.md` tablosu: | Plan | Başlangıç sn | Bitiş sn | Söz | Vurgu kelimesi @ sn | Baskın el | Jest (hazırlık → vuruş → gevşeme, saniyeleriyle) | Açı (A1/A2/A3) |. Plan sınırı her zaman cümle sınırıdır.
 
 ## 3. Tek ana kare, farklı kamera açıları
@@ -63,6 +74,7 @@ Seedance 2.5 Omni Reference; referanslar: A1, A2, (A3), son olarak `mekan-kilidi
 ## 6. Denetim (video-denetci ek maddeleri)
 - Her planın zirve saniyesinde ana jest var mı (±0,4 sn) ve söze uyuyor mu.
 - Yapaylık işaretleri = KIRP ya da YENİDEN ÜRET: ayna gibi simetrik eller, aynı hareketin döngü gibi tekrarı, hiç durmadan sallanan eller, tamamen donuk eller, robot gibi köşeli hareket, sözle ilgisiz jest.
+- **Çeşitlilik:** videoda gerçekten görülen ana jestlerin türlerini say; 2. maddedeki sayı kuralı tutmuyorsa ya da eller robot gibi aynı hareketi farklı cümlelerde tekrarlıyorsa EKSIK'e yaz ve uyumu düşür (Hoca'nın açık isteği). Rapora `JEST_CESITLILIK: <farklı tür sayısı>/<ana jest sayısı>` yaz.
 - Avuç göğse/kalbe konup tutuluyor mu: o saniyeler KIRP (plan başka açıyla kapatılır), kapatılamıyorsa YENİDEN ÜRET.
 - Çekim hissi: elde titreme görünüyor mu, gimbal/slider gibi pürüzsüz hareket var mı. Rapora `ELDE_CEKIM: VAR|ZAYIF|YOK` yaz.
 - Yüz/çene/boyun, kol ve tırnak kuralı, nesne sürekliliği her zamanki gibi.
