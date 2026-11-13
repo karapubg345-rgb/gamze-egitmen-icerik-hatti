@@ -605,6 +605,11 @@ export function telegramBaslat(hat) {
       if (anlatim.split(/\s+/).length < 5) return yaz(chat, 'Kayıtta anlaşılır bir konuşma duyamadım. Biraz daha yakından ve sessiz bir yerde tekrar gönderir misiniz?');
 
       const p = ayristir(kalan, hat.SURE); // açıklama yalnız seçenekler için (süre, kredili, onaylı); konu da yazılabilir
+      // Eğitmen anlatımında Hoca'nın sözleri değişmeden, kendi sesiyle kullanılır (uslup/EGITMEN-CEKIM.md): süre kayıttan gelir.
+      if (tur === 'egitim') {
+        const sn = Number(spawnSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', kayit], { encoding: 'utf8', windowsHide: true }).stdout);
+        if (sn > 0) p.sure = Math.min(hat.SURE.cok, Math.max(hat.SURE.en, Math.ceil(sn)));
+      }
       const konu = p.konu || await konuBul(anlatim, tur);
       const klasor = hat.yeniKlasor({ bolum: tur, ...p, konu, ipucu: kalan });
       const hedef = path.join(hat.KOK, klasor, t.klasor);
@@ -616,7 +621,9 @@ export function telegramBaslat(hat) {
         `Not: otomatik deşifredir; yanlış duyulmuş kelimeler olabilir (şüpheliler: ${t.klasor}/supheli.txt).\n\n## Anlatım\n\n${anlatim}\n`);
       return taslakGoster(chat, klasor, `Anladığım ${t.ne}:\n"${kisa(anlatim, 1200)}"` +
         (etiket ? '' : '\n\nEğitmen videosu olarak hazırlanacak. Tarif videosu isterseniz kaydın açıklamasına "tarif" yazıp yeniden gönderin.') +
-        '\n\nYanlış duyduğum bir yer varsa "Metni düzelt"e basın.',
+        (tur === 'egitim'
+          ? '\n\nSözleriniz hiç değişmeden, kendi sesinizle kullanılacak; eller söylediklerinize göre hareket edecek. Yanlış duyduğum bir kelime varsa "Metni düzelt"e basın (yalnız altyazı düzelir, sesiniz aynı kalır).'
+          : '\n\nYanlış duyduğum bir yer varsa "Metni düzelt"e basın.'),
         { dosya: t.dosya, kelime: anlatim.split(/\s+/).filter(Boolean).length });
     } catch (e) { return yaz(chat, 'Ses kaydı işlenemedi: ' + e.message); }
     finally { fs.rmSync(gecici, { recursive: true, force: true }); }

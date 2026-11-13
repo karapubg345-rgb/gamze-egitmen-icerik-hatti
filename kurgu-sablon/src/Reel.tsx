@@ -28,6 +28,18 @@ const camera = (t: number) => {
   return { z, fx: sh.fx, fy: sh.fy };
 };
 
+/** Elde telefon hissi (timeline.json → "handheld": 0-1; yoksa kapalı). Üst üste binen yavaş salınımlar: birkaç piksel kayma
+ *  ve çok hafif eğim; kenar görünmesin diye görüntü biraz büyütülür. Video zaten elde çekilmiş gibiyse 0 bırakılır. */
+const HANDHELD = Math.min(1, Math.max(0, Number((TL as any).handheld ?? 0)));
+const handheld = (t: number) => {
+  if (!HANDHELD) return "";
+  const n = (a: number, b: number, c: number, p: number) => Math.sin(t * a + p) * 0.5 + Math.sin(t * b + p * 2.3) * 0.3 + Math.sin(t * c + p * 4.1) * 0.2;
+  const x = n(1.9, 4.3, 9.7, 0.4) * 9 * HANDHELD;
+  const y = n(1.6, 3.7, 8.9, 2.1) * 11 * HANDHELD;
+  const r = n(1.1, 2.9, 6.1, 4.0) * 0.35 * HANDHELD;
+  return ` translate(${x.toFixed(2)}px, ${y.toFixed(2)}px) rotate(${r.toFixed(3)}deg) scale(${1 + 0.03 * HANDHELD})`;
+};
+
 const Flash: React.FC<{ t: number }> = ({ t }) => {
   const sc = sceneStarts.find((x) => x > 0 && t >= x && t - x < 0.12);
   if (sc === undefined) return null;
@@ -165,7 +177,7 @@ export const Reel: React.FC = () => {
   const { z, fx, fy } = camera(t);
   return (
     <AbsoluteFill style={{ background: "#000", overflow: "hidden" }}>
-      <AbsoluteFill style={{ transform: `scale(${z})`, transformOrigin: `${fx}px ${fy}px` }}>
+      <AbsoluteFill style={{ transform: `scale(${z})${handheld(t)}`, transformOrigin: `${fx}px ${fy}px` }}>
         <OffthreadVideo src={staticFile(TL.video)} muted style={{ width: "100%", height: "100%", objectFit: "cover" }} />
       </AbsoluteFill>
       <Flash t={t} />

@@ -3,6 +3,8 @@
 Gamze Hoca bu videonun **biçimini çok beğendi**. Bölüm 0 (Eğitmen anlatımı) videoları bu biçimde üretilir; yalnız konu nesnesi, metin ve süre değişir. Yalnız eğitmen anlatımı için geçerlidir (tarif ve çekim videoları kendi kurallarıyla devam eder).
 Kaynak: 24 sn, 1080×1920, 9:16. Kareler: `kare-01.jpg` … `kare-07.jpg` (0,8 / 4,5 / 8,5 / 11,5 / 16,5 / 20 / 23. sn).
 
+**13 Kas 2026 güncellemesi:** klon sesle ilk videoda eller yapay durdu. Eller, kare sayısı ve çekim hissi için artık `uslup/EGITMEN-CEKIM.md` geçerlidir: "eller hiç durmaz" yerine cümle başına sözü anlatan tek ana jest ve aralarda dinlenme; her plana ayrı kare yerine tek ana kare + açılar; elde iPhone çekimi hissi. Bu dosyadaki kadraj, masa düzeni ve kurgu görünümü aynen sürer.
+
 ## Kadraj ve mekân
 - Kamera göğüs ortası hizasında, hafif yukarıdan masaya bakar. Gövde ve eller üst yarıda, masa alt yarıda. Baş, yüz, boyun ve saç hiç görünmez.
 - Sunucu: dar, mat siyah uzun kol, başparmak deliği var. Yalnız parmaklar açıkta, tırnaklar kısa ve doğal.

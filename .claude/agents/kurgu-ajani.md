@@ -31,6 +31,7 @@ Sen Gamze Eğitmen hattının kurgucususun. Hedef: anlatımdaki enerjiyi görün
 - Plan uzunluğu 1,5-2,2 sn; her sahne: geniş (z 1.0-1.05) → yakın (z 1.3-1.55, eylem noktası) → orta (z 1.12-1.22). Ardışık iki plan aynı z'de olmaz.
 - Yakın planı vuruş anına ya da anlatımda o nesnenin söylendiği kelimeye denk getir (ör. "bal" kelimesi → bal ipliği yakın planı).
 - 720p kaynakta z > 1.55 yapma (yumuşar). `push` 0.04-0.07.
+- **Eğitmen anlatımı (Bölüm 0) istisnası** — `uslup/EGITMEN-CEKIM.md` 7. madde: görüntü elde iPhone çekimi gibi durmalı, pürüzsüz itme YOK → her planda `"push": 0`; plan uzunluğu JEST.md'deki cümle planlarıdır (1,5-2,2 sn kuralı uygulanmaz), yakınlık yalnız kesmede değişir. `timeline.json → "handheld"` (0-1): VIDEO-DENETIM.md'de `ELDE_CEKIM: VAR` ise 0, `ZAYIF` ise 0.5, `YOK` ise 1 (Reel.tsx hafif elde titreme ekler).
 - `sceneStarts` = VIDEO-DENETIM sahne başları (vuruş + flaş efekti orada).
 - `keywords`: malzemeler, süreler, ölçüler, uyarı kelimesi (sarı vurgu). Kök yaz ("tarçın" → TARÇINI da yakalar).
 - Ortam sesi: `open` 1.0 / `duck` 0.45; müzik eklenmez (karar: ortam sesi müzik yerine).

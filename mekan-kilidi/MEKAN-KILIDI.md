@@ -49,10 +49,12 @@ Kaynak fotoğraf: `ELLER-referans.jpg` (Gamze Hoca'nın gönderdiği; ışık hu
 ## Eğitmen kadrajı (anlatım planları)
 - Kamera masanın karşısında, göğüs hizasında; kadraj **göğüs ortasından masaya** kadar. Baş, yüz, boyun, saç, omuz üstü kadraj DIŞINDA — çenenin ucu bile görünmez.
 - Gamze Hoca'nın üstünde düz, mat **siyah** bol elbise (ferace) ve aynı siyah başparmak delikli kollar; yaka/düğme/takı/broş/logo yok.
-- Eller masanın üstünde, konu nesnesinin (ör. taze ve kuru reyhan) yanında; konuşurken jest yapar (avuç açma, parmakla sayma, nesneyi kaldırıp gösterme, koklatır gibi yaklaştırma).
+- Eller masanın üstünde, konu nesnesinin (ör. taze ve kuru reyhan) yanında; konuşurken jest yapar (avuç açma, parmakla sayma, nesneyi kaldırıp gösterme, koklatır gibi yaklaştırma). Tek yasak jest: avucu göğse/kalbe koyup orada tutmak (13 Kas 2026).
 - Yakın planlarda (nesne gösterimi) yalnız eller + nesne; gövde arka planda flu olabilir.
 
 **Eğitmen kalıbı:**
-> Same office as Image1. A woman sits behind the desk facing the camera, framed from mid-chest down to the desk top: her head, face, neck, hair and shoulders are completely outside the frame. She wears a plain loose matte black dress with the same black sleeves; <eller kalıbı>. On the desk in front of her: <konu nesnesi, Image2 ile aynı>. <bu planın jesti>. Natural window light, shallow depth of field, photorealistic, vertical 9:16, no text, no logos.
+> Same office as Image1. A woman sits behind the desk facing the camera, framed from mid-chest down to the desk top: her head, face, neck, hair and shoulders are completely outside the frame. She wears a plain loose matte black dress with the same black sleeves; <eller kalıbı>. On the desk in front of her: <konu nesnesi, Image2 ile aynı>. <bu planın jesti>. <telefon kalıbı: uslup/EGITMEN-CEKIM.md 4. madde>. Photorealistic, vertical 9:16, no text, no logos.
+
+13 Kas 2026: eğitmen kareleri stüdyo çekimi gibi değil, elde tutulan iPhone çekimi gibi (derin netlik, doğal gün ışığı; sinematik bokeh yok). Her plana ayrı kare üretilmez: tek ana kare (A1) + ondan türetilen en fazla iki açı (A2, A3) — `uslup/EGITMEN-CEKIM.md` 3. ve 4. madde.
 
 **Üretim:** TopView → Image → Image Edit → GPT Image 2 · 9:16 · 1K · Medium → Generate düğmesinde rakam yok (Sınırsız, 0 kredi). Board 042734ce97334ddd950d7ee3044c8894. Eski "yaşanmış ev" denemesi ve peçeli karakter `_eski\` klasöründe.

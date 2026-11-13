@@ -37,7 +37,7 @@ Eğitmen videosunda her cümleye bir jest; jest konuşmanın vurgulu kelimesine 
 | Gelenek / büyükanne | iki el yumuşakça yana açılır, geçmişi anlatır gibi |
 | Koku / koklamak | demeti kendine doğru yaklaştırır, bırakır |
 | Liste ("yemeğe, salataya, yoğurda") | parmakla sayar (1-2-3) ya da kuru reyhanı avuçta ufalar |
-| "Kesinlikle tavsiye ediyorum" | avuç göğse (kalbe) konur |
+| "Kesinlikle tavsiye ediyorum" | avuç yukarı açılır ya da el masada küçük, kararlı bir vuruş yapar (avuç göğse/kalbe KONMAZ: Hoca istemiyor, 13 Kas 2026) |
 | "Açıklamayı okuyun" | işaret parmağı aşağıyı (açıklamayı) gösterir |
 
 ## Örnek cümleler (Hoca'nın kendi sözleri)
