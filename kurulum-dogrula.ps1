@@ -17,6 +17,15 @@ foreach ($p in @("git", "node", "npm", "python", "ffmpeg", "ffprobe", "uv", "cla
   $k = Get-Command $p -ErrorAction SilentlyContinue
   Basari $p ([bool]$k) $(if ($k) { $k.Source } else { "bulunamadı — kurulum.ps1'i çalıştırın" })
 }
+# Akıllı Uygulama Denetimi (Smart App Control) açıksa whisper'ın imzasız DLL'leri engellenir (WinError 4551).
+# VerifiedAndReputablePolicyState: 0 = kapalı, 1 = açık (engeller), 2 = değerlendirme (şimdilik engellemez, Windows sonra açabilir)
+$sac = (Get-ItemProperty "HKLM:\SYSTEM\CurrentControlSet\Control\CI\Policy" -Name VerifiedAndReputablePolicyState -ErrorAction SilentlyContinue).VerifiedAndReputablePolicyState
+$sacYol = "Ayarlar > Gizlilik ve güvenlik > Windows Güvenliği > Uygulama ve tarayıcı denetimi > Akıllı Uygulama Denetimi ayarları > Kapalı"
+switch ($sac) {
+  1 { Basari "Akıllı Uygulama Denetimi" $false "AÇIK — whisper engellenir (WinError 4551). Kapatın: $sacYol" }
+  2 { Basari "Akıllı Uygulama Denetimi" $true "değerlendirme modunda; Windows ileride açabilir. Önlem için kapatın: $sacYol" }
+  default { Basari "Akıllı Uygulama Denetimi" $true "kapalı" }
+}
 
 Write-Host "`n2/5 FFmpeg örneği: mekân görselinden 31 sn yakınlaşan dikey video + sessiz ses" -ForegroundColor Yellow
 $ffv = Join-Path $C "ffmpeg-ornek.mp4"

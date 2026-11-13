@@ -108,6 +108,7 @@ powershell -ExecutionPolicy Bypass -File .\kurulum.ps1
 - **Playwright bağlanmıyor:** Chrome açık mı, uzantı etkin mi, token `.env`'de mi? Token'ı değiştirdiysen `. .\araclar\env-yukle.ps1` çalıştır ve PowerShell'i/Stüdyo'yu yeniden aç. `claude` içinde `/mcp` ile durumu gör.
 - **Stüdyo aşaması hemen "Hata" oluyor:** kartın "Çalışma günlüğü"nü aç. "MCP" geçiyorsa 4. adımdaki ilk `claude` onayı yapılmamış.
 - **Whisper yavaş:** ilk çalıştırmada model iner; sonrakiler hızlıdır.
+- **"Ses kaydı işlenemedi … WinError 4551 / Uygulama Denetimi ilkesi bu dosyayı engelledi":** Windows'un Akıllı Uygulama Denetimi whisper'ın imzasız DLL'lerini engelliyor. Ayarlar → Gizlilik ve güvenlik → Windows Güvenliği → Uygulama ve tarayıcı denetimi → Akıllı Uygulama Denetimi ayarları → **Kapalı**; Stüdyo'yu yeniden aç. (Bazı Windows sürümlerinde sıfırlamadan yeniden açılamaz; Defender ve diğer korumalar açık kalır.) `kurulum-dogrula.ps1` bu ayarı denetler.
 - **Render "dosya kilitli":** oynatıcıda açık olan videoyu kapat; teslim.sh yeni dosyayı `.yeni.mp4` olarak bırakır.
 - **`kurulum.ps1` "winget bulunamadı":** Microsoft Store → "Uygulama Yükleyicisi"ni güncelle.
 - **Port meşgul (4747):** Stüdyo zaten açık; tarayıcıda `http://127.0.0.1:4747` adresine git.
