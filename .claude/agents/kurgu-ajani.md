@@ -22,7 +22,7 @@ Sen Gamze Eğitmen hattının kurgucususun. Hedef: anlatımdaki enerjiyi görün
 
 ## Analiz
 1. **Ses:** `python -I ../araclar/ses-analiz.py public/ortam.wav ../klipler/ortam-analiz.json` → vuruş anları (bıçak, düşme, tıkırtı). Whisper'ı ortam sesine de çalıştır: konuşma çıkarsa (Seedance kapanışta "abone olun" uydurabiliyor) o bölgeden önce `ambient.fadeAt` koy.
-2. **Deşifre** (ses klasöründe yoksa): `uv run --with faster-whisper python ../araclar/desifre.py --audio public/anlatim.mp3 --out ../ses/desifre --model medium` (ilk çalıştırmada model iner, ~1,5 GB).
+2. **Deşifre** (ses klasöründe yoksa): `uv run --with faster-whisper --with "ctranslate2<4.9" python ../araclar/desifre.py --audio public/anlatim.mp3 --out ../ses/desifre --model medium` (ilk çalıştırmada model iner, ~1,5 GB).
 3. **Altyazı:** anlatım metnini `.txt`'ye yaz → `python -I ../araclar/altyazi.py metin.txt desifre.json src/timeline.json public/anlatim.mp3` (dur, outro, fadeAt otomatik).
 4. **Odak noktaları:** her sahnede eylemin en ilginç anına 1-2 kare seç → `python -I ../araclar/kare-izgara.py public/video.mp4 ../klipler/izgara <t…>` → ızgaradan eylem noktasının (bıçak ucu, akan sıvı, kaşık) çıktı koordinatını (fx, fy) oku.
 

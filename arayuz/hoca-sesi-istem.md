@@ -22,7 +22,7 @@ Ses kimliği `.env` → `HOCA_SES_ID` doluysa o (Hoca'nın kendi ses klonu: çı
    - Önce ElevenLabs MCP (ToolSearch `elevenlabs`): speech-to-speech / voice changer aracı varsa parametreleri şemadan al.
    - Yoksa web arayüzü (Playwright uzantı modu): `https://elevenlabs.io/app/voice-changer` → kaydı yükle → sesi seç → üret → indir (indirme düğmesi yoksa `.claude/skills/elevenlabs-ses/SKILL.md` 4. adımdaki MediaRecorder yöntemi).
 2. **Olmazsa TTS:** Hoca'nın kelimeleri BİREBİR (deşifre + sözlük düzeltmesi, `araclar/sozluk.json`), model Eleven v4 / `eleven_v3`, 2. adımdaki analize göre öbek başına duygu etiketi (`[curious]`, `[warmly]`, `[excited]`, `[short pause]` …) — `elevenlabs-ses` skill'i. Raporda "Voice Changer kullanılamadı, TTS + duygu etiketi" yaz.
-- Sonra whisper: `uv run --with faster-whisper python araclar/desifre.py --audio {klasor}/ses/hoca-sesi/eleven.mp3 --out {klasor}/ses/hoca-sesi/desifre --model medium`. Kelimeler Hoca'nın kaydıyla aynı mı karşılaştır; eksik/fazla kelime varsa bir kez yeniden üret.
+- Sonra whisper: `uv run --with faster-whisper --with "ctranslate2<4.9" python araclar/desifre.py --audio {klasor}/ses/hoca-sesi/eleven.mp3 --out {klasor}/ses/hoca-sesi/desifre --model medium`. Kelimeler Hoca'nın kaydıyla aynı mı karşılaştır; eksik/fazla kelime varsa bir kez yeniden üret.
 
 ## 4. Yerleşim (senkron)
 `{klasor}/ses/hoca-sesi/yerlesim.json` yaz (biçim `araclar/hoca-sesi.mjs` başındaki açıklamada; örnek: `araclar/hoca-sesi-ornek.json` — video-05 patates suyu + tahin için denenmiş, senkronu doğrulanmış yerleşim). Kurallar:

@@ -1,5 +1,5 @@
 # Türkçe deşifre: faster-whisper (CPU, int8) + kelime zamanları + düzeltme sözlükleri.
-#   uv run --with faster-whisper python desifre.py --audio anlatim.flac --out desifre/ [--model medium]
+#   uv run --with faster-whisper --with "ctranslate2<4.9" python desifre.py --audio anlatim.flac --out desifre/ [--model medium]
 #          [--sozluk ../desifre/sozluk.json] [--proje desifre/duzeltmeler.json] [--sadece-duzelt]
 # Çıktılar (out/):
 #   ham.json        whisper'ın kendisi (segment + kelime), düzeltmeler tekrar uygulanabilsin diye saklanır

@@ -32,7 +32,7 @@ python -m pip install --upgrade pip --quiet
 python -m pip install pillow numpy --quiet
 
 Write-Host "4/7 Whisper (faster-whisper, uv önbelleğine)" -ForegroundColor Yellow
-uv run --with faster-whisper python -c "import faster_whisper; print('  faster-whisper', faster_whisper.__version__)"
+uv run --with faster-whisper --with "ctranslate2<4.9" python -c "import faster_whisper; print('  faster-whisper', faster_whisper.__version__)"
 
 Write-Host "5/7 Kurgu şablonu (Remotion paketleri + render tarayıcısı)" -ForegroundColor Yellow
 Push-Location kurgu-sablon

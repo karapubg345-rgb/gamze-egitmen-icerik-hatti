@@ -35,7 +35,7 @@ Oynatıcıdaki ses **blob**'dur ve fetch/XHR ile okunamaz. Gerçek zamanlı kayd
 (`.env`'de `ELEVENLABS_API_KEY` varsa bunun yerine API ile doğrudan mp3 indir: `POST https://api.elevenlabs.io/v1/text-to-speech/<voice_id>` model `eleven_v3`/v4.)
 
 ## 5. Doğrula
-`uv run --with faster-whisper python araclar/desifre.py --audio ses/<ad>.mp3 --out ses/desifre --model medium` → `okunur.txt`'yi metinle karşılaştır. Eksik/yanlış kelime → kullanıcıya söyle (whisper hatası olabilir: "tarçım", "dilinmeyin"; şüpheliyse dinlet).
+`uv run --with faster-whisper --with "ctranslate2<4.9" python araclar/desifre.py --audio ses/<ad>.mp3 --out ses/desifre --model medium` → `okunur.txt`'yi metinle karşılaştır. Eksik/yanlış kelime → kullanıcıya söyle (whisper hatası olabilir: "tarçım", "dilinmeyin"; şüpheliyse dinlet).
 
 ## MCP yolu (öncelikli — iki modda da; tarayıcı açılmaz)
 ElevenLabs'in barındırılan MCP sunucusu (`.mcp.json` → `elevenlabs`, `https://api.elevenlabs.io/v1/mcp`, OAuth; API anahtarı gerekmez). Araçlar `mcp__elevenlabs__*`.

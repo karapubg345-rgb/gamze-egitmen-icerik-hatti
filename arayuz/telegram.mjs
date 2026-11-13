@@ -548,7 +548,7 @@ export function telegramBaslat(hat) {
   async function desifreEt(kayit, gecici) {
     const desifre = path.join(gecici, 'desifre');
     try {
-      await komut('uv', ['run', '--with', 'faster-whisper', 'python', path.join(hat.KOK, 'araclar', 'desifre.py'), '--audio', kayit, '--out', desifre, '--model', 'medium'], 20 * 60e3);
+      await komut('uv', ['run', '--with', 'faster-whisper', '--with', 'ctranslate2<4.9', 'python', path.join(hat.KOK, 'araclar', 'desifre.py'), '--audio', kayit, '--out', desifre, '--model', 'medium'], 20 * 60e3);
     } catch (e) {
       // Windows Akıllı Uygulama Denetimi (Smart App Control) whisper'ın imzasız DLL'lerini (ctranslate2) engeller: WinError 4551.
       if (/WinError 4551|Uygulama Denetimi|Application Control/i.test(e.message)) throw new Error(

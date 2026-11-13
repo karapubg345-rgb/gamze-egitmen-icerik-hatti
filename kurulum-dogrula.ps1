@@ -38,7 +38,7 @@ Write-Host "`n3/5 Whisper örneği: video-03 anlatımının deşifresi" -Foregro
 $model = if ($Hizli) { "small" } else { "medium" }
 Write-Host "  model: $model (ilk çalıştırmada indirilir, birkaç dakika sürebilir)" -ForegroundColor DarkGray
 $wOut = Join-Path $C "whisper"
-& uv run --with faster-whisper python araclar\desifre.py --audio "video-03-hacamat-cekim\ses\anlatim-gamze.mp3" --out $wOut --model $model
+& uv run --with faster-whisper --with "ctranslate2<4.9" python araclar\desifre.py --audio "video-03-hacamat-cekim\ses\anlatim-gamze.mp3" --out $wOut --model $model
 $okunur = Join-Path $wOut "okunur.txt"
 if (Test-Path $okunur) { $ilk = (Get-Content $okunur -Encoding UTF8 | Select-Object -First 2) -join " | "; Basari "Whisper" $true $ilk } else { Basari "Whisper" $false "okunur.txt oluşmadı" }
 
