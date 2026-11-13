@@ -24,6 +24,9 @@ export const SURE = { en: 10, cok: 60, varsayilan: 25, parca: 30 }; // Seedance 
 // Ortak ayarlar: geliştirme bilgisayarında .env.example'da değişir, /guncelle sonrası açılışta üretim
 // bilgisayarının .env'ine yazılır (.env git dışında olduğu için başka türlü ulaşmaz). Token'lar buraya GİRMEZ.
 const ORTAK_AYARLAR = ['ELEVENLABS_VOICE_ID'];
+// Yerel öncelik: üretim bilgisayarının .env'inde bu anahtar doluysa ortak değerin yerine o yazılır.
+// HOCA_SES_ID = Gamze Hoca'nın ElevenLabs'taki kendi ses klonu (hesaba özel, o bilgisayarda oluşturulur).
+const YEREL_ONCELIK = { ELEVENLABS_VOICE_ID: 'HOCA_SES_ID' };
 try {
   const oku = d => {
     const o = {};
@@ -36,10 +39,11 @@ try {
   const mevcut = oku(env);
   const degisen = [];
   for (const k of ORTAK_AYARLAR) {
-    if (!ornek[k] || mevcut[k] === ornek[k]) continue;
+    const hedef = mevcut[YEREL_ONCELIK[k]] || ornek[k];
+    if (!hedef || mevcut[k] === hedef) continue;
     const satir = new RegExp(`^(\\s*${k}\\s*=).*$`, 'm');
-    env = satir.test(env) ? env.replace(satir, `$1${ornek[k]}`) : env.replace(/\s*$/, '') + `\n${k}=${ornek[k]}\n`;
-    degisen.push(`${k}: ${mevcut[k] || '(yok)'} → ${ornek[k]}`);
+    env = satir.test(env) ? env.replace(satir, `$1${hedef}`) : env.replace(/\s*$/, '') + `\n${k}=${hedef}\n`;
+    degisen.push(`${k}: ${mevcut[k] || '(yok)'} → ${hedef}`);
   }
   if (degisen.length) { fs.writeFileSync(envYol, env); console.log('Ortak ayarlar .env\'e yazıldı:\n  ' + degisen.join('\n  ')); }
 } catch (e) { console.log('Ortak ayar eşitlemesi yapılamadı:', e.message); }

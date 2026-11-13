@@ -7,7 +7,7 @@ Gamze konuyu/tarifi verir → hat 10-60 sn'lik yüzsüz Reel çıkarır (30 sn �
 - Eller kuralı (11 Kas 2026) — sunucu eli: dar mat siyah uzun kol, başparmak deliği, elin sırtını örter; yalnız parmaklar açık, tırnaklar kısa/temiz/doğal nude; takı yok; yüz yok. Parmak dışında çıplak ten ya da kötü tırnak = hata. Kan temasında siyah nitril eldiven. Referans `mekan-kilidi/ELLER-kilidi.png`, İngilizce kalıp MEKAN-KILIDI.md → "Eller".
 - `uslup/GAMZE-USLUP.md` — Gamze Hoca'nın konuşma kalıpları, temposu ve jest dili; her anlatım metni buna göre yazılır.
 - `beden-kilidi/` — gösterim bedeni (B1 çocuk eli, B2 yetişkin erkek ön kol, B3 yetişkin ayak, B4 yetişkin sırt; BEDEN-KILIDI.md). Tarif bedende gösterim gerektirdiğinde o planda yüzsüz, kıyafetsiz, takısız tek bölge; ilk kullanımda gerçek fotoğrafa göre bir kez üretilir, videolar arasında ortaktır.
-- Ses — ElevenLabs'ta seçili ses (`ELEVENLABS_VOICE_ID`; klon yok), Hoca'nın üslubuyla.
+- Ses — ElevenLabs, `ELEVENLABS_VOICE_ID`: Hoca'nın ses klonu varsa o (`.env` → `HOCA_SES_ID`, açılışta yerine geçer), yoksa ortak seçili ses; Hoca'nın üslubuyla.
 - Yazı stili — Remotion şablonu (kanca yazısı, logo, altyazı, "açıklamada").
 
 ## Bölüm 0 — Eğitmen anlatımı (arayüzde 1. sekme · öncelikli)

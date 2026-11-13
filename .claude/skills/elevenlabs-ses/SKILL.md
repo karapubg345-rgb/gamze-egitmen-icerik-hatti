@@ -6,7 +6,7 @@ description: Reel anlatımını ElevenLabs (Eleven v4, duygu etiketli) ile üret
 # ElevenLabs seslendirme
 
 ## 1. Metin
-- SENARYO.md'deki anlatım, `uslup/GAMZE-USLUP.md` kalıplarıyla (Hoca'nın hitabı, tekrar vurguları, kanca/kapanış). Ses klonu YOK: Hoca'ya benzerlik metnin üslubundan ve etiketlerden gelir.
+- SENARYO.md'deki anlatım, `uslup/GAMZE-USLUP.md` kalıplarıyla (Hoca'nın hitabı, tekrar vurguları, kanca/kapanış). Ses, Hoca'nın klonu da olsa ortak ses de olsa, üslup ve etiketler aynı kalır.
 - Tempo Hoca'nınki gibi akıcı ve hızlı (~150 kelime/dk); `[slowly]` kullanma. Ton sıcak: `[warmly]`; merak/heyecan anında `[excited]`. Kancadaki "Hocam …" cümleleri arasına ve "Nedir bu?" sonrasına `[short pause]`.
 - Duygu etiketleri cümle başında: `[warmly]`, `[short pause]`, `[matter-of-fact]`, `[cheerfully]`, `[excited]`, `[calmly]`.
 - Eğitmen anlatımında (Bölüm 0) ses videodan ÖNCE üretilir; çıktı `ses/anlatim.mp3`, whisper `desifre.json` kelime zamanları JEST.md için kullanılır.
@@ -14,7 +14,7 @@ description: Reel anlatımını ElevenLabs (Eleven v4, duygu etiketli) ile üret
 - Karakter ≈ kredi. Metni ve tahmini krediyi kullanıcıya göster.
 
 ## 2. Ses kimliği
-`.env` → `ELEVENLABS_VOICE_ID`. Ses (10 Kas 2026, Gamze Hoca'nın isteğiyle değişti): `Xen0soH4tcGo78ododZU` — eski "Gamze – Soft, Young and Encouraging" (`oDu9B15AlAcHxBVp7d6a`) artık KULLANILMAZ. Ses hesabın "My voices"ında yoksa ses seçicide ara → "Add to My Voices".
+`.env` → `ELEVENLABS_VOICE_ID`. `.env`'de `HOCA_SES_ID` doluysa (Hoca'nın kendi ses klonu, 13 Kas 2026) HER ZAMAN o kullanılır; klon Hoca'nın hesabında "My voices"tadır, "Add to My Voices" gerekmez. Klonla TTS'te model `eleven_v3` (duygu etiketleri), olmazsa `eleven_multilingual_v2`; Voice Changer'da `eleven_multilingual_sts_v2`. `HOCA_SES_ID` boşsa ortak ses (10 Kas 2026, Gamze Hoca'nın isteğiyle değişti): `Xen0soH4tcGo78ododZU` — eski "Gamze – Soft, Young and Encouraging" (`oDu9B15AlAcHxBVp7d6a`) artık KULLANILMAZ. Ses hesabın "My voices"ında yoksa ses seçicide ara → "Add to My Voices".
 
 ## 3. Üret (Playwright, uzantı modu)
 1. `https://elevenlabs.io/app/speech-synthesis/text-to-speech`, `main .ProseMirror` bekle.

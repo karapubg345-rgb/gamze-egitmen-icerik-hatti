@@ -17,7 +17,7 @@ Değişmezler: Hoca'nın kelimeleri eklenmez, çıkarılmaz, sırası değişmez
 - Duygu ve vurgu: öbek başına ses yüksekliği, hız (kelime/sn), vurgulu kelimeler, soru/heyecan/sıcaklık. `{klasor}/ses/hoca-sesi/ANALIZ.md`'ye yaz.
 
 ## 3. ElevenLabs ile ses (kelime ve duygu Hoca'nınki)
-Ses kimliği `.env` → `ELEVENLABS_VOICE_ID`. Çıktı `{klasor}/ses/hoca-sesi/eleven.mp3`. Sırayla dene, ilk olanı kullan:
+Ses kimliği `.env` → `HOCA_SES_ID` doluysa o (Hoca'nın kendi ses klonu: çıktı Hoca'nın sesiyle olur), boşsa `ELEVENLABS_VOICE_ID`. Çıktı `{klasor}/ses/hoca-sesi/eleven.mp3`. Sırayla dene, ilk olanı kullan:
 1. **Voice Changer (speech-to-speech), öncelikli:** Hoca'nın kaydı girdi, hedef ses ELEVENLABS_VOICE_ID. Kelimeler, vurgu, duygu ve ritim birebir Hoca'nın kaydından gelir. Ayar: arka plan gürültüsünü kaldır açık; stil/benzerlik varsayılan.
    - Önce ElevenLabs MCP (ToolSearch `elevenlabs`): speech-to-speech / voice changer aracı varsa parametreleri şemadan al.
    - Yoksa web arayüzü (Playwright uzantı modu): `https://elevenlabs.io/app/voice-changer` → kaydı yükle → sesi seç → üret → indir (indirme düğmesi yoksa `.claude/skills/elevenlabs-ses/SKILL.md` 4. adımdaki MediaRecorder yöntemi).
