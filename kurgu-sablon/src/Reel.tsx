@@ -5,6 +5,8 @@ import TL from "./timeline.json";
 
 // Gamze Eğitmen marka renkleri: mürdüm + leylak (mekândaki tekstillerle aynı aile).
 const B = { plum: "#6B3A5E", lilac: "#D9C2E6", cream: "#FFF8EE", hi: "#F3C969" };
+// Açılış başlığı (konu bandı) — Gamze Hoca, 14 Kas 2026: 1. kutu koyu bordo + beyaz yazı, 2. kutu krem + şarap kırmızısı yazı.
+const HOOK = { k1Bg: "#4A0F26", k1Ink: "#FFFFFF", k2Bg: "#EFE8DD", k2Ink: "#7A1E35" };
 
 type Cap = { t: string; s: number; e: number };
 type Shot = { s: number; e: number; z: number; fx: number; fy: number; push?: number };
@@ -63,8 +65,8 @@ const Hook: React.FC<{ t: number }> = ({ t }) => {
             key={i}
             style={{
               transform: `scale(${k}) rotate(${i === 0 ? -2 : 1.5}deg)`,
-              background: i === 0 ? B.plum : B.cream,
-              color: i === 0 ? B.cream : B.plum,
+              background: i === 0 ? HOOK.k1Bg : HOOK.k2Bg,
+              color: i === 0 ? HOOK.k1Ink : HOOK.k2Ink,
               fontFamily,
               fontWeight: 800,
               fontSize: 80,

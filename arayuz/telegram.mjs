@@ -23,6 +23,7 @@ Sesli tarif: sesli mesajın açıklamasına "tarif" yazın; tarif videosu (mutfa
    ör. /yeni zencefilli limon 45sn kredili
 Çekim videosu: videoyu bu sohbete gönderin, açıklamasına konuyu yazın (ör. "hacamat 25sn").
 Video linki: Instagram/TikTok/YouTube linkini yanına konuyla yazın (ör. "https://instagram.com/reel/… hacamat 25sn"). Video indirilir, eller ve ortam bizimkilerle değiştirilir; üstündeki yazı ve logolar kaldırılır.
+Beğendiğiniz videoyu kendi sesinizle: linki (ya da videoyu) gönderin, sonra o mesaja basılı tutup "Yanıtla" deyin ve sesli mesajla kendi sözlerinizle anlatın. Videodaki içerik bizim ellerimizle (siyah başparmak delikli kol) yeniden çekilir, sizin sözlerinizin sırasına göre dizilir; ses sizin kaydınızdır, kendi ses klonunuza çevrilir. Süre kaydınızın süresidir (en fazla 60 sn).
 Linkten yalnız tarif: linkin yanına "tarif" yazın (ör. "https://instagram.com/reel/… tarif 30sn"). Videodaki konuşma ve gönderi açıklaması okunur, tarif çıkarılır; görüntü kullanılmaz, video sıfırdan bizim mutfağımızda üretilir.
 Linkten anlatım: linkin yanına "eğitim" yazın; konuşmadaki bilgi sizin üslubunuzla yeniden yazılır, ofisinizde eğitmen videosu olur.
 Bedende gösterim: tarif bir bedende gösterilecekse isteğe yazın: "çocuk eli", "erkek kolu", "ön kol", "ayak", "sırt" (ör. "https://… tarif 25sn çocuk eli" ya da "/yeni çimdik testi erkek kolu 20sn"). Bu ipucu senaryoya geçer; o planda yüzsüz bir gösterim bedeni (el, ön kol, ayak, sırt) kullanılır.
@@ -97,6 +98,11 @@ const TURLER = {
   tarif: { ne: 'tarif', neyi: 'tarifi', baslik: "Gamze Hoca'nın sesli tarifi", dosya: 'SESLI-TARIF.md', klasor: 'sesli-tarif', komut: '/yeni',
     mekan: 'bizim mutfağımızda', linkNot: 'Tarif (malzeme, ölçü, sıra) buradan alınır.' }
 };
+
+// Referans video + Hoca'nın sesi (link/video mesajına sesli yanıt): klasördeki metin dosyası; sunucu bunu görünce hocaSesi talimatını ekler.
+const HOCA_SESI = 'HOCA-SESI.md';
+const METIN_DOSYALARI = [...Object.values(TURLER).map(x => x.dosya), HOCA_SESI];
+const SESLI_YANIT_IPUCU = 'Kendi sesinizle anlatmak isterseniz: bu kart başlamadan, gönderdiğiniz link/video mesajına basılı tutup "Yanıtla" deyin ve sesli mesaj kaydedin. Video sizin sözlerinize göre hazırlanır.';
 
 // Mesajdaki tür etiketi: "tarif" → tarif, "eğitim/anlatım/fayda" → eğitim, yoksa null. Etiket metinden çıkarılır (konu sanılmasın).
 function turEtiketi(metin) {
@@ -311,8 +317,8 @@ export function telegramBaslat(hat) {
     if (taslaklar.has(klasor)) return taslaklar.get(klasor);
     const d = hat.durumOku(klasor);
     if (!d.bolum || d.otomatik || Object.keys(d.asamalar || {}).length) return null;
-    const tt = Object.values(TURLER).find(x => fs.existsSync(path.join(hat.KOK, klasor, x.dosya)));
-    taslaklar.set(klasor, { chat, mid, ust: '', metin: tt ? { dosya: tt.dosya, kelime: 0 } : null });
+    const dosya = METIN_DOSYALARI.find(x => fs.existsSync(path.join(hat.KOK, klasor, x)));
+    taslaklar.set(klasor, { chat, mid, ust: '', metin: dosya ? { dosya, kelime: 0 } : null });
     return taslaklar.get(klasor);
   }
 
@@ -398,7 +404,7 @@ export function telegramBaslat(hat) {
     metinBekleyen.delete(chat);
     const t = taslaklar.get(klasor);
     if (!t) return yaz(chat, 'Bu video başladı; değişikliği iş bitince "Düzelt" ile yazabilirsiniz.');
-    if (!t.metin) { const tt = Object.values(TURLER).find(x => fs.existsSync(path.join(hat.KOK, klasor, x.dosya))); if (tt) t.metin = { dosya: tt.dosya, kelime: 0 }; }
+    if (!t.metin) { const dosya = METIN_DOSYALARI.find(x => fs.existsSync(path.join(hat.KOK, klasor, x))); if (dosya) t.metin = { dosya, kelime: 0 }; }
     if (!t.metin) return yaz(chat, 'Bu videoda düzeltilecek bir metin yok (sesli mesaj ya da linkten gelmedi).');
     const kelime = yeni.split(/\s+/).filter(Boolean).length;
     const tam = kelime >= Math.max(8, t.metin.kelime * 0.5);
@@ -418,10 +424,18 @@ export function telegramBaslat(hat) {
     }
     const video = m.video || (m.document?.mime_type?.startsWith('video/') ? m.document : null);
     const ses = m.voice || m.audio || (m.document?.mime_type?.startsWith('audio/') ? m.document : null);
+    // Link ya da video mesajına SESLİ YANIT: referans video + Hoca'nın kendi sözleri (Video Edit hattı, ses Voice Changer).
+    const yanit = m.reply_to_message;
+    if (ses && !video && yanit) {
+      const yMetin = (yanit.text || yanit.caption || '').trim();
+      const yLink = yMetin.match(/https?:\/\/\S+/i)?.[0];
+      const yVideo = yanit.video || (yanit.document?.mime_type?.startsWith('video/') ? yanit.document : null);
+      if (yLink || yVideo) return referansSesliAl(chat, ses, metin, { link: yLink, video: yVideo, mid: yanit.message_id, metin: yLink ? yMetin.replace(yLink, ' ') : yMetin });
+    }
     // "Özel istek ekle"ye basıldıysa gelen ilk yazı ya da sesli mesaj o videonun isteğidir (yeni video sayılmaz).
     if (ozelBekleyen.has(chat) && !video && (ses || (metin && !metin.startsWith('/'))))
       return ses ? ozelIstekSesli(chat, ozelBekleyen.get(chat), ses) : ozelIstekAl(chat, ozelBekleyen.get(chat), metin);
-    if (video) return cekimAl(chat, m, video, metin);
+    if (video) return cekimAl(chat, m, video, metin, m.message_id);
     if (ses) return sesliAl(chat, ses, metin);
     if (metinBekleyen.has(chat) && metin && !metin.startsWith('/')) return metinDuzelt(chat, metinBekleyen.get(chat), metin);
     if (notBekleyen.has(chat) && !metin.startsWith('/')) {
@@ -430,7 +444,7 @@ export function telegramBaslat(hat) {
       catch (e) { return yaz(chat, e.message); }
     }
     const link = metin.startsWith('/') ? null : metin.match(/https?:\/\/\S+/i)?.[0];
-    if (link) return linkAl(chat, link, metin.replace(link, ' '));
+    if (link) return linkAl(chat, link, metin.replace(link, ' '), m.message_id);
     const [komut, ...geri] = metin.split(/\s+/);
     const arg = geri.join(' ');
     switch (komut.replace(/@.*$/, '').toLowerCase()) {
@@ -461,24 +475,91 @@ export function telegramBaslat(hat) {
     }
   }
 
-  async function cekimAl(chat, m, video, metin) {
+  async function cekimAl(chat, m, video, metin, mid) {
     if (video.file_size > 20e6) return yaz(chat, 'Video 20 MB\'den büyük; Telegram botlar daha büyüğünü indiremiyor. Telefonda kısaltıp/sıkıştırıp gönderin ya da bilgisayardan Stüdyo\'ya yükleyin.');
     const p = ayristir(metin || 'çekim', hat.SURE);
     try {
       const klasor = hat.yeniKlasor({ bolum: 'cekim', ...p, konu: p.konu || 'çekim' });
       await yaz(chat, 'Video alınıyor…');
-      const f = await tg('getFile', { file_id: video.file_id });
-      const r = await fetch(`${DOSYA}/${f.file_path}`);
-      const uzanti = path.extname(video.file_name || f.file_path).toLowerCase();
-      await hat.kaynakEkle(klasor, klasor + (/^\.(mp4|mov|m4v|webm)$/.test(uzanti) ? uzanti : '.mp4'), Readable.fromWeb(r.body));
-      return taslakGoster(chat, klasor, 'Çekim alındı; eller ve ortam bizimkilerle değiştirilecek.');
+      await telegramVideoEkle(klasor, video);
+      if (mid) kaynakMesaj.set(`${chat}:${mid}`, klasor);
+      return taslakGoster(chat, klasor, 'Çekim alındı; eller ve ortam bizimkilerle değiştirilecek.\n' + SESLI_YANIT_IPUCU);
     } catch (e) { return yaz(chat, 'Çekim alınamadı: ' + e.message); }
+  }
+
+  async function telegramVideoEkle(klasor, video) {
+    const f = await tg('getFile', { file_id: video.file_id });
+    const r = await fetch(`${DOSYA}/${f.file_path}`);
+    const uzanti = path.extname(video.file_name || f.file_path).toLowerCase();
+    await hat.kaynakEkle(klasor, klasor + (/^\.(mp4|mov|m4v|webm)$/.test(uzanti) ? uzanti : '.mp4'), Readable.fromWeb(r.body));
+  }
+
+  // --- Referans video + Hoca'nın sesi: link/video mesajına sesli yanıt. Video Edit hattı (bölüm 'cekim'); klasörde HOCA-SESI.md
+  // olduğu için sunucu her aşamaya asamalar.json → hocaSesi talimatını ekler (kesitler Hoca'nın cümlelerine göre, ses Voice Changer,
+  // video sese uyar). Link/video mesajından açılmış ve henüz BAŞLAMAMIŞ klasör varsa ses ona eklenir; başlamışsa yeni klasör açılır.
+  const kaynakMesaj = new Map(); // `${chat}:${message_id}` → klasor (link ya da video mesajından açılan)
+  const baslamadi = k => { try { const d = hat.durumOku(k); return !!d.bolum && !d.otomatik && !Object.keys(d.asamalar || {}).length; } catch { return false; } };
+  // Stüdyo yeniden açıldıysa eşleme bellekte yok: aynı linkten açılmış en yeni klasör (KAYNAK-LINK.txt).
+  function linkKlasoru(link) {
+    return fs.readdirSync(hat.KOK).filter(k => /^video-\d+/.test(k)).reverse().find(k => {
+      try { return fs.readFileSync(path.join(hat.KOK, k, 'KAYNAK-LINK.txt'), 'utf8').split(/\r?\n/)[0].trim() === link; } catch { return false; }
+    });
+  }
+
+  async function referansSesliAl(chat, ses, metin, ref) {
+    if (ses.file_size > 20e6) return yaz(chat, 'Ses kaydı 20 MB\'den büyük; Telegram botlar daha büyüğünü indiremiyor. Daha kısa bir kayıt gönderin.');
+    if (ref.video && !ref.link && ref.video.file_size > 20e6) return yaz(chat, 'Yanıt verdiğiniz video 20 MB\'den büyük; indiremiyorum. Linkini gönderip linke sesli yanıt verin.');
+    const gecici = fs.mkdtempSync(path.join(os.tmpdir(), 'ref-sesli-'));
+    try {
+      await yaz(chat, 'Sesiniz alındı. Videoyu sizin sözlerinize göre, bizim ellerimizle hazırlayacağım. Önce kaydı dinliyorum… (1-3 dk)');
+      const f = await tg('getFile', { file_id: ses.file_id });
+      const uzanti = path.extname(ses.file_name || f.file_path).toLowerCase() || '.ogg';
+      const kayit = path.join(gecici, 'kayit' + uzanti);
+      fs.writeFileSync(kayit, Buffer.from(await (await fetch(`${DOSYA}/${f.file_path}`)).arrayBuffer()));
+      const { anlatim, desifre } = await desifreEt(kayit, gecici);
+      const kelime = anlatim.split(/\s+/).filter(Boolean).length;
+      if (kelime < 5) return yaz(chat, 'Kayıtta anlaşılır bir konuşma duyamadım. Biraz daha yakından ve sessiz bir yerde tekrar gönderir misiniz?');
+      const sn = Number(spawnSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', kayit], { encoding: 'utf8', windowsHide: true }).stdout);
+      if (sn > hat.SURE.cok + 2) return yaz(chat, `Kaydınız ${Math.round(sn)} sn; video en fazla ${hat.SURE.cok} sn olabiliyor ve sözlerinizi kesmiyorum. ${hat.SURE.cok} sn'den kısa bir kayıtla aynı mesaja yeniden yanıt verir misiniz?`);
+
+      let klasor = kaynakMesaj.get(`${chat}:${ref.mid}`) || (ref.link ? linkKlasoru(ref.link) : null);
+      let ek = '';
+      if (klasor && !baslamadi(klasor)) { ek = `\n\nNot: Bu ${ref.link ? 'linkten' : 'videodan'} açılan ${klasor} zaten başlamıştı, o da sürüyor; sizin sesinizle olanı ayrı video olarak açtım.`; klasor = null; }
+      if (!klasor) {
+        const p = ayristir(ref.metin || '', hat.SURE);
+        const konu = p.konu || await konuBul(anlatim, 'egitim');
+        klasor = hat.yeniKlasor({ bolum: 'cekim', ...p, konu, ipucu: [ref.metin, metin].filter(Boolean).join(' ') });
+        if (ref.link) {
+          await yaz(chat, 'Referans video indiriliyor…');
+          const { dosya } = await linkIndir(ref.link, gecici);
+          await hat.kaynakEkle(klasor, klasor + path.extname(dosya).toLowerCase(), fs.createReadStream(dosya));
+          fs.writeFileSync(path.join(hat.KOK, klasor, 'KAYNAK-LINK.txt'), `${ref.link}\n${new Date().toISOString()}\n`);
+        } else await telegramVideoEkle(klasor, ref.video);
+        kaynakMesaj.set(`${chat}:${ref.mid}`, klasor);
+      }
+      const hedef = path.join(hat.KOK, klasor, 'hoca-kaydi');
+      fs.rmSync(hedef, { recursive: true, force: true }); // aynı mesaja ikinci yanıt: son kayıt geçerli
+      fs.mkdirSync(hedef, { recursive: true });
+      fs.copyFileSync(kayit, path.join(hedef, 'kayit' + uzanti));
+      for (const d of fs.readdirSync(desifre)) fs.copyFileSync(path.join(desifre, d), path.join(hedef, d));
+      fs.writeFileSync(path.join(hat.KOK, klasor, HOCA_SESI),
+        `# Referans video + Gamze Hoca'nın sesi\n\nReferans: ${ref.link || 'Telegram video mesajı (referans-videolar/)'} · Hoca'nın kaydı: Telegram sesli yanıtı (${new Date().toLocaleString('tr-TR')}), ${Math.round(sn)} sn · kayıt ve zamanlı deşifre: hoca-kaydi/\n` +
+        `Görüntünün içeriği ve sırası referans videodan (Video Edit; eller ve ortam bizden). Ses Hoca'nın bu kaydıdır: kelimeleri DEĞİŞMEZ, ElevenLabs Voice Changer ile kendi klonuna çevrilir; video sese uyar. Referans videonun konuşması kullanılmaz.\n` +
+        `Not: aşağıdaki metin otomatik deşifredir, yalnız altyazı ve plan eşleştirmesi için (şüpheliler: hoca-kaydi/supheli.txt).\n` +
+        (metin ? `\n## Hoca'nın yanıtındaki not\n\n${metin}\n` : '') + `\n## Anlatım\n\n${anlatim}\n`);
+      if (sn > 0) hat.ayarDegistir(klasor, { sure: Math.ceil(sn) });
+      return taslakGoster(chat, klasor, `Anladığım anlatımınız:\n"${kisa(anlatim, 1200)}"\n\n` +
+        `Referans videonun içeriği sizin sözlerinize göre sıralanacak; eller bizim (siyah başparmak delikli kol), ortam bizim. Ses sizin kaydınız, kendi ses klonunuza çevrilecek; her cümle anlattığı plana oturacak. Süre kaydınızdan alındı (${Math.round(sn)} sn). ` +
+        `Yanlış duyduğum bir kelime varsa "Metni düzelt"e basın (yalnız altyazı düzelir, sesiniz aynı kalır).` + ek,
+        { dosya: HOCA_SESI, kelime });
+    } catch (e) { return yaz(chat, 'Sesli yanıt işlenemedi: ' + e.message); }
+    finally { fs.rmSync(gecici, { recursive: true, force: true }); }
   }
 
   // Video linki (Instagram, TikTok, YouTube…): indir → çekim videosu gibi Video Edit hattına girer.
   // Telegram'ın 20 MB sınırı burada yok. Videodaki yazı/logo/filigran Video Edit promptunda kaldırılır (cekim-donusturucu).
   // Linkin yanında "tarif" kelimesi varsa video kopyalanmaz: sesi deşifre edilir (+ gönderi açıklaması) → tarif videosu hattı.
-  async function linkAl(chat, link, metin) {
+  async function linkAl(chat, link, metin, mid) {
     const { tur, kalan } = turEtiketi(metin);
     if (tur) return linkMetinAl(chat, link, kalan, tur);
     const gecici = fs.mkdtempSync(path.join(os.tmpdir(), 'link-video-'));
@@ -489,8 +570,9 @@ export function telegramBaslat(hat) {
       const klasor = hat.yeniKlasor({ bolum: 'cekim', ...p, konu: p.konu || 'çekim' });
       await hat.kaynakEkle(klasor, klasor + path.extname(dosya).toLowerCase(), fs.createReadStream(dosya));
       fs.writeFileSync(path.join(hat.KOK, klasor, 'KAYNAK-LINK.txt'), `${link}\n${new Date().toISOString()}\n`);
+      if (mid) kaynakMesaj.set(`${chat}:${mid}`, klasor);
       return taslakGoster(chat, klasor, 'Video indirildi; eller ve ortam bizimkilerle değiştirilecek, üstündeki yazı ve logolar kaldırılacak.\n' +
-        'Tarif ya da anlatım olarak istiyorsanız linki yanına "tarif" ya da "eğitim" yazarak yeniden gönderin.');
+        'Tarif ya da anlatım olarak istiyorsanız linki yanına "tarif" ya da "eğitim" yazarak yeniden gönderin.\n' + SESLI_YANIT_IPUCU);
     } catch (e) { return yaz(chat, 'Linkteki video alınamadı: ' + e.message + '\nVideoyu dosya olarak da gönderebilirsiniz.'); }
     finally { fs.rmSync(gecici, { recursive: true, force: true }); }
   }

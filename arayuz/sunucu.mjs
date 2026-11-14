@@ -361,6 +361,15 @@ function ozelIstekBlogu(klasor, d) {
     + istekler.map(s => '> ' + s.replace(/\n/g, '\n> ')).join('\n');
 }
 
+// Referans video + Hoca'nın sesi (Telegram: link/video mesajına sesli yanıt). Klasörde HOCA-SESI.md varsa çekim aşamalarına
+// asamalar.json → hocaSesi'nin ortak + aşamaya özel talimatı eklenir; aşamanın kendi talimatıyla çelişirse bu geçerlidir.
+const HOCA_SESI = 'HOCA-SESI.md';
+const hocaSesiVar = (klasor, d) => d.bolum === 'cekim' && fs.existsSync(path.join(guvenliYol(klasor), HOCA_SESI));
+function hocaSesiBlogu(klasor, d, asama, t, doldur) {
+  if (!t.hocaSesi || !hocaSesiVar(klasor, d)) return '';
+  return '\n\n' + doldur(t.hocaSesi.ortak) + (t.hocaSesi[asama] ? '\nBU AŞAMADA (yukarıdaki aşama talimatıyla çelişirse bu geçerli): ' + doldur(t.hocaSesi[asama]) : '');
+}
+
 function calistir({ klasor, asama, not, krediOnay, krediLimit, otoDeneme, surdur }) {
   if (calisan) throw new Error(`Şu an çalışan bir iş var: ${calisan.klasor} · ${calisan.asama}`);
   const d = durumOku(klasor);
@@ -376,9 +385,12 @@ function calistir({ klasor, asama, not, krediOnay, krediLimit, otoDeneme, surdur
   if (krediHarcar && kalan <= 0) throw new Error(`Kredi bütçesi bitti (bütçe ${d.butce}, harcanan ${d.harcanan}).`);
 
   const t = tanim();
-  const tarayici = tarayiciGerekli(d.mod, asama);
+  // Hoca'nın sesiyle referans videoda ses aşaması ElevenLabs Voice Changer'ı (MCP'de yoksa) web arayüzünden kullanır.
+  const voiceChanger = asama === 'ses' && hocaSesiVar(klasor, d);
+  const tarayici = tarayiciGerekli(d.mod, asama) || voiceChanger;
   let modKurali = t.modlar[d.mod].kural;
-  if (d.mod === 'kredili' && tarayici) modKurali += ' İSTİSNA: görsel arama anahtarı olmadığı için yalnız gerçek referans araması (Bing Görseller) için tarayıcı kullanılabilir.';
+  if (d.mod === 'kredili' && voiceChanger) modKurali += ' İSTİSNA: tarayıcı yalnız ElevenLabs Voice Changer için (MCP\'de speech-to-speech yoksa) kullanılabilir; TopView tarayıcıdan açılmaz.';
+  else if (d.mod === 'kredili' && tarayici) modKurali += ' İSTİSNA: görsel arama anahtarı olmadığı için yalnız gerçek referans araması (Bing Görseller) için tarayıcı kullanılabilir.';
   const doldur = s => s.replaceAll('{klasor}', klasor).replaceAll('{konu}', d.konu || '').replaceAll('{bolum}', `${b.ad} (${b.sistem})`)
     .replaceAll('{kaynaklar}', (d.kaynaklar || []).join(', ') || 'referans-videolar/ altındaki ilgili çekim')
     .replaceAll('{not}', (not || '').trim() || 'yok').replaceAll('{sure}', String(d.sure)).replaceAll('{planSayisi}', String(planSayisi(d.sure))).replaceAll('{parcalar}', parcalar(d.sure))
@@ -401,7 +413,8 @@ function calistir({ klasor, asama, not, krediOnay, krediLimit, otoDeneme, surdur
       + (fs.existsSync(krediKaydi(klasor, asama)) ? `\nKREDİ: .arayuz/kredi-${asama}.json kesilen çalışmanın başlangıç bakiyesidir; ÜZERİNE YAZMA. Kesilen çalışmada harcanan = o başlangıç − şimdiki bakiye; bu aşamada harcayabileceğin kalan = {kalan} − bu tutar. HARCANAN_KREDI = başlangıç − son bakiye (iki çalışmanın toplamı).` : '');
   } else fs.rmSync(krediKaydi(klasor, asama), { force: true }); // sıfırdan çalışma: eski kayıt hesabı bozmasın
   const istem = doldur(t.ortak).replace('ÜRETİM MODU: {mod}', 'ÜRETİM MODU: ' + doldur(modKurali))
-    + '\n\nAŞAMA — ' + a.ad + ':\n' + doldur(t.surdurme) + (a.surdur ? ' Bu aşamada: ' + doldur(a.surdur) : '') + '\n' + doldur(a.talimat) + doldur(surdurBlogu)
+    + '\n\nAŞAMA — ' + a.ad + ':\n' + doldur(t.surdurme) + (a.surdur ? ' Bu aşamada: ' + doldur(a.surdur) : '') + '\n' + doldur(a.talimat)
+    + hocaSesiBlogu(klasor, d, asama, t, doldur) + doldur(surdurBlogu)
     + '\n\nRAPOR SONU (sunucu okur, bu sırayla): denetimde bulduğun her eksik için bir `EKSIK: <kısa, kullanıcının anlayacağı dille>` satırı (en fazla 6); '
     + '`UYUM: <0-100>` — çıktının isteğe (senaryo, CLAUDE.md kuralları, kullanıcı notu) genel uyum yüzdesi, denetçi raporlarına dayanarak dürüstçe; '
     + '`SONUC: TAMAM` ya da `SONUC: SORUN` (denetimden geçmeyen kare/video, bütçe ya da Sınırsız mod nedeniyle yapılamayan gönderim, eksik çıktı varsa SORUN); gerekiyorsa `GERI: <aşama-id>`; en son `HARCANAN_KREDI: <sayı>`.'

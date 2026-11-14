@@ -49,6 +49,8 @@ Akış (her video `video-NN-konu/` klasörü):
 4. **Karşılaştırma** — kaynak/çıktı şeritleri + yan yana video; uydurma nesne, siyah kol, görünen hasta saniyeleri → NOTLAR.md.
 5. **video-denetci** → **ses** (aynı kesit sırası önceden seslendirildiyse o ses kullanılır) → **kurgu-ajani** (hasta görünen geniş planlar kırpılır/kesilir).
 
+**Hoca'nın sesiyle referans video** (Telegram: link/video mesajına sesli yanıt; klasörde `HOCA-SESI.md` + `hoca-kaydi/`): aynı aşamalar, farkları `arayuz/asamalar.json → hocaSesi`. Kesitler Hoca'nın cümle sırasına göre seçilir (NOTLAR.md → "Cümle → plan"), süre kaydın süresi; ses aşamasında metin yazılmaz, Hoca'nın kaydı ElevenLabs Voice Changer ile klonuna çevrilir (`ses/hoca.mp3`, kelimeler değişmez); kurguda video sese uyar (kesit hızı 0,7-1,6, cümle anlattığı planda ±0,3 sn). Referans videonun konuşması kullanılmaz.
+
 Bilinen sınır: Video Edit hastayı değiştirmiyor (vücudu koruyor) → hastanın kafa/yüz/kıyafet/takısı kurguda gizlenir; uygulama bölgesinin (sırt, kol, ayak) görünmesi kabul (CLAUDE.md → "Kişi tanınmaz"). Beden kilidi Bölüm 1 içindir; Video Edit'te gerçek bölge korunur.
 
 ## Ajanlar (`.claude/agents/`)
